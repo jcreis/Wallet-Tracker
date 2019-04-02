@@ -14,9 +14,14 @@ import bftsmart.tom.ServiceProxy;
  * Implementacao do servidor de rendezvous em REST 
  */
 @Path("/users")
-public class RendezVousResources {
+public class WalletResources {
 
 	ServiceProxy serviceProxy = new ServiceProxy(0);
+
+	ReplicaServer replica = new ReplicaServer(0);
+
+
+
 
 	public enum opType{
 		TRANSFER,

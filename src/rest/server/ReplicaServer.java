@@ -14,13 +14,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
     private Map<String, User> db = new ConcurrentHashMap<String, User>();
 
-    public static void main(String[] args){
-        if (args.length < 1) {
-            System.out.println("Usage: ReplicaServer(id)");
-            System.exit(-1);
-        }
-        new ReplicaServer(Integer.parseInt(args[0]));
-    }
+
 
     public ReplicaServer(int id){
         new ServiceReplica(id, this, this);
@@ -51,7 +45,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-            RendezVousResources.opType reqType = (RendezVousResources.opType)objIn.readObject();
+            WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
 
             switch (reqType) {
                 case ADD_MONEY:
@@ -151,7 +145,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-            RendezVousResources.opType reqType = (RendezVousResources.opType)objIn.readObject();
+            WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
             switch (reqType) {
                 case GET_USERS:
                     System.out.println("List of users: "+ db.values().toArray(new User[db.size()]).toString());

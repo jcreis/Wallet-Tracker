@@ -8,6 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import bftsmart.tom.ServiceProxy;
+import rest.server.CaptureMessages;
 import rest.server.ReplicaServer;
 
 
@@ -16,7 +17,7 @@ public class WalletResources {
 
 	int replicaNumber;
 
-	ServiceProxy serviceProxy = new ServiceProxy(0);
+	ServiceProxy serviceProxy;
 
 	ReplicaServer replicaServer;
 
@@ -24,6 +25,8 @@ public class WalletResources {
 		this.replicaNumber = replicaNumber;
 		System.out.println("replica number " + replicaNumber);
 		replicaServer = new ReplicaServer(replicaNumber);
+		serviceProxy  = new ServiceProxy(replicaNumber, null,null, new CaptureMessages());
+
 	}
 
 	public enum opType{
@@ -39,6 +42,7 @@ public class WalletResources {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public User[] getUsers() {
+		System.out.println("maria");
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {

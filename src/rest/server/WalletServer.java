@@ -18,8 +18,8 @@ public class WalletServer {
 			port = Integer.parseInt(args[0]);
 			replicaNum = Integer.parseInt(args[1]);
 		}
-		System.out.println("Server running at port "+port);
-		System.out.println("Replica number "+replicaNum);
+		System.out.println("Server running at port "+ port);
+		System.out.println("Replica number "+ replicaNum);
 		URI baseUri = UriBuilder.fromUri("https://0.0.0.0/").port(port).build();
 
 		ResourceConfig config = new ResourceConfig();

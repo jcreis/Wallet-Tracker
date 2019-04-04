@@ -1,4 +1,4 @@
-package rest.server;
+package api;
 
 import java.io.*;
 import java.util.Map;
@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import api.User;
 import bftsmart.tom.ServiceProxy;
+import rest.server.ReplicaServer;
 
 /**
  * Implementacao do servidor de rendezvous em REST 
@@ -18,10 +18,7 @@ public class WalletResources {
 
 	ServiceProxy serviceProxy = new ServiceProxy(0);
 
-	ReplicaServer replica = new ReplicaServer(0);
-
-
-
+	ReplicaServer replicaServer = new ReplicaServer(1);
 
 	public enum opType{
 		TRANSFER,
@@ -180,13 +177,6 @@ public class WalletResources {
 		}
 		return null;
 
-
-
-		/*if(db.containsKey(id)){
-			return db.get(id).getMoney();
-		}
-		else
-			throw new WebApplicationException(NOT_FOUND);*/
 	}
 
 }

@@ -1,6 +1,6 @@
 package rest.server;
 
-import api.User;
+import api.*;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;

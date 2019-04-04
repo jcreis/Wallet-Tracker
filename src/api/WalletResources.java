@@ -10,15 +10,21 @@ import javax.ws.rs.core.MediaType;
 import bftsmart.tom.ServiceProxy;
 import rest.server.ReplicaServer;
 
-/**
- * Implementacao do servidor de rendezvous em REST 
- */
+
 @Path("/users")
 public class WalletResources {
 
+	int replicaNumber;
+
 	ServiceProxy serviceProxy = new ServiceProxy(0);
 
-	ReplicaServer replicaServer = new ReplicaServer(1);
+	ReplicaServer replicaServer;
+
+	public WalletResources(int replicaNumber) {
+		this.replicaNumber = replicaNumber;
+		System.out.println("replica number " + replicaNumber);
+		replicaServer = new ReplicaServer(replicaNumber);
+	}
 
 	public enum opType{
 		TRANSFER,

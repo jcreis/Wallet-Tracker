@@ -9,6 +9,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
+import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
 import rest.server.CaptureMessages;
 import rest.server.ReplicaServer;
@@ -29,7 +30,7 @@ public class WalletResources {
 		this.replicaNumber = replicaNumber;
 		System.out.println("replica number " + replicaNumber);
 		replicaServer = new ReplicaServer(replicaNumber);
-		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages);
+		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages,  new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption"));
 
 	}
 

@@ -1,6 +1,7 @@
 package api;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,11 +22,13 @@ public class WalletResources {
 
 	ReplicaServer replicaServer;
 
+	CaptureMessages captureMessages = new CaptureMessages();
+
 	public WalletResources(int replicaNumber) {
 		this.replicaNumber = replicaNumber;
 		System.out.println("replica number " + replicaNumber);
 		replicaServer = new ReplicaServer(replicaNumber);
-		serviceProxy  = new ServiceProxy(replicaNumber, null,null, new CaptureMessages());
+		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages);
 
 	}
 
@@ -75,7 +78,11 @@ public class WalletResources {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public User register(User user) {
+	public Reply register(User user) {
+
+		User userReply ;
+
+
 		System.err.printf("register: %s <%s>\n", user.getId(), user);
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -92,7 +99,10 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				return (User)objIn.readObject();
+				userReply = (User)objIn.readObject();
+				System.out.println(captureMessages.sendMessages());
+				return new Reply(captureMessages.sendMessages(), userReply);
+
 			}
 
 		} catch (IOException | ClassNotFoundException e) {

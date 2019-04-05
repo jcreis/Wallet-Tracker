@@ -15,16 +15,18 @@ public class CaptureMessages implements Extractor {
     public ArrayList messages;
 
     public CaptureMessages(){
-        messages = new ArrayList<User>();
+
     }
 
 
     @Override
     public TOMMessage extractResponse(TOMMessage[] tomMessages, int sameContent, int lastReceived) {
 
+        messages = new ArrayList<User>();
         for(int i = 0; i < tomMessages.length ; i++){
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
                 messages.add((Object) objIn.readObject());
 
             } catch (IOException | ClassNotFoundException e) {

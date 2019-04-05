@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import bftsmart.tom.ServiceProxy;
@@ -44,8 +45,8 @@ public class WalletResources {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public User[] getUsers() {
-		System.out.println("maria");
+	public Reply getUsers() {
+		User[] userReply ;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -63,8 +64,10 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				System.out.println("List of users: "+ db.values().toArray(new User[db.size()]));
+				userReply = (User[])objIn.readObject();
 
-				return (User[]) objIn.readObject();
+				System.out.println(captureMessages.sendMessages());
+				return new Reply(captureMessages.sendMessages(), userReply);
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -72,7 +75,7 @@ public class WalletResources {
 		}
 
 		System.out.println( db.size());
-		return db.values().toArray( new User[ db.size() ]);
+		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]));
 	}
 
 	@POST
@@ -100,7 +103,6 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				userReply = (User)objIn.readObject();
-				System.out.println(captureMessages.sendMessages());
 				return new Reply(captureMessages.sendMessages(), userReply);
 
 			}
@@ -114,7 +116,8 @@ public class WalletResources {
 
 	@PUT
 	@Path("/{id}")
-	public Double addMoney(@PathParam("id") String id, @QueryParam("value") Double value){
+	@Produces(MediaType.APPLICATION_JSON)
+	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value){
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -130,7 +133,8 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				return (Double)objIn.readObject();
+				 double money = (Double)objIn.readObject();
+				 return new Reply(captureMessages.sendMessages(), money) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -142,7 +146,8 @@ public class WalletResources {
 
 	@PUT
 	@Path("/transfer/{fid}")
-	public Double transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value){
+	@Produces(MediaType.APPLICATION_JSON)
+	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value){
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -160,7 +165,8 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				return (Double)objIn.readObject();
+				double money = (Double)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), money) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -173,7 +179,7 @@ public class WalletResources {
 	@GET
 	@Path("/{id}/money")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Double getMoney(@PathParam("id") String id){
+	public Reply getMoney(@PathParam("id") String id){
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -189,7 +195,8 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				return (Double) objIn.readObject();
+				double money = (Double)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), money) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {

@@ -140,18 +140,22 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         byte[] reply = null;
         boolean hasReply = false;
         String key1;
+        Long nonce;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
             WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
+            nonce = (Long)objIn.readObject();
             switch (reqType) {
                 case GET_USERS:
                     System.out.println("List of users: "+ db.values().toArray(new User[db.size()]).toString());
 
                     // Prepares output
                     objOut.writeObject(db.values().toArray(new User[db.size()]));
+
+                    objOut.writeObject(nonce);
                     // Allows output to be set to ByteArray in the final phase of the method
                     hasReply = true;
                     break;

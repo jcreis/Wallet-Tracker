@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import rest.server.CaptureMessages;
 import rest.server.ReplicaServer;
 
@@ -20,9 +21,13 @@ public class WalletResources {
 
 	int replicaNumber;
 
+	Long nonce;
+
 	ServiceProxy serviceProxy;
 
 	ReplicaServer replicaServer;
+
+	RSAKeyLoader keyLoader;
 
 	CaptureMessages captureMessages = new CaptureMessages();
 
@@ -30,7 +35,8 @@ public class WalletResources {
 		this.replicaNumber = replicaNumber;
 		System.out.println("replica number " + replicaNumber);
 		replicaServer = new ReplicaServer(replicaNumber);
-		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages,  new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption"));
+		keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
+		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages, keyLoader);
 
 	}
 
@@ -46,29 +52,34 @@ public class WalletResources {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getUsers() {
+
+	public Reply getUsers(@QueryParam("nonce") Long nonce) {
 		User[] userReply ;
+		Long replyNonce;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.GET_USERS);
+			objOut.writeObject(nonce);
 
 			objOut.flush();
 			byteOut.flush();
 
+			// TODO Passar para Ordered ?
 			byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
 			if (reply.length == 0) {
-				System.out.println("1");
+				//System.out.println("1");
 				return null;
 			}
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				System.out.println("List of users: "+ db.values().toArray(new User[db.size()]));
 				userReply = (User[])objIn.readObject();
-
+				replyNonce = (Long)objIn.readObject();
 				System.out.println(captureMessages.sendMessages());
-				return new Reply(captureMessages.sendMessages(), userReply);
+				System.out.println("nonce :" + replyNonce);
+				return new Reply(captureMessages.sendMessages(), userReply, replyNonce);
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -76,7 +87,7 @@ public class WalletResources {
 		}
 
 		System.out.println( db.size());
-		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]));
+		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]), nonce);
 	}
 
 	@POST
@@ -104,7 +115,7 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				userReply = (User)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), userReply);
+				return new Reply(captureMessages.sendMessages(), userReply, nonce);
 
 			}
 
@@ -135,7 +146,7 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				 double money = (Double)objIn.readObject();
-				 return new Reply(captureMessages.sendMessages(), money) ;
+				 return new Reply(captureMessages.sendMessages(), money, nonce) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -167,7 +178,7 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money) ;
+				return new Reply(captureMessages.sendMessages(), money, nonce) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -197,7 +208,7 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money) ;
+				return new Reply(captureMessages.sendMessages(), money, nonce) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {

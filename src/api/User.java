@@ -8,6 +8,8 @@ public class User implements Serializable {
 
 	Double money;
 
+
+
 	public User(String id, Double money) {
 		this.id = id;
 		this.money = money;

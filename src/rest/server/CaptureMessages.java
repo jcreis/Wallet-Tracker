@@ -26,7 +26,9 @@ public class CaptureMessages implements Extractor {
         for(int i = 0; i < tomMessages.length ; i++){
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
-
+                /*byte[] x = tomMessages[i].serializedMessageSignature;
+                System.out.println(x);
+                System.out.println(tomMessages[i].signed);*/
                 messages.add((Object) objIn.readObject());
 
             } catch (IOException | ClassNotFoundException e) {

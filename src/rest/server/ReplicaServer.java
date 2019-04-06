@@ -1,6 +1,5 @@
 package rest.server;
 
-import api.User;
 import api.WalletResources;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
@@ -168,7 +167,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
             WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
             switch (reqType) {
-                case GET_USERS:
+                /*case GET_USERS:
                     nonce = (Long)objIn.readObject();
 
 
@@ -180,7 +179,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     objOut.writeObject(nonce);
                     // Allows output to be set to ByteArray in the final phase of the method
                     hasReply = true;
-                    break;
+                    break;*/
 
                 case GET_MONEY:
                     key1 = (String)objIn.readObject();

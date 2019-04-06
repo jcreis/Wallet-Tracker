@@ -91,6 +91,7 @@ public class AppClient {
         java.security.KeyPair kp = kpg.generateKeyPair() ;
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+
         /*String pubTry = "ab123";
         String privTry = "cd456";*/
 
@@ -98,8 +99,10 @@ public class AppClient {
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
         Long nonce = random.nextLong();
+
         String msg = publicString + value + nonce;
         byte[] hash = Digest.getDigest(msg.getBytes());
+
         byte[] hashEncriptPriv = priv.encrypt(hash);
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");

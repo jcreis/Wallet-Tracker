@@ -14,6 +14,7 @@ import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,8 +26,6 @@ import static security.Digest.getDigest;
 public class WalletResources {
 
     int replicaNumber;
-
-    Long nonce;
 
     ServiceProxy serviceProxy;
 
@@ -149,48 +148,50 @@ public class WalletResources {
 
         Long replyNonce;
 
-        URLDecoder.decode(publicKey, "UTF-8");
-        String verify = publicKey + value + nonce;
-        /*byte[] hash = Digest.getDigest(verify.getBytes());
-        byte[] pubKeyArr = publicKey.getBytes();
-        PublicKey pub2 = PublicKey.createKey( pubKeyArr);
+            URLDecoder.decode(publicKey, "UTF-8");
+            String verify = publicKey + value + nonce;
+            byte[] hash = Digest.getDigest(verify.getBytes());
 
-        byte[] decodedBytes = Base64.getDecoder().decode(msg);
-        byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
-*/
-        System.out.println("1");
-        //if (hashDecriptPriv == hash) {
+            byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
+            PublicKey pub2 = PublicKey.createKey(pubKeyArr);
 
-            System.out.println("12");
-            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+            byte[] decodedBytes = Base64.getDecoder().decode(msg);
+            byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
 
-                objOut.writeObject(opType.ADD_MONEY);
-                objOut.writeObject(publicKey);
-                objOut.writeObject(value);
-                objOut.writeObject(nonce);
-                System.out.println("2");
+            System.out.println("1");
+            if (Arrays.equals(hashDecriptPriv,hash)) {
 
-                objOut.flush();
-                byteOut.flush();
-                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
-                if (reply.length == 0)
-                    return null;
-                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                    double money = (Double) objIn.readObject();
-                    replyNonce = (Long) objIn.readObject();
-                    System.out.println("RESPONSE FROM ADD MONEY IS:");
-                    Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println(r);
-                    return r;
+                System.out.println("12");
+                try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                     ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+
+                    objOut.writeObject(opType.ADD_MONEY);
+                    objOut.writeObject(publicKey);
+                    objOut.writeObject(value);
+                    objOut.writeObject(nonce);
+                    System.out.println("2");
+
+                    objOut.flush();
+                    byteOut.flush();
+                    byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                    if (reply.length == 0)
+                        return null;
+                    try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                         ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                        double money = (Double) objIn.readObject();
+                        replyNonce = (Long) objIn.readObject();
+                        System.out.println("RESPONSE FROM ADD MONEY IS:");
+                        Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                        System.out.println(r);
+                        return r;
+                    }
+
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("Exception putting value into map: " + e.getMessage());
                 }
-
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.println("Exception putting value into map: " + e.getMessage());
             }
-        //}
-        return null;
+            return null;
+
     }
 
 

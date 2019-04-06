@@ -14,6 +14,8 @@ import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static security.Digest.getDigest;
+
 
 @Path("/users")
 public class WalletResources {
@@ -40,15 +42,14 @@ public class WalletResources {
         serviceProxy = new ServiceProxy(replicaNumber, "config", null, captureMessages, keyLoader);
 
         //TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
-        nonce = random.nextLong();
-        System.out.println("nonce = " + nonce);
+
     }
 
     public enum opType {
         TRANSFER,
         ADD_MONEY,
         GET_MONEY,
-        GET_USERS,
+        //GET_USERS,
         ADD_USER
     }
 
@@ -134,15 +135,17 @@ public class WalletResources {
 	}*/
 
     @PUT
-    @Path("/{id}")
+    @Path("/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Reply addMoney(@QueryParam("publicKey") String publicKey, @QueryParam("value") Double value,
-                          @QueryParam("nonce") Long nonce, @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
-
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Reply addMoney(@PathParam("publicKey") String publicKey, @QueryParam("value") Double value,
+                          @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
+        System.out.println("ola");
         Long replyNonce;
-        String verify = publicKey + value;
 
-        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
+        String verify = publicKey + value + nonce;
+
+        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -170,7 +173,7 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-        return null;
+        throw new ForbiddenException();
     }
 
 
@@ -178,13 +181,13 @@ public class WalletResources {
     @Path("/transfer/{fpublicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
-            Double value, @QueryParam("nonce") Long nonce, @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
+            Double value, @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
 
         Long replyNonce;
 
-        String verify = fpublicKey + tpublicKey + value;
+        String verify = fpublicKey + tpublicKey + value + nonce;
 
-        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
+        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
 
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -214,7 +217,7 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-        return null;
+        throw new ForbiddenException();
 
     }
 
@@ -222,13 +225,13 @@ public class WalletResources {
     @Path("/{publicKey}/money")
     @Produces(MediaType.APPLICATION_JSON)
     public Reply getMoney(@PathParam("publicKey") String publicKey, @QueryParam("nonce") Long nonce,
-                          @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
+                          @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
 
         Long replyNonce;
 
-        String verify = publicKey;
+        String verify = publicKey + nonce;
 
-        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
+        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -255,14 +258,10 @@ public class WalletResources {
                 System.out.println("Exception getting value from map: " + e.getMessage());
             }
         }
-        return null;
+        throw new ForbiddenException();
 
     }
 
-    public static byte[] getDigest(byte[] data) throws NoSuchAlgorithmException {
-        MessageDigest d = MessageDigest.getInstance("MD5");
-        d.update(data);
-        return d.digest();
-    }
+
 
 }

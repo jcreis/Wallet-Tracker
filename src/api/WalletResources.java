@@ -148,65 +148,79 @@ public class WalletResources {
 
         Long replyNonce;
 
-            URLDecoder.decode(publicKey, "UTF-8");
-            String verify = publicKey + value + nonce;
-            byte[] hash = Digest.getDigest(verify.getBytes());
+        URLDecoder.decode(publicKey, "UTF-8");
+        String verify = publicKey + value + nonce;
+        byte[] hash = Digest.getDigest(verify.getBytes());
 
-            byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
-            PublicKey pub2 = PublicKey.createKey(pubKeyArr);
+        byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
+        PublicKey pub2 = PublicKey.createKey(pubKeyArr);
 
-            byte[] decodedBytes = Base64.getDecoder().decode(msg);
-            byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
+        byte[] decodedBytes = Base64.getDecoder().decode(msg);
+        byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
 
-            System.out.println("1");
-            if (Arrays.equals(hashDecriptPriv,hash)) {
+        //System.out.println("1");
+        if (Arrays.equals(hashDecriptPriv, hash)) {
 
-                System.out.println("12");
-                try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                     ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+            //System.out.println("12");
+            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                    objOut.writeObject(opType.ADD_MONEY);
-                    objOut.writeObject(publicKey);
-                    objOut.writeObject(value);
-                    objOut.writeObject(nonce);
-                    System.out.println("2");
+                objOut.writeObject(opType.ADD_MONEY);
+                objOut.writeObject(publicKey);
+                objOut.writeObject(value);
+                objOut.writeObject(nonce);
+                System.out.println("2");
 
-                    objOut.flush();
-                    byteOut.flush();
-                    byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
-                    if (reply.length == 0)
-                        return null;
-                    try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                         ObjectInput objIn = new ObjectInputStream(byteIn)) {
-                        double money = (Double) objIn.readObject();
-                        replyNonce = (Long) objIn.readObject();
-                        System.out.println("RESPONSE FROM ADD MONEY IS:");
-                        Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
-                        System.out.println(r);
-                        return r;
-                    }
-
-                } catch (IOException | ClassNotFoundException e) {
-                    System.out.println("Exception putting value into map: " + e.getMessage());
+                objOut.flush();
+                byteOut.flush();
+                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                if (reply.length == 0)
+                    return null;
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                    double money = (Double) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    System.out.println("RESPONSE FROM ADD MONEY IS:");
+                    Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println(r);
+                    return r;
                 }
+
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Exception putting value into map: " + e.getMessage());
             }
-            return null;
+        }
+        return null;
 
     }
 
 
     @SuppressWarnings("Duplicates")
-    @PUT
+    @POST
     @Path("/transfer/{fpublicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
-            Double value, @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
+            Double value, @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws Exception {
 
+        System.out.println("1");
         Long replyNonce;
-
+        System.out.println("2");
+        URLDecoder.decode(fpublicKey, "UTF-8");
+        System.out.println("2.1");
+        URLDecoder.decode(tpublicKey, "UTF-8");
+        System.out.println("3");
         String verify = fpublicKey + tpublicKey + value + nonce;
-
-        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
+        System.out.println("4");
+        byte[] hash = Digest.getDigest(verify.getBytes());
+        System.out.println("5");
+        byte[] pubKeyArr = Base64.getDecoder().decode(fpublicKey);
+        PublicKey pub2 = PublicKey.createKey(pubKeyArr);
+        System.out.println("6");
+        byte[] decodedBytes = Base64.getDecoder().decode(msg);
+        byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
+        System.out.println("7");
+        System.out.println("wazzazazazaza");
+        if (Arrays.equals(hashDecriptPriv, hash)) {
 
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -236,7 +250,8 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-        throw new ForbiddenException();
+        return null;
+
 
     }
 
@@ -281,7 +296,6 @@ public class WalletResources {
         throw new ForbiddenException();
 
     }
-
 
 
 }

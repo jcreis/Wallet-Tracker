@@ -5,13 +5,13 @@ import java.security.*;
 /** Esta classe permite gerar pares de chaves destinadas a opera��es de criptografia assim�trica.
  * Dimens�o m�xima das mensagens a cficrar: 117 bytes.
  */
-final public class KeyPair {
+final public class KeyPairImplementation {
     private PublicKey pubKey ;
     private PrivateKey prvKey ;
     
     /** Cria um par de chaves assim�tricas RSA.
      */
-    public static KeyPair createKeyPair() {
+    public static KeyPairImplementation createKeyPair() {
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
             kpg.initialize(1024);
@@ -20,7 +20,7 @@ final public class KeyPair {
             PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
             PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
             
-            return new KeyPair( pub, priv);
+            return new KeyPairImplementation( pub, priv);
         }
         catch( Exception x ) {
             x.printStackTrace() ;
@@ -28,7 +28,7 @@ final public class KeyPair {
         return null;
     }
     
-    protected KeyPair( PublicKey pub, PrivateKey priv) {
+    protected KeyPairImplementation(PublicKey pub, PrivateKey priv) {
     	this.pubKey = pub;
     	this.prvKey = priv;
     	

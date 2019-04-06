@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaServer extends DefaultSingleRecoverable {
 
-    private Map<String, User> db = new ConcurrentHashMap<String, User>();
+    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
 
 
 
@@ -36,8 +36,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         byte[] reply = null;
         String key1;
         String key2;
+        String publicKey;
+        String publicKey2;
         Double value;
-        User user;
+        //User user;
         boolean hasReply = false;
         Long nonce;
 
@@ -54,12 +56,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     key1 = (String)objIn.readObject();
                     value = (Double)objIn.readObject();
                     nonce = (Long)objIn.readObject();
+                    publicKey = (String)objIn.readObject();
 
-                    if(db.containsKey(key1)) {
+                    if(db.containsKey(publicKey)) {
                         if (value >= 0){
-                            db.get(key1).addMoney(value);
+                            db.put(publicKey, db.get(publicKey) + value);
                             // returns updated money
-                            objOut.writeObject(db.get(key1).getMoney());
+                            objOut.writeObject(db.get(publicKey));
                             objOut.writeObject(nonce);
 
                             hasReply = true;
@@ -76,13 +79,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
                 case ADD_USER:
-                    user = (User)objIn.readObject();
+                    value = (Double)objIn.readObject();
                     nonce = (Long)objIn.readObject();
-                    if(!db.containsKey(user.getId())) {
-                        db.put(user.getId(), user);
-                        System.out.println("User " + user.getId() + " added to Database.");
+                    publicKey = (String)objIn.readObject();
+                    if(!db.containsKey(publicKey)) {
+                        db.put(publicKey, value);
+                        System.out.println("User " + db.get(publicKey) + " added to Database.");
 
-                        objOut.writeObject(user);
+                       /* objOut.writeObject(user);*/
                         objOut.writeObject(nonce);
 
                         hasReply = true;
@@ -101,25 +105,29 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     key2 = (String)objIn.readObject();
                     value = (Double)objIn.readObject();
                     nonce = (Long)objIn.readObject();
+                    publicKey = (String)objIn.readObject();
+                    publicKey2 = (String)objIn.readObject();
 
 
-                    if(!db.containsKey(key1) || !db.containsKey(key2)){
+                    if(!db.containsKey(publicKey) || !db.containsKey(publicKey2)){
                         System.out.println("User not found.");
                     }
                     else if(value < 0){
                         System.out.println("Invalid amount.");
                     }
                     else{
-                        User u1 = db.get(key1);
-                        User u2 = db.get(key2);
-                        if(u1.getMoney()>=value){
-                            u1.setMoney(u1.getMoney() - value);
+                        /*User u1 = db.get(publicKey);
+                        User u2 = db.get(publicKey2);*/
+                        if(db.get(publicKey) >= value){
+                            db.put(publicKey, db.get(publicKey) - value);
+                            db.put(publicKey2, db.get(publicKey2) + value);
+                            /*u1.setMoney(u1.getMoney() - value);
                             u2.setMoney(u2.getMoney() + value);
-                            db.put(u1.getId(), u1);
-                            db.put(u2.getId(), u2);
+                            db.put(publicKey, u1);
+                            db.put(publicKey2, u2);*/
 
-                            objOut.writeObject(u2.getMoney());
-                            System.out.println("User "+u2.getId() + " now has "+u2.getMoney()+"€");
+                            objOut.writeObject(db.get(publicKey2));
+                            System.out.println("User "+ publicKey2 + " now has "+ db.get(publicKey2)+"€");
                             objOut.writeObject(nonce);
 
                             hasReply = true;
@@ -151,6 +159,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         byte[] reply = null;
         boolean hasReply = false;
         String key1;
+        String publicKey;
         Long nonce;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
@@ -161,6 +170,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             switch (reqType) {
                 case GET_USERS:
                     nonce = (Long)objIn.readObject();
+
 
                     System.out.println("List of users: "+ db.values().toArray(new User[db.size()]).toString());
 
@@ -175,11 +185,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 case GET_MONEY:
                     key1 = (String)objIn.readObject();
                     nonce = (Long)objIn.readObject();
+                    publicKey = (String)objIn.readObject();
 
-                    if(db.containsKey(key1)) {
-                        System.out.println("Amount: " + db.get(key1).getMoney());
+                    if(db.containsKey(publicKey)) {
+                        System.out.println("Amount: " + db.get(publicKey));
 
-                        objOut.writeObject(db.get(key1).getMoney());
+                        objOut.writeObject(db.get(publicKey));
                         objOut.writeObject(nonce);
 
                         hasReply = true;
@@ -207,5 +218,6 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
         return reply;
     }
+
 }
 

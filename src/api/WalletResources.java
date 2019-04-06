@@ -8,6 +8,8 @@ import rest.server.ReplicaServer;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,24 +52,24 @@ public class WalletResources {
 		ADD_USER
 	}
 
-	private Map<String, User> db = new ConcurrentHashMap<String, User>();
-
-	@GET
+	private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
+	/*@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getUsers() { //@QueryParam("nonce") Long nonce
+	public Reply getUsers(@QueryParam("nonce") Long nonce, @QueryParam("publicKey") String publicKey) { //
 		User[] userReply ;
-		Long replyNonce;
+		Long replyNonce = 0L;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.GET_USERS);
 			objOut.writeObject(nonce);
+			objOut.writeObject(publicKey);
+
 
 			objOut.flush();
 			byteOut.flush();
 
-			// TODO Passar para Ordered ?
 			byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
 			if (reply.length == 0) {
 				//System.out.println("1");
@@ -94,19 +96,21 @@ public class WalletResources {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply register(User user) {
+	public Reply register(@QueryParam("publicKey") String publicKey,  @QueryParam("amount") Double amount, @QueryParam("nonce") Long nonce) {
 
-		User userReply ;
 		Long replyNonce;
 
-		System.err.printf("register: %s <%s>\n", user.getId(), user);
+		//System.err.printf("register: %s <%s>\n", user.getId(), user);
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.ADD_USER);
-			objOut.writeObject(user);
+			objOut.writeObject(publicKey);
+			objOut.writeObject(amount);
 			objOut.writeObject(nonce);
+
+
 
 			objOut.flush();
 			byteOut.flush();
@@ -116,9 +120,9 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				userReply = (User)objIn.readObject();
+				double money = (Double)objIn.readObject();
 				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), userReply, replyNonce+1);
+				return new Reply(captureMessages.sendMessages(), publicKey, money,replyNonce+1);
 
 			}
 
@@ -127,12 +131,13 @@ public class WalletResources {
 			e.printStackTrace();
 		}
 		return null;
-	}
+	}*/
 
 	@PUT
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value){
+	public Reply addMoney(@QueryParam("publicKey") String publicKey, @QueryParam("value") Double value,
+						  @QueryParam("nonce") Long nonce){
 
 		Long replyNonce;
 
@@ -140,9 +145,10 @@ public class WalletResources {
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.ADD_MONEY);
-			objOut.writeObject(id);
+			objOut.writeObject(publicKey);
 			objOut.writeObject(value);
 			objOut.writeObject(nonce);
+
 
 
 			objOut.flush();
@@ -155,7 +161,7 @@ public class WalletResources {
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
 				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
+				return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -166,17 +172,19 @@ public class WalletResources {
 
 
 	@PUT
-	@Path("/transfer/{fid}")
+	@Path("/transfer/{fpublicKey}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value){
+	public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
+			Double value, @QueryParam("nonce") Long nonce){
+
 		Long replyNonce;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.TRANSFER);
-			objOut.writeObject(fid);
-			objOut.writeObject(tid);
+			objOut.writeObject(fpublicKey);
+			objOut.writeObject(tpublicKey);
 			objOut.writeObject(value);
 			objOut.writeObject(nonce);
 
@@ -191,7 +199,7 @@ public class WalletResources {
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
 				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
+				return new Reply(captureMessages.sendMessages(), fpublicKey, money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -202,9 +210,9 @@ public class WalletResources {
 	}
 
 	@GET
-	@Path("/{id}/money")
+	@Path("/{publicKey}/money")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getMoney(@PathParam("id") String id){
+	public Reply getMoney(@PathParam("publicKey") String publicKey){
 
 		Long replyNonce;
 
@@ -212,7 +220,7 @@ public class WalletResources {
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.GET_MONEY);
-			objOut.writeObject(id);
+			objOut.writeObject(publicKey);
 			objOut.writeObject(nonce);
 
 
@@ -226,7 +234,7 @@ public class WalletResources {
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
 				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
+				return new Reply(captureMessages.sendMessages(), publicKey,  money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -234,6 +242,12 @@ public class WalletResources {
 		}
 		return null;
 
+	}
+
+	public static byte[] getDigest( byte[] data ) throws NoSuchAlgorithmException {
+		MessageDigest d = MessageDigest.getInstance("MD5");
+		d.update( data ) ;
+		return d.digest();
 	}
 
 }

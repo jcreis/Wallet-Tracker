@@ -1,3 +1,4 @@
+/*
 package api;
 
 import java.io.Serializable;
@@ -6,7 +7,7 @@ public class User implements Serializable {
 
 	String id;
 
-	Double money;
+
 
 
 
@@ -30,12 +31,7 @@ public class User implements Serializable {
 		return money;
 	}
 
-	public void setMoney(Double money) {
-		this.money = money;
-	}
 
-	public void addMoney(Double amount) {
-		money += amount;
-	}
 
 }
+*/

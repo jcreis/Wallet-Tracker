@@ -1,6 +1,6 @@
 package rest.server;
 
-import api.User;
+//import api.User;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.Extractor;
 
@@ -22,7 +22,7 @@ public class CaptureMessages implements Extractor {
     @Override
     public TOMMessage extractResponse(TOMMessage[] tomMessages, int sameContent, int lastReceived) {
 
-        messages = new ArrayList<User>();
+        messages = new ArrayList<String>();
         for(int i = 0; i < tomMessages.length ; i++){
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {

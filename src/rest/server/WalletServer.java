@@ -19,7 +19,7 @@ public class WalletServer {
 		}
 		System.out.println("Server running at port "+ port);
 		System.out.println("Replica number "+ replicaNum);
-		URI baseUri = UriBuilder.fromUri("https://0.0.0.0/").port(port).build();
+		URI baseUri = UriBuilder.fromUri("https://localhost/").port(port).build();
 
 		ResourceConfig config = new ResourceConfig();
 		config.register( new WalletResources(replicaNum) );

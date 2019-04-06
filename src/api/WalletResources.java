@@ -49,7 +49,6 @@ public class WalletResources {
         TRANSFER,
         ADD_MONEY,
         GET_MONEY,
-        //GET_USERS,
         ADD_USER
     }
 
@@ -134,7 +133,7 @@ public class WalletResources {
 		return null;
 	}*/
 
-    @PUT
+    @POST
     @Path("/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)

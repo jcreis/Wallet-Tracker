@@ -15,6 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import api.Reply;
 import api.WalletResources;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -33,12 +34,7 @@ public class AppClient {
     }
 
 
-    public AppClient(String url){
-//       baseURI = UriBuilder.fromUri(url).build();
-        Client client = ClientBuilder.newBuilder()
-                .hostnameVerifier(new InsecureHostnameVerifier())
-                .build();
-
+    public AppClient(){
 
     }
 
@@ -84,6 +80,8 @@ public class AppClient {
         URI baseURI = UriBuilder.fromUri("https://" + "localhost:8080" + "/").build();
         WebTarget target = client.target(baseURI);
 
+        System.out.println("URI: " + baseURI);
+
 
         Double value = 0.0;
 
@@ -112,14 +110,17 @@ public class AppClient {
 
 
 
-        Response response = target.path("/users/" + publicString)
+        Response response = target.path("users/" + publicString)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHash)
                 .request()
-                .put(Entity.entity(" ", MediaType.APPLICATION_JSON));
+                .post(Entity.entity("", MediaType.APPLICATION_JSON));
 
-        System.out.println(response.getEntity());
+        System.out.println(response.getStatusInfo());
+        if (response.hasEntity()) {
+            System.out.println(response.readEntity(Reply.class));
+        }
     }
 
     static public class InsecureHostnameVerifier implements HostnameVerifier{

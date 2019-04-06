@@ -37,9 +37,9 @@ public class WalletResources {
 		keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
 		serviceProxy  = new ServiceProxy(replicaNumber, "config",null, captureMessages, keyLoader);
 
-		//TODO: to automate nonces uncomment the next 2 lines and remove @Query nonce from methods bellow
-		//nonce = random.nextLong();
-		//System.out.println("nonce = " + nonce);
+		//TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
+		nonce = random.nextLong();
+		System.out.println("nonce = " + nonce);
 	}
 
 	public enum opType{
@@ -54,7 +54,7 @@ public class WalletResources {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getUsers(@QueryParam("nonce") Long nonce) { //@QueryParam("nonce") Long nonce
+	public Reply getUsers() { //@QueryParam("nonce") Long nonce
 		User[] userReply ;
 		Long replyNonce;
 
@@ -88,13 +88,13 @@ public class WalletResources {
 		}
 
 		System.out.println( db.size());
-		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]), nonce+1);
+		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]), replyNonce+1);
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply register(User user, @QueryParam("nonce") Long nonce) {
+	public Reply register(User user) {
 
 		User userReply ;
 		Long replyNonce;
@@ -132,8 +132,7 @@ public class WalletResources {
 	@PUT
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value,
-						  @QueryParam("nonce") Long nonce){
+	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value){
 
 		Long replyNonce;
 
@@ -169,8 +168,7 @@ public class WalletResources {
 	@PUT
 	@Path("/transfer/{fid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value,
-							   @QueryParam("nonce") Long nonce){
+	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value){
 		Long replyNonce;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -206,7 +204,7 @@ public class WalletResources {
 	@GET
 	@Path("/{id}/money")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getMoney(@PathParam("id") String id, @QueryParam("nonce") Long nonce){
+	public Reply getMoney(@PathParam("id") String id){
 
 		Long replyNonce;
 

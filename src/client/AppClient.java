@@ -2,6 +2,7 @@ package client;
 
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -82,8 +83,8 @@ public class AppClient {
         java.security.KeyPair kp = kpg.generateKeyPair() ;
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
-        String pubTry = "ab123";
-        String privTry = "cd456";
+        /*String pubTry = "ab123";
+        String privTry = "cd456";*/
 
 
 
@@ -122,7 +123,9 @@ public class AppClient {
         /*con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36");
-        */Response response = target.path(pubTry)
+        */
+        String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
+        Response response = target.path(pathPublicKey)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)

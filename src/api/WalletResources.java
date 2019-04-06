@@ -8,6 +8,7 @@ import rest.server.ReplicaServer;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
+import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -142,8 +143,14 @@ public class WalletResources {
                           @QueryParam("value") Double value,
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
-        Long replyNonce;
 
+        Long replyNonce;
+	    try {
+
+            URLDecoder.decode(publicKey, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         String verify = publicKey + value + nonce;
         System.out.println("1");
         //if (getDigest(verify.getBytes()).equals(getDigest(msg.getBytes()))) {

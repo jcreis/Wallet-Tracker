@@ -18,41 +18,41 @@ import java.util.concurrent.ConcurrentHashMap;
 @Path("/users")
 public class WalletResources {
 
-	int replicaNumber;
+    int replicaNumber;
 
-	Long nonce;
+    Long nonce;
 
-	ServiceProxy serviceProxy;
+    ServiceProxy serviceProxy;
 
-	ReplicaServer replicaServer;
+    ReplicaServer replicaServer;
 
-	RSAKeyLoader keyLoader;
+    RSAKeyLoader keyLoader;
 
-	CaptureMessages captureMessages = new CaptureMessages();
+    CaptureMessages captureMessages = new CaptureMessages();
 
-	SecureRandom random = new SecureRandom();
+    SecureRandom random = new SecureRandom();
 
-	public WalletResources(int replicaNumber) {
-		this.replicaNumber = replicaNumber;
-		System.out.println("replica number " + replicaNumber);
-		replicaServer = new ReplicaServer(replicaNumber);
-		keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
-		serviceProxy  = new ServiceProxy(replicaNumber, "config",null, captureMessages, keyLoader);
+    public WalletResources(int replicaNumber) {
+        this.replicaNumber = replicaNumber;
+        System.out.println("replica number " + replicaNumber);
+        replicaServer = new ReplicaServer(replicaNumber);
+        keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
+        serviceProxy = new ServiceProxy(replicaNumber, "config", null, captureMessages, keyLoader);
 
-		//TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
-		nonce = random.nextLong();
-		System.out.println("nonce = " + nonce);
-	}
+        //TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
+        nonce = random.nextLong();
+        System.out.println("nonce = " + nonce);
+    }
 
-	public enum opType{
-		TRANSFER,
-		ADD_MONEY,
-		GET_MONEY,
-		GET_USERS,
-		ADD_USER
-	}
+    public enum opType {
+        TRANSFER,
+        ADD_MONEY,
+        GET_MONEY,
+        GET_USERS,
+        ADD_USER
+    }
 
-	private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
+    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
 	/*@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Reply getUsers(@QueryParam("nonce") Long nonce, @QueryParam("publicKey") String publicKey) { //
@@ -133,121 +133,136 @@ public class WalletResources {
 		return null;
 	}*/
 
-	@PUT
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Reply addMoney(@QueryParam("publicKey") String publicKey, @QueryParam("value") Double value,
-						  @QueryParam("nonce") Long nonce){
+    @PUT
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Reply addMoney(@QueryParam("publicKey") String publicKey, @QueryParam("value") Double value,
+                          @QueryParam("nonce") Long nonce, @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
 
-		Long replyNonce;
+        Long replyNonce;
+        String verify = publicKey + value;
 
-		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
 
-			objOut.writeObject(opType.ADD_MONEY);
-			objOut.writeObject(publicKey);
-			objOut.writeObject(value);
-			objOut.writeObject(nonce);
+            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-
-
-			objOut.flush();
-			byteOut.flush();
-
-			byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
-			if (reply.length == 0)
-				return null;
-			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				double money = (Double)objIn.readObject();
-				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce+1) ;
-			}
-
-		} catch (IOException | ClassNotFoundException e) {
-			System.out.println("Exception putting value into map: " + e.getMessage());
-		}
-		return null;
-	}
+                objOut.writeObject(opType.ADD_MONEY);
+                objOut.writeObject(publicKey);
+                objOut.writeObject(value);
+                objOut.writeObject(nonce);
 
 
-	@PUT
-	@Path("/transfer/{fpublicKey}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
-			Double value, @QueryParam("nonce") Long nonce){
+                objOut.flush();
+                byteOut.flush();
 
-		Long replyNonce;
+                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                if (reply.length == 0)
+                    return null;
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                    double money = (Double) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                }
 
-		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-
-			objOut.writeObject(opType.TRANSFER);
-			objOut.writeObject(fpublicKey);
-			objOut.writeObject(tpublicKey);
-			objOut.writeObject(value);
-			objOut.writeObject(nonce);
-
-
-			objOut.flush();
-			byteOut.flush();
-
-			byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
-			if (reply.length == 0)
-				return null;
-			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				double money = (Double)objIn.readObject();
-				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), fpublicKey, money, replyNonce+1) ;
-			}
-
-		} catch (IOException | ClassNotFoundException e) {
-			System.out.println("Exception putting value into map: " + e.getMessage());
-		}
-		return null;
-
-	}
-
-	@GET
-	@Path("/{publicKey}/money")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getMoney(@PathParam("publicKey") String publicKey){
-
-		Long replyNonce;
-
-		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-
-			objOut.writeObject(opType.GET_MONEY);
-			objOut.writeObject(publicKey);
-			objOut.writeObject(nonce);
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Exception putting value into map: " + e.getMessage());
+            }
+        }
+        return null;
+    }
 
 
-			objOut.flush();
-			byteOut.flush();
+    @PUT
+    @Path("/transfer/{fpublicKey}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
+            Double value, @QueryParam("nonce") Long nonce, @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
 
-			byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
-			if (reply.length == 0)
-				return null;
-			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				double money = (Double)objIn.readObject();
-				replyNonce = (Long)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), publicKey,  money, replyNonce+1) ;
-			}
+        Long replyNonce;
 
-		} catch (IOException | ClassNotFoundException e) {
-			System.out.println("Exception getting value from map: " + e.getMessage());
-		}
-		return null;
+        String verify = fpublicKey + tpublicKey + value;
 
-	}
+        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
 
-	public static byte[] getDigest( byte[] data ) throws NoSuchAlgorithmException {
-		MessageDigest d = MessageDigest.getInstance("MD5");
-		d.update( data ) ;
-		return d.digest();
-	}
+
+            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+
+                objOut.writeObject(opType.TRANSFER);
+                objOut.writeObject(fpublicKey);
+                objOut.writeObject(tpublicKey);
+                objOut.writeObject(value);
+                objOut.writeObject(nonce);
+
+
+                objOut.flush();
+                byteOut.flush();
+
+                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                if (reply.length == 0)
+                    return null;
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                    double money = (Double) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    return new Reply(captureMessages.sendMessages(), fpublicKey, money, replyNonce + 1);
+                }
+
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Exception putting value into map: " + e.getMessage());
+            }
+        }
+        return null;
+
+    }
+
+    @GET
+    @Path("/{publicKey}/money")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Reply getMoney(@PathParam("publicKey") String publicKey, @QueryParam("nonce") Long nonce,
+                          @QueryParam("hash") String hash) throws NoSuchAlgorithmException {
+
+        Long replyNonce;
+
+        String verify = publicKey;
+
+        if (getDigest(verify.getBytes()) == getDigest(hash.getBytes())) {
+
+            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+
+                objOut.writeObject(opType.GET_MONEY);
+                objOut.writeObject(publicKey);
+                objOut.writeObject(nonce);
+
+
+                objOut.flush();
+                byteOut.flush();
+
+                byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+                if (reply.length == 0)
+                    return null;
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                    double money = (Double) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                }
+
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Exception getting value from map: " + e.getMessage());
+            }
+        }
+        return null;
+
+    }
+
+    public static byte[] getDigest(byte[] data) throws NoSuchAlgorithmException {
+        MessageDigest d = MessageDigest.getInstance("MD5");
+        d.update(data);
+        return d.digest();
+    }
 
 }

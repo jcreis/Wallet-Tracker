@@ -1,5 +1,6 @@
 package rest.server;
 
+
 import api.WalletResources;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
@@ -167,7 +168,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
             WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
             switch (reqType) {
-                /*case GET_USERS:
+
+               /* case GET_USERS:
+
                     nonce = (Long)objIn.readObject();
 
 

@@ -77,6 +77,14 @@ public class AppClient {
     public static void addMoney() throws Exception {
 
 
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+
         // TODO generate random public/private key
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
         kpg.initialize(1024);
@@ -86,45 +94,16 @@ public class AppClient {
         /*String pubTry = "ab123";
         String privTry = "cd456";*/
 
-
-
-
-        Client client = ClientBuilder.newBuilder()
-                .hostnameVerifier(new InsecureHostnameVerifier())
-                .build();
-
-        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
-        WebTarget target = client.target(baseURI);
-        System.out.println("URI: " + baseURI);
-      /*  URL url = new URL("https://localhost:8080/users");
-        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();*/
-
-
-
-
-
-
-
         Double value = 0.0;
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
-
         Long nonce = random.nextLong();
-
         String msg = publicString + value + nonce;
-
         byte[] hash = Digest.getDigest(msg.getBytes());
-
         byte[] hashEncriptPriv = priv.encrypt(hash);
-
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
-
-
-        /*con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36");
-        */
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
+
         Response response = target.path(pathPublicKey)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)

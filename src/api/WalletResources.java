@@ -4,6 +4,8 @@ import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
 import rest.server.CaptureMessages;
 import rest.server.ReplicaServer;
+import security.Digest;
+import security.PublicKey;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -12,6 +14,7 @@ import java.net.URLDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -134,7 +137,7 @@ public class WalletResources {
 		return null;
 	}*/
 
-	@SuppressWarnings("Duplicates")
+    @SuppressWarnings("Duplicates")
     @POST
     @Path("/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -142,18 +145,22 @@ public class WalletResources {
     public Reply addMoney(@PathParam("publicKey") String publicKey,
                           @QueryParam("value") Double value,
                           @QueryParam("nonce") Long nonce,
-                          @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
+                          @QueryParam("msg") String msg) throws Exception {
 
         Long replyNonce;
-	    try {
 
-            URLDecoder.decode(publicKey, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        URLDecoder.decode(publicKey, "UTF-8");
         String verify = publicKey + value + nonce;
+        /*byte[] hash = Digest.getDigest(verify.getBytes());
+        byte[] pubKeyArr = publicKey.getBytes();
+        PublicKey pub2 = PublicKey.createKey( pubKeyArr);
+
+        byte[] decodedBytes = Base64.getDecoder().decode(msg);
+        byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
+*/
         System.out.println("1");
-        //if (getDigest(verify.getBytes()).equals(getDigest(msg.getBytes()))) {
+        //if (hashDecriptPriv == hash) {
+
             System.out.println("12");
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {

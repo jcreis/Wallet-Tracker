@@ -1,19 +1,16 @@
 package api;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import rest.server.CaptureMessages;
 import rest.server.ReplicaServer;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.io.*;
+import java.security.SecureRandom;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Path("/users")
@@ -31,13 +28,18 @@ public class WalletResources {
 
 	CaptureMessages captureMessages = new CaptureMessages();
 
+	SecureRandom random = new SecureRandom();
+
 	public WalletResources(int replicaNumber) {
 		this.replicaNumber = replicaNumber;
 		System.out.println("replica number " + replicaNumber);
 		replicaServer = new ReplicaServer(replicaNumber);
 		keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
-		serviceProxy  = new ServiceProxy(replicaNumber, null,null, captureMessages, keyLoader);
+		serviceProxy  = new ServiceProxy(replicaNumber, "config",null, captureMessages, keyLoader);
 
+		//TODO: to automate nonces uncomment the next 2 lines and remove @Query nonce from methods bellow
+		//nonce = random.nextLong();
+		//System.out.println("nonce = " + nonce);
 	}
 
 	public enum opType{
@@ -52,8 +54,7 @@ public class WalletResources {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-
-	public Reply getUsers(@QueryParam("nonce") Long nonce) {
+	public Reply getUsers(@QueryParam("nonce") Long nonce) { //@QueryParam("nonce") Long nonce
 		User[] userReply ;
 		Long replyNonce;
 
@@ -79,7 +80,7 @@ public class WalletResources {
 				replyNonce = (Long)objIn.readObject();
 				System.out.println(captureMessages.sendMessages());
 				System.out.println("nonce :" + replyNonce);
-				return new Reply(captureMessages.sendMessages(), userReply, replyNonce);
+				return new Reply(captureMessages.sendMessages(), userReply, replyNonce+1);
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -87,16 +88,16 @@ public class WalletResources {
 		}
 
 		System.out.println( db.size());
-		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]), nonce);
+		return new Reply(captureMessages.sendMessages(), db.values().toArray( new User[ db.size() ]), nonce+1);
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply register(User user) {
+	public Reply register(User user, @QueryParam("nonce") Long nonce) {
 
 		User userReply ;
-
+		Long replyNonce;
 
 		System.err.printf("register: %s <%s>\n", user.getId(), user);
 
@@ -105,6 +106,7 @@ public class WalletResources {
 
 			objOut.writeObject(opType.ADD_USER);
 			objOut.writeObject(user);
+			objOut.writeObject(nonce);
 
 			objOut.flush();
 			byteOut.flush();
@@ -115,7 +117,8 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				userReply = (User)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), userReply, nonce);
+				replyNonce = (Long)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), userReply, replyNonce+1);
 
 			}
 
@@ -129,13 +132,19 @@ public class WalletResources {
 	@PUT
 	@Path("/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value){
+	public Reply addMoney(@PathParam("id") String id, @QueryParam("value") Double value,
+						  @QueryParam("nonce") Long nonce){
+
+		Long replyNonce;
+
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.ADD_MONEY);
 			objOut.writeObject(id);
 			objOut.writeObject(value);
+			objOut.writeObject(nonce);
+
 
 			objOut.flush();
 			byteOut.flush();
@@ -145,8 +154,9 @@ public class WalletResources {
 				return null;
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
-				 double money = (Double)objIn.readObject();
-				 return new Reply(captureMessages.sendMessages(), money, nonce) ;
+				double money = (Double)objIn.readObject();
+				replyNonce = (Long)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -159,7 +169,9 @@ public class WalletResources {
 	@PUT
 	@Path("/transfer/{fid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value){
+	public Reply transferMoney(@PathParam("fid") String fid, @QueryParam("tid") String tid, @QueryParam("value") Double value,
+							   @QueryParam("nonce") Long nonce){
+		Long replyNonce;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -168,6 +180,8 @@ public class WalletResources {
 			objOut.writeObject(fid);
 			objOut.writeObject(tid);
 			objOut.writeObject(value);
+			objOut.writeObject(nonce);
+
 
 			objOut.flush();
 			byteOut.flush();
@@ -178,7 +192,8 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money, nonce) ;
+				replyNonce = (Long)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {
@@ -191,13 +206,17 @@ public class WalletResources {
 	@GET
 	@Path("/{id}/money")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Reply getMoney(@PathParam("id") String id){
+	public Reply getMoney(@PathParam("id") String id, @QueryParam("nonce") Long nonce){
+
+		Long replyNonce;
 
 		try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 			 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
 			objOut.writeObject(opType.GET_MONEY);
 			objOut.writeObject(id);
+			objOut.writeObject(nonce);
+
 
 			objOut.flush();
 			byteOut.flush();
@@ -208,7 +227,8 @@ public class WalletResources {
 			try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
 				 ObjectInput objIn = new ObjectInputStream(byteIn)) {
 				double money = (Double)objIn.readObject();
-				return new Reply(captureMessages.sendMessages(), money, nonce) ;
+				replyNonce = (Long)objIn.readObject();
+				return new Reply(captureMessages.sendMessages(), money, replyNonce+1) ;
 			}
 
 		} catch (IOException | ClassNotFoundException e) {

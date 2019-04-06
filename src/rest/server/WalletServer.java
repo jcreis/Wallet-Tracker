@@ -1,13 +1,12 @@
 package rest.server;
 
-import java.net.URI;
-
-import javax.net.ssl.SSLContext;
-import javax.ws.rs.core.UriBuilder;
-
 import api.WalletResources;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import javax.net.ssl.SSLContext;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 public class WalletServer {
 

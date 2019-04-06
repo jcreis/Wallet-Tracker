@@ -1,7 +1,5 @@
 package api;
 
-import bftsmart.tom.core.messages.TOMMessage;
-
 import java.util.ArrayList;
 
 public class Reply {

@@ -1,12 +1,12 @@
 package rest.server;
 
-import api.*;
+import api.User;
+import api.WalletResources;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 
 import java.io.*;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +39,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         Double value;
         User user;
         boolean hasReply = false;
+        Long nonce;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -49,14 +50,18 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
             switch (reqType) {
                 case ADD_MONEY:
+
                     key1 = (String)objIn.readObject();
                     value = (Double)objIn.readObject();
+                    nonce = (Long)objIn.readObject();
 
                     if(db.containsKey(key1)) {
                         if (value >= 0){
                             db.get(key1).addMoney(value);
                             // returns updated money
                             objOut.writeObject(db.get(key1).getMoney());
+                            objOut.writeObject(nonce);
+
                             hasReply = true;
                         }
                         else {
@@ -72,12 +77,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                 case ADD_USER:
                     user = (User)objIn.readObject();
-
+                    nonce = (Long)objIn.readObject();
                     if(!db.containsKey(user.getId())) {
                         db.put(user.getId(), user);
                         System.out.println("User " + user.getId() + " added to Database.");
 
                         objOut.writeObject(user);
+                        objOut.writeObject(nonce);
+
                         hasReply = true;
 
                     }
@@ -89,9 +96,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
                 case TRANSFER:
+
                     key1 = (String)objIn.readObject();
                     key2 = (String)objIn.readObject();
                     value = (Double)objIn.readObject();
+                    nonce = (Long)objIn.readObject();
 
 
                     if(!db.containsKey(key1) || !db.containsKey(key2)){
@@ -111,6 +120,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                             objOut.writeObject(u2.getMoney());
                             System.out.println("User "+u2.getId() + " now has "+u2.getMoney()+"€");
+                            objOut.writeObject(nonce);
+
                             hasReply = true;
                         }
                         else{
@@ -147,9 +158,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
             WalletResources.opType reqType = (WalletResources.opType)objIn.readObject();
-            nonce = (Long)objIn.readObject();
             switch (reqType) {
                 case GET_USERS:
+                    nonce = (Long)objIn.readObject();
+
                     System.out.println("List of users: "+ db.values().toArray(new User[db.size()]).toString());
 
                     // Prepares output
@@ -162,11 +174,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                 case GET_MONEY:
                     key1 = (String)objIn.readObject();
+                    nonce = (Long)objIn.readObject();
 
                     if(db.containsKey(key1)) {
                         System.out.println("Amount: " + db.get(key1).getMoney());
 
                         objOut.writeObject(db.get(key1).getMoney());
+                        objOut.writeObject(nonce);
+
                         hasReply = true;
                     }
                     else {

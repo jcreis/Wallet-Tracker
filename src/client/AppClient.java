@@ -1,16 +1,15 @@
 package client;
 
 import java.net.URI;
+import java.net.URL;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.util.Base64;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -76,15 +75,6 @@ public class AppClient {
 
     public static void addMoney() throws Exception {
 
-        Client client = ClientBuilder.newBuilder().hostnameVerifier(new InsecureHostnameVerifier()).build();
-        URI baseURI = UriBuilder.fromUri("https://" + "localhost:8080" + "/").build();
-        WebTarget target = client.target(baseURI);
-
-        System.out.println("URI: " + baseURI);
-
-
-        Double value = 0.0;
-
 
         // TODO generate random public/private key
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
@@ -92,8 +82,29 @@ public class AppClient {
         java.security.KeyPair kp = kpg.generateKeyPair() ;
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        String pubTry = "ab123";
+        String privTry = "cd456";
 
 
+
+
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+      /*  URL url = new URL("https://localhost:8080/users");
+        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();*/
+
+
+
+
+
+
+
+        Double value = 0.0;
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
 
@@ -105,17 +116,18 @@ public class AppClient {
 
         byte[] hashEncriptPriv = priv.encrypt(hash);
 
-
-        String msgHash = Base64.getEncoder().encodeToString(hashEncriptPriv);
-
+        String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
 
-        Response response = target.path("users/" + publicString)
+        /*con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36");
+        */Response response = target.path(pubTry)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
-                .queryParam("msg", msgHash)
+                .queryParam("msg", msgHashStr)
                 .request()
-                .post(Entity.entity("", MediaType.APPLICATION_JSON));
+                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
         System.out.println(response.getStatusInfo());
         if (response.hasEntity()) {

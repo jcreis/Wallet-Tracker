@@ -133,19 +133,21 @@ public class WalletResources {
 		return null;
 	}*/
 
+	@SuppressWarnings("Duplicates")
     @POST
     @Path("/{publicKey}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Reply addMoney(@PathParam("publicKey") String publicKey, @QueryParam("value") Double value,
-                          @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
-        System.out.println("ola");
+    public Reply addMoney(@PathParam("publicKey") String publicKey,
+                          @QueryParam("value") Double value,
+                          @QueryParam("nonce") Long nonce,
+                          @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
         Long replyNonce;
 
         String verify = publicKey + value + nonce;
-
-        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
-
+        System.out.println("1");
+        //if (getDigest(verify.getBytes()).equals(getDigest(msg.getBytes()))) {
+            System.out.println("12");
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -153,11 +155,10 @@ public class WalletResources {
                 objOut.writeObject(publicKey);
                 objOut.writeObject(value);
                 objOut.writeObject(nonce);
-
+                System.out.println("2");
 
                 objOut.flush();
                 byteOut.flush();
-
                 byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
                 if (reply.length == 0)
                     return null;
@@ -165,17 +166,21 @@ public class WalletResources {
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println("RESPONSE FROM ADD MONEY IS:");
+                    Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println(r);
+                    return r;
                 }
 
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
-        }
-        throw new ForbiddenException();
+        //}
+        return null;
     }
 
 
+    @SuppressWarnings("Duplicates")
     @PUT
     @Path("/transfer/{fpublicKey}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -220,6 +225,7 @@ public class WalletResources {
 
     }
 
+    @SuppressWarnings("Duplicates")
     @GET
     @Path("/{publicKey}/money")
     @Produces(MediaType.APPLICATION_JSON)

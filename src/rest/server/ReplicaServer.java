@@ -89,7 +89,6 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         db.put(publicKey, value);
                         System.out.println("User " + db.get(publicKey) + " added to Database.");
 
-                       /* objOut.writeObject(user);*/
                         objOut.writeObject(nonce);
 
                         hasReply = true;

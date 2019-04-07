@@ -7,7 +7,6 @@ import security.PublicKey;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
-import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -15,11 +14,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.net.URI;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -72,9 +68,7 @@ public class AppClient {
 
 
         KeyPair kp = keys.get(random.nextInt(keys.size()));
-/*
-        System.out.println("key pair: <" + kp.getPrivate() + "|" + kp.getPublic()+">");
-*/
+
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
@@ -123,10 +117,7 @@ public class AppClient {
             System.out.println("Client nonce: " + nonce);
             System.out.println("Nonce from response: " + r.getNonce());
             System.out.println();
-        /*if (response.hasEntity()) {
-            System.out.println(response.readEntity(Reply.class));
 
-        }*/
         }
     }
 
@@ -172,9 +163,9 @@ public class AppClient {
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
-
         if(response.getStatus() == 401){
             System.out.println("Sorry, you dont have permissions to add Money");
+            System.out.println();
         }else {
             Reply r = response.readEntity(Reply.class);
 
@@ -291,9 +282,7 @@ public class AppClient {
             System.out.println("Nonce from response: " + r.getNonce());
             System.out.println();
 
-        /*if (response.hasEntity()) {
-            System.out.println(response.readEntity(Reply.class));
-        }*/
+
         }
     }
 
@@ -348,10 +337,7 @@ public class AppClient {
             System.out.println("Client nonce: " + nonce);
             System.out.println("Nonce from response: " + r.getNonce());
             System.out.println();
-        /*if (response.hasEntity()) {
-            //System.out.println(response.readEntity(Reply.class));
-            System.out.println(response.readEntity(Reply.class).getAmount());
-        }*/
+
         }
     }
 

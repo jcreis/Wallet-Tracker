@@ -12,7 +12,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -71,6 +70,7 @@ public class WalletResources {
         //TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
 
     }
+
 
     public enum opType {
         TRANSFER,
@@ -139,7 +139,9 @@ public class WalletResources {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM ADD MONEY IS:");
-                    Reply r = new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                    Reply r = new Reply(captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println("message 1 is from replica: "+captureMessages.getReplicaMessages().get(1).getSender());
+                    System.out.println("message 1 content: "+captureMessages.getReplicaMessages().get(1));
                     System.out.println(r);
                     return r;
                 }
@@ -194,7 +196,7 @@ public class WalletResources {
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    return new Reply(captureMessages.sendMessages(), fpublicKey, money, replyNonce + 1);
+                    return new Reply(captureMessages.getReplicaMessages(), fpublicKey, money, replyNonce + 1);
                 }
 
             } catch (IOException | ClassNotFoundException e) {
@@ -246,15 +248,14 @@ public class WalletResources {
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    return new Reply(captureMessages.sendMessages(), publicKey, money, replyNonce + 1);
+                    return new Reply(captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                 }
 
             } catch (IOException | ClassNotFoundException e) {
                 System.out.println("Exception getting value from map: " + e.getMessage());
             }
         }
-        throw new ForbiddenException();
-
+        return null;
     }
 
 

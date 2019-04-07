@@ -34,7 +34,8 @@ public class AppClient {
         addMoney();
         addMoney();
         getMoney();
-
+        transferMoney();
+        getMoney();
 
     }
 
@@ -47,7 +48,7 @@ public class AppClient {
 
 
 
-   //@Override
+
     @SuppressWarnings("Duplicates")
     public static void transferMoney() throws Exception {
         Client client = ClientBuilder.newBuilder()
@@ -66,6 +67,9 @@ public class AppClient {
 
 
         KeyPair kp = keys.get(random.nextInt(keys.size()));
+/*
+        System.out.println("key pair: <" + kp.getPrivate() + "|" + kp.getPublic()+">");
+*/
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
@@ -78,7 +82,7 @@ public class AppClient {
         String pathPublicKey2 = URLEncoder.encode(publicString2, "UTF-8");
 
 
-        Double value = 0.0;
+        Double value = 1.0;
         Long nonce = random.nextLong();
 
         String msg = publicString + publicString2 + value + nonce;
@@ -88,18 +92,35 @@ public class AppClient {
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
 
-
-
         Response response = target.path("transfer/" + pathPublicKey).queryParam("tpublicKey", pathPublicKey2)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
-        System.out.println(response.getStatusInfo());
-        if (response.hasEntity()) {
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if(response.readEntity(Reply.class).getNonce() != nonce+1){
+            System.out.println("Nonces dont match, reject message from server");
+        }
+        else {
+            Reply r = response.readEntity(Reply.class);
+
+            System.out.println("#################################");
+            System.out.println("####### T R A N S F E R #########");
+            System.out.println("#################################");
+            System.out.println();
+            System.out.println("Status: " + response.getStatusInfo());
+            System.out.println("From pubKey: " + publicString);
+            System.out.println("To pubKey: " + r.getPublicKey());
+            System.out.println("New amount: " + r.getAmount());
+            System.out.println("Client nonce: " + nonce);
+            System.out.println("Nonce from response: " + r.getNonce());
+            System.out.println();
+        /*if (response.hasEntity()) {
             System.out.println(response.readEntity(Reply.class));
 
+        }*/
         }
     }
 
@@ -144,9 +165,27 @@ public class AppClient {
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if(response.readEntity(Reply.class).getNonce() != nonce+1){
+            System.out.println("Nonces dont match, reject message from server");
+        }
+        else {
+            Reply r = response.readEntity(Reply.class);
+            System.out.println("#################################");
+            System.out.println("####### A D D - M O N E Y #######");
+            System.out.println("#################################");
+            System.out.println();
+            System.out.println("Status: " + response.getStatusInfo());
+            System.out.println("From pubKey: " + publicString);
+            System.out.println("To pubKey(????): " + r.getPublicKey());
+            System.out.println("New amount: " + r.getAmount());
+            System.out.println("Client nonce: " + nonce);
+            System.out.println("Nonce from response: " + r.getNonce());
+            System.out.println();
 
-        if (response.hasEntity()) {
+        /*if (response.hasEntity()) {
             System.out.println(response.readEntity(Reply.class));
+        }*/
         }
     }
 
@@ -178,14 +217,32 @@ public class AppClient {
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
         Response response = target.path(pathPublicKey + "/money")
-
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
                 .request()
                 .get();
-        if (response.hasEntity()) {
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if(response.readEntity(Reply.class).getNonce() != nonce+1){
+            System.out.println("Nonces dont match, reject message from server");
+        }
+        else {
+            Reply r = response.readEntity(Reply.class);
+            System.out.println("#################################");
+            System.out.println("####### G E T - M O N E Y #######");
+            System.out.println("#################################");
+            System.out.println();
+            System.out.println("Status: " + response.getStatusInfo());
+            System.out.println("From pubKey: " + publicString);
+            System.out.println("To pubKey(????): " + r.getPublicKey());
+            System.out.println("New amount: " + r.getAmount());
+            System.out.println("Client nonce: " + nonce);
+            System.out.println("Nonce from response: " + r.getNonce());
+            System.out.println();
+        /*if (response.hasEntity()) {
             //System.out.println(response.readEntity(Reply.class));
             System.out.println(response.readEntity(Reply.class).getAmount());
+        }*/
         }
     }
 

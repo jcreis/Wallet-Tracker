@@ -14,7 +14,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.security.KeyPair;
@@ -33,14 +36,12 @@ public class AppClient {
     private static List<KeyPair> keys = new ArrayList<KeyPair>();
 
     public static void main(String[] args) throws Exception {
-        addMoneyWNoPermission();
+        /*addMoneyWNoPermission();
         addMoney();
         addMoney();
         transferMoney();
-        getMoney();
-
-
-
+        getMoney();*/
+        readFromFile("0");
 
     }
 
@@ -341,7 +342,28 @@ public class AppClient {
         }
     }
 
+    //TODO so retorna a 1ª linha (tem 3) - ver se a 2ª e 3ª linha é pa concatenar à 1ª (se tbm fazem parte da pubKey)
+    private static void readFromFile(String replicaID){
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
 
+            /*StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            String everything = sb.toString();*/
+
+            System.out.println(br.readLine());
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     static public class InsecureHostnameVerifier implements HostnameVerifier{
 
@@ -350,6 +372,8 @@ public class AppClient {
             return true;
         }
     }
+
+
 }
 
 

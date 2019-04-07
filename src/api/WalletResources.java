@@ -158,10 +158,8 @@ public class WalletResources {
         byte[] decodedBytes = Base64.getDecoder().decode(msg);
         byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
 
-        //System.out.println("1");
         if (Arrays.equals(hashDecriptPriv, hash)) {
 
-            //System.out.println("12");
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -169,7 +167,6 @@ public class WalletResources {
                 objOut.writeObject(publicKey);
                 objOut.writeObject(value);
                 objOut.writeObject(nonce);
-                System.out.println("2");
 
                 objOut.flush();
                 byteOut.flush();
@@ -202,24 +199,17 @@ public class WalletResources {
     public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
             Double value, @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws Exception {
 
-        System.out.println("1");
+
         Long replyNonce;
-        System.out.println("2");
         URLDecoder.decode(fpublicKey, "UTF-8");
-        System.out.println("2.1");
         URLDecoder.decode(tpublicKey, "UTF-8");
-        System.out.println("3");
         String verify = fpublicKey + tpublicKey + value + nonce;
-        System.out.println("4");
         byte[] hash = Digest.getDigest(verify.getBytes());
-        System.out.println("5");
         byte[] pubKeyArr = Base64.getDecoder().decode(fpublicKey);
         PublicKey pub2 = PublicKey.createKey(pubKeyArr);
-        System.out.println("6");
         byte[] decodedBytes = Base64.getDecoder().decode(msg);
         byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
-        System.out.println("7");
-        System.out.println("wazzazazazaza");
+
         if (Arrays.equals(hashDecriptPriv, hash)) {
 
 
@@ -260,13 +250,22 @@ public class WalletResources {
     @Path("/{publicKey}/money")
     @Produces(MediaType.APPLICATION_JSON)
     public Reply getMoney(@PathParam("publicKey") String publicKey, @QueryParam("nonce") Long nonce,
-                          @QueryParam("msg") String msg) throws NoSuchAlgorithmException {
+                          @QueryParam("msg") String msg) throws Exception {
 
         Long replyNonce;
 
         String verify = publicKey + nonce;
+        URLDecoder.decode(publicKey, "UTF-8");
+        byte[] hash = Digest.getDigest(verify.getBytes());
 
-        if (getDigest(verify.getBytes()) == getDigest(msg.getBytes())) {
+        byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
+        PublicKey pub2 = PublicKey.createKey(pubKeyArr);
+
+        byte[] decodedBytes = Base64.getDecoder().decode(msg);
+        byte[] hashDecriptPriv = pub2.decrypt(decodedBytes);
+
+
+        if (Arrays.equals(hashDecriptPriv, hash)) {
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {

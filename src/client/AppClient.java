@@ -33,8 +33,7 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
         addMoney();
         addMoney();
-        addMoney();
-        transferMoney();
+        getMoney();
 
 
     }
@@ -64,10 +63,8 @@ public class AppClient {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
         kpg.initialize(1024);
 
-        /*KeyPair kp = kpg.generateKeyPair() ;
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
-*/
+
+
         KeyPair kp = keys.get(random.nextInt(keys.size()));
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
@@ -126,10 +123,9 @@ public class AppClient {
         PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
         PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
 
-        /*String pubTry = "ab123";
-        String privTry = "cd456";*/
 
-        Double value = 0.0;
+
+        Double value = 50.5;
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
         Long nonce = random.nextLong();
@@ -151,6 +147,45 @@ public class AppClient {
 
         if (response.hasEntity()) {
             System.out.println(response.readEntity(Reply.class));
+        }
+    }
+
+    @SuppressWarnings("Duplicates")
+    public static void getMoney() throws Exception {
+
+
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+
+        KeyPair kp = keys.get(random.nextInt(keys.size()));
+        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
+        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
+        String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
+
+
+        Long nonce = random.nextLong();
+
+        String msg = publicString + nonce;
+        byte[] hash = Digest.getDigest(msg.getBytes());
+
+        byte[] hashEncriptPriv = priv.encrypt(hash);
+        String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
+
+        Response response = target.path(pathPublicKey + "/money")
+
+                .queryParam("nonce", nonce)
+                .queryParam("msg", msgHashStr)
+                .request()
+                .get();
+        if (response.hasEntity()) {
+            //System.out.println(response.readEntity(Reply.class));
+            System.out.println(response.readEntity(Reply.class).getAmount());
         }
     }
 

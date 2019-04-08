@@ -319,6 +319,9 @@ public class AppClient {
 
         // TODO
 
+        ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<Long> lNonces = new ArrayList<Long>();
+
         for (int i = 0; i < r.getMessages().size(); i++){
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
@@ -328,13 +331,19 @@ public class AppClient {
             System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
             System.out.println("replica nonce: " + replicaNonce);
+
             //TODO FAZER POS OUTROS METODOS
+
+            amounts.add(replicaMsgAmount);
+            lNonces.add(replicaNonce);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
             sig.update(currentReplicaMsg.getSerializedMessage());
+
+
             if(sig.verify(currentReplicaMsg.getSignature())){
                 System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
             }
@@ -343,6 +352,29 @@ public class AppClient {
                 System.out.println("Signature of message is invalid");
             }
 
+        }
+        int majority = 0;
+        int numbNonces = 0;
+        for (Double amount: amounts) {
+            if(amount == r.getAmount())
+                majority ++;
+        }
+        for (Long n: lNonces) {
+            if(n+1 == r.getNonce())
+                numbNonces ++;
+        }
+
+        if(numbNonces >= (lNonces.size()/2)+1){
+            System.out.println("majority of replicas returns the right nonce");
+        }else{
+            System.out.println("No majority reached for nonce");
+
+        }
+
+        if((majority >= (amounts.size()/2)+1)){
+            System.out.println("majority of replicas returns the right value");
+        }else{
+            System.out.println("No majority reached");
         }
 
 

@@ -1,7 +1,8 @@
 package client;
 
 import api.Reply;
-import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.reconfiguration.util.RSAKeyLoader;
+import bftsmart.tom.util.KeyLoader;
 import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
@@ -268,26 +269,17 @@ public class AppClient {
         // TODO
         for (int i = 0; i<r.getMessages().size(); i++){
 
-            String publicKey = readFromFile(i);
-            byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
-            PublicKey repPub = PublicKey.createKey(pubKeyArr);
-
-            byte[] content =  r.getMessages().get(i).getContent();
-
-
-
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
-            sig.initVerify(repPub);
+            sig.initVerify(pk);
             sig.update(r.getMessages().get(i).getSerializedMessage());
-            System.out.println(sig.verify(r.getMessages().get(i).getSignature()));
-
-
-
-
-            String stringContent = Base64.getEncoder().encodeToString(content);
-
-            System.out.println(" ---------------- String content - " + i + " : " + stringContent);
-
+            if(sig.verify(r.getMessages().get(i).getSignature())){
+                System.out.println("Replica message is authentic");
+            }
+            else{
+                System.out.println("Signature of message is invalid");
+            }
 
         }
 
@@ -368,6 +360,8 @@ public class AppClient {
     }
 
 
+    /* READS CORRESPONDENT PUBKEY FROM config/keys
+    
     private static String readFromFile(Integer replicaID){
         try {
             BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
@@ -389,7 +383,7 @@ public class AppClient {
         return null;
 
     }
-
+*/
     static public class InsecureHostnameVerifier implements HostnameVerifier{
 
         @Override

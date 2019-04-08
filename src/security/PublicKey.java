@@ -22,4 +22,5 @@ public class PublicKey extends Key {
     	java.security.PublicKey key = KeyFactory.getInstance(algorithm).generatePublic( new X509EncodedKeySpec( data) ) ;
     	return new PublicKey( algorithm, key);
     }
+
 }

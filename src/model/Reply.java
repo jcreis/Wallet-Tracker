@@ -1,6 +1,4 @@
-package api;
-
-import bftsmart.tom.core.messages.TOMMessage;
+package model;
 
 import java.util.ArrayList;
 

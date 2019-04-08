@@ -2,7 +2,8 @@ package api;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
-import rest.server.CaptureMessages;
+import model.Reply;
+import model.CaptureMessages;
 import rest.server.ReplicaServer;
 import security.Digest;
 import security.PrivateKey;
@@ -21,7 +22,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static api.OpType.*;
+import static model.OpType.*;
 
 
 @Path("/users")
@@ -87,9 +88,10 @@ public class WalletResources {
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg) throws Exception {
 
+
         Long replyNonce;
 
-
+        // Reads admin pubKey
         File file = new File("./publicKey.txt");
         String adminPublicString = null;
         Scanner sc = new Scanner(file);
@@ -99,18 +101,16 @@ public class WalletResources {
         byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
         PublicKey adminPubKey = PublicKey.createKey(adminPublic);
 
-
+        // Prepares Hash of message H(N), N = (pubKey, value, nonce)
         URLDecoder.decode(publicKey, "UTF-8");
         String verify = publicKey + value + nonce;
         byte[] hash = Digest.getDigest(verify.getBytes());
 
-        //byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
-        //PublicKey pub2 = PublicKey.createKey(pubKeyArr);
-
+        // UnHash H(N)
         byte[] decodedBytes = Base64.getDecoder().decode(msg);
         byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
-
+        // Checks if Hashes match
         if (Arrays.equals(hashDecriptPriv, hash)) {
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -124,18 +124,19 @@ public class WalletResources {
                 objOut.flush();
                 byteOut.flush();
                 byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+
                 if (reply.length == 0)
                     return null;
+
                 try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM ADD MONEY IS:");
                     Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println("message 1 is from replica: " + captureMessages.getReplicaMessages().get(1).getSender());
-                    System.out.println("message 1 content: " + captureMessages.getReplicaMessages().get(1));
-                    System.out.println("RESPONSE: " + r);
-
+                    System.out.println("User: "+publicKey.substring(0,50)+" has now "+money+"€");
+                    //System.out.println("->" + captureMessages.getReplicaMessages().get(0).getContent());
                     return r;
                 }
 
@@ -143,7 +144,7 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-        return null;
+        throw new NotAuthorizedException("Don't have permission to add money.");
 
     }
 
@@ -168,7 +169,6 @@ public class WalletResources {
 
         if (Arrays.equals(hashDecriptPriv, hash)) {
 
-
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -178,17 +178,21 @@ public class WalletResources {
                 objOut.writeObject(value);
                 objOut.writeObject(nonce);
 
-
                 objOut.flush();
                 byteOut.flush();
 
                 byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+
                 if (reply.length == 0)
                     return null;
+
                 try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
+                    System.out.println("RESPONSE FROM TRANSFER MONEY IS:");
+                    System.out.println("User "+fpublicKey.substring(0,50)+" transfered "+value+"€"+" to user "+tpublicKey.substring(0,50));
                     return new Reply(TRANSFER, captureMessages.getReplicaMessages(), fpublicKey, money, replyNonce + 1);
                 }
 
@@ -239,8 +243,12 @@ public class WalletResources {
                     return null;
                 try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
+                    System.out.println("RESPONSE FROM GET MONEY IS:");
+                    System.out.println("User "+publicKey.substring(0,50)+" has "+money+"€ in the his account");
+
                     return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                 }
 

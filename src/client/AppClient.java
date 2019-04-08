@@ -1,9 +1,9 @@
 package client;
 
-import api.OpType;
-import api.ReplicaResponseMessage;
+import model.OpType;
+import model.ReplicaResponseMessage;
 
-import api.Reply;
+import model.Reply;
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
 import security.Digest;
@@ -26,10 +26,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.Signature;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class AppClient {
 
@@ -37,15 +34,22 @@ public class AppClient {
     private static SecureRandom random = new SecureRandom();
 
     private static List<KeyPair> keys = new ArrayList<KeyPair>();
-
     public static void main(String[] args) throws Exception {
 
-        addMoney();
-        /*addMoneyWNoPermission();
-
-        addMoney();
-        transferMoney();
-        getMoney();*/
+        boolean timeout = false;
+        // Makes addMoney() every 2s
+        Timer t = new Timer();
+        TimerTask addMoneyThread = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    addMoney();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        t.schedule(addMoneyThread, 0L, 2000L);
 
     }
 
@@ -57,6 +61,11 @@ public class AppClient {
 
     @SuppressWarnings("Duplicates")
     public static void transferMoney() throws Exception {
+        System.out.println("#################################");
+        System.out.println("####### T R A N S F E R #########");
+        System.out.println("#################################");
+        System.out.println();
+
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
                 .build();
@@ -79,8 +88,12 @@ public class AppClient {
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
 
         KeyPair kp2 = keys.get(random.nextInt(keys.size()));
-        PublicKey pub2 = new PublicKey("RSA", kp.getPublic());
-        PrivateKey priv2 = new PrivateKey("RSA", kp.getPrivate());
+        if(kp2.getPublic().equals(kp.getPublic())){
+            kp2 = keys.get(random.nextInt(keys.size()));
+        }
+        //kp = keys.get(random.nextInt(keys.size()));
+        PublicKey pub2 = new PublicKey("RSA", kp2.getPublic());
+        PrivateKey priv2 = new PrivateKey("RSA", kp2.getPrivate());
         String publicString2 = Base64.getEncoder().encodeToString(pub2.exportKey());
         String pathPublicKey2 = URLEncoder.encode(publicString2, "UTF-8");
 
@@ -112,8 +125,10 @@ public class AppClient {
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
             sig.update(currentReplicaMsg.getSerializedMessage());
+
+
             if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message is authentic");
+                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
             }
@@ -125,17 +140,15 @@ public class AppClient {
             System.out.println("Nonces dont match, reject message from server");
         } else {
 
-
-            System.out.println("#################################");
-            System.out.println("####### T R A N S F E R #########");
-            System.out.println("#################################");
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("From pubKey: " + publicString);
-            System.out.println("To pubKey: " + r.getPublicKey());
-            System.out.println("New amount: " + r.getAmount());
-            System.out.println("Client nonce: " + nonce);
-            System.out.println("Nonce from response: " + r.getNonce());
+            System.out.println("From pubKey: " + publicString.substring(0,50));
+            System.out.println("To pubKey: " + publicString2.substring(0,50));
+            System.out.println("Transfering amount : " + value);
+            System.out.println(publicString2.substring(0,50) + " now has " + r.getAmount());
+            if(nonce+1 == r.getNonce()){
+                System.out.println("Nonces match");
+            }
             System.out.println();
 
         }
@@ -144,6 +157,10 @@ public class AppClient {
     @SuppressWarnings("Duplicates")
     public static void addMoneyWNoPermission() throws Exception {
 
+        System.out.println("#############################################");
+        System.out.println("####### A D D - M O N E Y (NOT ADMIN) #######");
+        System.out.println("#############################################");
+        System.out.println();
 
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
@@ -187,9 +204,8 @@ public class AppClient {
             System.out.println();
         } else {
             Reply r = response.readEntity(Reply.class);
-
             for (int i = 0; i < r.getMessages().size(); i++) {
-
+                System.out.println("2");
                 ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
                 KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
@@ -198,7 +214,7 @@ public class AppClient {
                 sig.initVerify(pk);
                 sig.update(currentReplicaMsg.getSerializedMessage());
                 if (sig.verify(currentReplicaMsg.getSignature())) {
-                    System.out.println("Replica message is authentic");
+                    System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
                 } else {
                     System.out.println("Signature of message is invalid");
                 }
@@ -210,16 +226,15 @@ public class AppClient {
                 System.out.println("Nonces dont match, reject message from server");
             } else {
 
-                System.out.println("#################################");
-                System.out.println("####### A D D - M O N E Y #######");
-                System.out.println("#################################");
+
                 System.out.println();
                 System.out.println("Status: " + response.getStatusInfo());
-                System.out.println("From pubKey: " + publicString);
-                System.out.println("To pubKey(????): " + r.getPublicKey());
+                System.out.println("From pubKey: " + publicString.substring(0,50));
+                System.out.println("To pubKey: " + r.getPublicKey().substring(0,50));
                 System.out.println("New amount: " + r.getAmount());
-                System.out.println("Client nonce: " + nonce);
-                System.out.println("Nonce from response: " + r.getNonce());
+                if(nonce+1 == r.getNonce()){
+                    System.out.println("Nonces match");
+                }
                 System.out.println();
 
 
@@ -229,7 +244,10 @@ public class AppClient {
 
     @SuppressWarnings("Duplicates")
     public static void addMoney() throws Exception {
-
+        System.out.println("#################################");
+        System.out.println("####### A D D - M O N E Y #######");
+        System.out.println("#################################");
+        System.out.println();
 
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
@@ -257,8 +275,8 @@ public class AppClient {
         }
 
 
-        System.out.println("publicKey : " + adminPublicString);
-        System.out.println("privateKey : " + adminPrivateString);
+        /*System.out.println("AdminPublicKey : " + adminPublicString.substring(0,50));
+        System.out.println("AdminPrivateKey : " + adminPrivateString.substring(0,50));*/
 
         byte[] pubByte = Base64.getDecoder().decode(adminPublicString);
         PublicKey adminPub = PublicKey.createKey(pubByte);
@@ -293,7 +311,6 @@ public class AppClient {
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
-        System.out.println(response);
         Reply r = response.readEntity(Reply.class);
 
         // TODO
@@ -322,15 +339,13 @@ public class AppClient {
             System.out.println("Nonces dont match, reject message from server");
         } else {
 
-            System.out.println("#################################");
-            System.out.println("####### A D D - M O N E Y #######");
-            System.out.println("#################################");
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("From pubKey: " + publicString);
-            System.out.println("New amount: " + r.getAmount());
-            System.out.println("Client nonce: " + nonce);
-            System.out.println("Nonce from response: " + r.getNonce());
+            System.out.println("Add money to pubKey: " + publicString.substring(0,50));
+            System.out.println("Amount: " + r.getAmount());
+            if(nonce+1 == r.getNonce()){
+                System.out.println("Nonces match");
+            }
             System.out.println();
 
 
@@ -339,7 +354,10 @@ public class AppClient {
 
     @SuppressWarnings("Duplicates")
     public static void getMoney() throws Exception {
-
+        System.out.println("#################################");
+        System.out.println("####### G E T - M O N E Y #######");
+        System.out.println("#################################");
+        System.out.println();
 
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
@@ -380,7 +398,7 @@ public class AppClient {
             sig.initVerify(pk);
             sig.update(currentReplicaMsg.getSerializedMessage());
             if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message is authentic");
+                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
             }
@@ -392,16 +410,13 @@ public class AppClient {
             System.out.println("Nonces dont match, reject message from server");
         } else {
 
-            System.out.println("#################################");
-            System.out.println("####### G E T - M O N E Y #######");
-            System.out.println("#################################");
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("From pubKey: " + publicString);
-            System.out.println("To pubKey(????): " + r.getPublicKey());
+            System.out.println("From pubKey: " + publicString.substring(0,50));
             System.out.println("New amount: " + r.getAmount());
-            System.out.println("Client nonce: " + nonce);
-            System.out.println("Nonce from response: " + r.getNonce());
+            if(nonce+1 == r.getNonce()){
+                System.out.println("Nonces match");
+            }
             System.out.println();
 
         }

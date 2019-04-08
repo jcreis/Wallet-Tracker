@@ -1,9 +1,10 @@
-package rest.server;
+package model;
 
-import api.ReplicaResponseMessage;
+import model.ReplicaResponseMessage;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.Extractor;
 
+import javax.validation.constraints.Null;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -24,20 +25,25 @@ public class CaptureMessages implements Extractor {
 
         messages = new ArrayList<ReplicaResponseMessage>();
         for(int i = 0; i < tomMessages.length ; i++){
+
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+
                 /*byte[] x = tomMessages[i].serializedMessageSignature;
                 System.out.println(x);
                 System.out.println(tomMessages[i].signed);*/
-                ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
-                replicaMsg.setSender(tomMessages[i].getSender());
-                replicaMsg.setContent(tomMessages[i].getContent());
-                replicaMsg.setSignature(tomMessages[i].serializedMessageSignature);
-                replicaMsg.setSerializedMessage(tomMessages[i].serializedMessage);
-                messages.add(replicaMsg);
+                    ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
+                    replicaMsg.setSender(tomMessages[i].getSender());
+                    replicaMsg.setContent(tomMessages[i].getContent());
+                    replicaMsg.setSignature(tomMessages[i].serializedMessageSignature);
+                    replicaMsg.setSerializedMessage(tomMessages[i].serializedMessage);
+                    messages.add(replicaMsg);
 
-            } catch (IOException e) {
-                e.printStackTrace();
+
+
+            } catch (IOException | NullPointerException e ) {
+
 
             }
 

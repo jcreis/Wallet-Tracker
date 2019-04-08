@@ -1,7 +1,7 @@
 package rest.server;
 
 
-import api.OpType;
+import model.OpType;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
@@ -17,7 +17,6 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
     public ReplicaServer(int id) {
         new ServiceReplica(id, this, this);
-        db.put("09325224767032", 10.0);
     }
 
 
@@ -54,9 +53,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     value = (Double) objIn.readObject();
                     nonce = (Long) objIn.readObject();
 
-
                     if (db.containsKey(publicKey)) {
                         if (value >= 0) {
+                            System.out.println("2");
                             db.put(publicKey, db.get(publicKey) + value);
                             // returns updated money
                             objOut.writeObject(db.get(publicKey));
@@ -76,24 +75,6 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     break;
 
 
-                case ADD_USER:
-
-                    publicKey = (String) objIn.readObject();
-                    value = (Double) objIn.readObject();
-                    nonce = (Long) objIn.readObject();
-                    if (!db.containsKey(publicKey)) {
-                        db.put(publicKey, value);
-                        System.out.println("User " + db.get(publicKey) + " added to Database.");
-
-                        objOut.writeObject(nonce);
-
-                        hasReply = true;
-
-                    } else {
-                        System.out.println("User already exists in the database.");
-                    }
-
-                    break;
 
 
                 case TRANSFER:
@@ -114,7 +95,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             db.put(publicKey, db.get(publicKey) - value);
                             db.put(publicKey2, db.get(publicKey2) + value);
                             objOut.writeObject(db.get(publicKey2));
-                            System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
+                            //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
                             objOut.writeObject(nonce);
 
                             hasReply = true;
@@ -136,7 +117,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("Exception");
         }
-        System.out.println(db);
+
         return reply;
     }
 
@@ -155,27 +136,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             OpType reqType = (OpType) objIn.readObject();
             switch (reqType) {
 
-               /* case GET_USERS:
-
-                    nonce = (Long)objIn.readObject();
-
-
-                    System.out.println("List of users: "+ db.values().toArray(new User[db.size()]).toString());
-
-                    // Prepares output
-                    objOut.writeObject(db.values().toArray(new User[db.size()]));
-
-                    objOut.writeObject(nonce);
-                    // Allows output to be set to ByteArray in the final phase of the method
-                    hasReply = true;
-                    break;*/
 
                 case GET_MONEY:
                     publicKey = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
 
                     if (db.containsKey(publicKey)) {
-                        System.out.println("Amount: " + db.get(publicKey));
+                        //System.out.println("Amount: " + db.get(publicKey));
 
                         objOut.writeObject(db.get(publicKey));
                         objOut.writeObject(nonce);

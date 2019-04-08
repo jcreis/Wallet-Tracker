@@ -19,7 +19,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.security.KeyPair;
@@ -144,7 +147,7 @@ public class AppClient {
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("From pubKey: " + publicString.substring(0,50));
             System.out.println("To pubKey: " + publicString2.substring(0,50));
-            System.out.println("Transfering amount : " + value);
+            System.out.println("Transferring amount : " + value);
             System.out.println(publicString2.substring(0,50) + " now has " + r.getAmount());
             if(nonce+1 == r.getNonce()){
                 System.out.println("Nonces match");
@@ -205,8 +208,9 @@ public class AppClient {
         } else {
             Reply r = response.readEntity(Reply.class);
             for (int i = 0; i < r.getMessages().size(); i++) {
-                System.out.println("2");
+
                 ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
 
                 KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
                 java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
@@ -317,6 +321,14 @@ public class AppClient {
 
         for (int i = 0; i < r.getMessages().size(); i++){
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+            Double replicaMsgAmount = (Double) objIn.readObject();
+            System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+            System.out.println("replica nonce: " + replicaNonce);
+            //TODO FAZER POS OUTROS METODOS
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());

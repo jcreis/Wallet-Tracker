@@ -136,7 +136,6 @@ public class WalletResources {
                     System.out.println("RESPONSE FROM ADD MONEY IS:");
                     Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                     System.out.println("User: "+publicKey.substring(0,50)+" has now "+money+"€");
-                    //System.out.println("->" + captureMessages.getReplicaMessages().get(0).getContent());
                     return r;
                 }
 

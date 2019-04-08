@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class Reply {
 
-    ArrayList<TOMMessage> messages;
+    ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
     double amount;
     long nonce;
@@ -14,7 +14,7 @@ public class Reply {
 
 
 
-    public Reply(ArrayList<TOMMessage> messages, String publicKey, double amount, long nonce){
+    public Reply(ArrayList<ReplicaResponseMessage> messages, String publicKey, double amount, long nonce){
         this.messages = messages;
         this.publicKey = publicKey;
         this.amount = amount;
@@ -33,11 +33,11 @@ public class Reply {
         this.publicKey = publicKey;
     }
 
-    public ArrayList<TOMMessage> getMessages() {
+    public ArrayList<ReplicaResponseMessage> getMessages() {
         return messages;
     }
 
-    public void setMessages(ArrayList<TOMMessage> messages) {
+    public void setMessages(ArrayList<ReplicaResponseMessage> messages) {
         this.messages = messages;
     }
 

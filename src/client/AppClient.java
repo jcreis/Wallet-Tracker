@@ -359,7 +359,7 @@ public class AppClient {
 
     private static String readFromFile(Integer replicaID){
         try {
-            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publicKey"+replicaID));
+            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
             StringBuilder b = new StringBuilder();
 
 

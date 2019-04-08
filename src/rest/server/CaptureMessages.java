@@ -1,6 +1,7 @@
 package rest.server;
 
 //import api.User;
+import api.ReplicaResponseMessage;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.Extractor;
 
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 
 public class CaptureMessages implements Extractor {
 
-    public ArrayList<TOMMessage> messages;
+    public ArrayList<ReplicaResponseMessage> messages;
 
     public CaptureMessages(){
 
@@ -22,15 +23,17 @@ public class CaptureMessages implements Extractor {
     @Override
     public TOMMessage extractResponse(TOMMessage[] tomMessages, int sameContent, int lastReceived) {
 
-        messages = new ArrayList<TOMMessage>();
+        messages = new ArrayList<ReplicaResponseMessage>();
         for(int i = 0; i < tomMessages.length ; i++){
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
                 /*byte[] x = tomMessages[i].serializedMessageSignature;
                 System.out.println(x);
                 System.out.println(tomMessages[i].signed);*/
-
-                messages.add(tomMessages[i]);
+                ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
+                replicaMsg.setSender(tomMessages[i].getSender());
+                replicaMsg.setContent(tomMessages[i].getContent());
+                messages.add(replicaMsg);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -43,7 +46,7 @@ public class CaptureMessages implements Extractor {
     }
 
 
-    public ArrayList<TOMMessage> getReplicaMessages(){
+    public ArrayList<ReplicaResponseMessage> getReplicaMessages(){
         return messages;
     }
 }

@@ -1,6 +1,8 @@
 package client;
 
 import api.OpType;
+import api.ReplicaResponseMessage;
+
 import api.Reply;
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
@@ -44,7 +46,6 @@ public class AppClient {
         addMoney();
         transferMoney();
         getMoney();*/
-
 
     }
 
@@ -293,16 +294,20 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
         // TODO
-        for (int i = 0; i < r.getMessages().size(); i++) {
+
+        for (int i = 0; i < r.getMessages().size(); i++){
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
-            sig.update(r.getMessages().get(i).getSerializedMessage());
-            if (sig.verify(r.getMessages().get(i).getSignature())) {
-                System.out.println("Replica message is authentic");
-            } else {
+            sig.update(currentReplicaMsg.getSerializedMessage());
+            if(sig.verify(currentReplicaMsg.getSignature())){
+                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
+            }
+            else{
+
                 System.out.println("Signature of message is invalid");
             }
 
@@ -399,7 +404,31 @@ public class AppClient {
     }
 
 
-    static public class InsecureHostnameVerifier implements HostnameVerifier {
+    /* READS CORRESPONDENT PUBKEY FROM config/keys
+
+    private static String readFromFile(Integer replicaID){
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
+            StringBuilder b = new StringBuilder();
+
+
+                String line = br.readLine();
+                while (line != null) {
+                    b.append(line);
+                    line = br.readLine();
+                }
+
+            System.out.println(b.toString());
+            return b.toString();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+*/
+    static public class InsecureHostnameVerifier implements HostnameVerifier{
 
         @Override
         public boolean verify(String s, SSLSession sslSession) {
@@ -409,7 +438,3 @@ public class AppClient {
 
 
 }
-
-
-
-

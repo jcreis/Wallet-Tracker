@@ -28,10 +28,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.Signature;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class AppClient {
 
@@ -51,7 +48,7 @@ public class AppClient {
         long initAddMoneyTime = System.currentTimeMillis();
         while(true){
                 addMoney();
-            if(System.currentTimeMillis()-initAddMoneyTime >= 100*60){
+            if(System.currentTimeMillis()-initAddMoneyTime >= 500*60){
                 break;
             }
         }
@@ -66,7 +63,7 @@ public class AppClient {
                 while (true){
                     try {
                         transferMoney();
-                        getMoney();
+                        //getMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -87,7 +84,7 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
-                        getMoney();
+                        //getMoney();
                         transferMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -103,9 +100,9 @@ public class AppClient {
         transferThread2.start();
         transferThread2.join();
 
-        System.out.println("####################################");
-        System.out.println("###### AVERAGE REQUEST TIMES########");
-        System.out.println("####################################");
+        System.out.println("#####################################");
+        System.out.println("###### AVERAGE REQUEST TIMES ########");
+        System.out.println("#####################################");
         System.out.println("Average time of transfer requests: "+ getTransferAvgTime()+"ms");
         System.out.println("Average time of getMoney requests: "+ getGetMoneyAvgTime()+"ms");
         System.out.println("Average time of addMoney requests: "+ getAddMoneyAvgTime()+"ms");
@@ -157,7 +154,9 @@ public class AppClient {
         String pathPublicKey2 = URLEncoder.encode(publicString2, "UTF-8");
 
 
-        Double value = 1.0;
+        Random randomm = new Random();
+        Double value = randomm.nextInt(89) + 10.0;
+
         Long nonce = random.nextLong();
 
         String msg = publicString + publicString2 + value + nonce;
@@ -402,7 +401,11 @@ public class AppClient {
         System.out.println("URI: " + baseURI);
 
 
-        Double value = 50.5;
+
+        Random randomm = new Random();
+
+        Double value = randomm.nextInt(899) + 100.0;
+
 
 
         File file = new File("./publicKey.txt");

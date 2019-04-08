@@ -42,7 +42,6 @@ public class WalletResources {
 
     public WalletResources(int replicaNumber) throws Exception {
         this.replicaNumber = replicaNumber;
-        System.out.println("replica number " + replicaNumber);
         replicaServer = new ReplicaServer(replicaNumber);
         keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
         serviceProxy = new ServiceProxy(replicaNumber, "config", null, captureMessages, keyLoader);

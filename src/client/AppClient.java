@@ -47,8 +47,8 @@ public class AppClient {
 
         long initAddMoneyTime = System.currentTimeMillis();
         while(true){
-                addMoney();
-            if(System.currentTimeMillis()-initAddMoneyTime >= 500*60){
+            addMoney();
+            if(System.currentTimeMillis()-initAddMoneyTime >= 300*60){
                 break;
             }
         }
@@ -63,11 +63,12 @@ public class AppClient {
                 while (true){
                     try {
                         transferMoney();
-                        //getMoney();
+                        getMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    if(System.currentTimeMillis()-initTransferTime >= 1000*60)
+                    // run during 3 min
+                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
                         break;
                 }
 
@@ -84,12 +85,12 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
-                        //getMoney();
+                        getMoney();
                         transferMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    if(System.currentTimeMillis()-initTransferTime >= 1000*60)
+                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
                         break;
                 }
             }
@@ -183,33 +184,32 @@ public class AppClient {
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
-        for (int i = 0; i < r.getMessages().size(); i++) {
-            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
-
-            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
-            ObjectInput objIn = new ObjectInputStream(byteIn);
-            Double replicaMsgAmount = (Double) objIn.readObject();
-            //System.out.println("replica amount: "+ replicaMsgAmount);
-            Long replicaNonce = (Long) objIn.readObject();
-            //System.out.println("replica nonce: " + replicaNonce);
-
-
-            amounts.add(replicaMsgAmount);
-            lNonces.add(replicaNonce);
-
-            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
-            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
-            sig.initVerify(pk);
-            sig.update(currentReplicaMsg.getSerializedMessage());
+        for (ReplicaResponseMessage currentReplicaMsg: r.getMessages()) {
+            if (currentReplicaMsg != null){
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+                ObjectInput objIn = new ObjectInputStream(byteIn);
+                Double replicaMsgAmount = (Double) objIn.readObject();
+                //System.out.println("replica amount: "+ replicaMsgAmount);
+                Long replicaNonce = (Long) objIn.readObject();
+                //System.out.println("replica nonce: " + replicaNonce);
 
 
-            if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
-            } else {
-                System.out.println("Signature of message is invalid");
+                amounts.add(replicaMsgAmount);
+                lNonces.add(replicaNonce);
+
+                KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+                java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+                Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+                sig.initVerify(pk);
+                sig.update(currentReplicaMsg.getSerializedMessage());
+
+
+                if (sig.verify(currentReplicaMsg.getSignature())) {
+                    System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+                } else {
+                    System.out.println("Signature of message is invalid");
+                }
             }
-
         }
 
         int majority = 0;
@@ -591,32 +591,32 @@ public class AppClient {
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
-        for (int i = 0; i < r.getMessages().size(); i++) {
-            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+        for (ReplicaResponseMessage currentReplicaMsg: r.getMessages()) {
+            if (currentReplicaMsg != null) {
 
-            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
-            ObjectInput objIn = new ObjectInputStream(byteIn);
-            Double replicaMsgAmount = (Double) objIn.readObject();
-            //System.out.println("replica amount: "+ replicaMsgAmount);
-            Long replicaNonce = (Long) objIn.readObject();
-            //System.out.println("replica nonce: " + replicaNonce);
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+                ObjectInput objIn = new ObjectInputStream(byteIn);
+                Double replicaMsgAmount = (Double) objIn.readObject();
+                //System.out.println("replica amount: "+ replicaMsgAmount);
+                Long replicaNonce = (Long) objIn.readObject();
+                //System.out.println("replica nonce: " + replicaNonce);
 
 
-            amounts.add(replicaMsgAmount);
-            lNonces.add(replicaNonce);
+                amounts.add(replicaMsgAmount);
+                lNonces.add(replicaNonce);
 
-            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
-            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
-            sig.initVerify(pk);
-            sig.update(currentReplicaMsg.getSerializedMessage());
+                KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+                java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+                Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+                sig.initVerify(pk);
+                sig.update(currentReplicaMsg.getSerializedMessage());
 
-            if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
-            } else {
-                System.out.println("Signature of message is invalid");
+                if (sig.verify(currentReplicaMsg.getSignature())) {
+                    System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+                } else {
+                    System.out.println("Signature of message is invalid");
+                }
             }
-
         }
 
         int majority = 0;

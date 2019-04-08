@@ -1,10 +1,8 @@
 package model;
 
-import model.ReplicaResponseMessage;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.Extractor;
 
-import javax.validation.constraints.Null;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -24,10 +22,11 @@ public class CaptureMessages implements Extractor {
     public TOMMessage extractResponse(TOMMessage[] tomMessages, int sameContent, int lastReceived) {
 
         messages = new ArrayList<ReplicaResponseMessage>();
-        for(int i = 0; i < tomMessages.length ; i++){
+        for (int i = 0; i < tomMessages.length; i++) {
+            if (tomMessages[i] != null) {
 
-            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
-                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(tomMessages[i].getContent());
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
 
                     ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
@@ -37,15 +36,14 @@ public class CaptureMessages implements Extractor {
                     replicaMsg.setSerializedMessage(tomMessages[i].serializedMessage);
                     messages.add(replicaMsg);
 
+                } catch (IOException e) {
 
 
-            } catch (IOException | NullPointerException e ) {
-
+                }
 
             }
 
         }
-        
         return tomMessages[lastReceived];
     }
 

@@ -1,5 +1,6 @@
 package client;
 
+import api.OpType;
 import api.Reply;
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
@@ -16,10 +17,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.security.KeyPair;
@@ -46,12 +44,12 @@ public class AppClient {
         addMoney();
         transferMoney();
         getMoney();*/
-        readFromFile(0);
+
 
     }
 
 
-    public AppClient(){
+    public AppClient() {
 
     }
 
@@ -68,21 +66,20 @@ public class AppClient {
 
 
         // TODO generate random public/private key
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
-
 
 
         KeyPair kp = keys.get(random.nextInt(keys.size()));
 
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
 
         KeyPair kp2 = keys.get(random.nextInt(keys.size()));
-        PublicKey pub2 = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv2 = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        PublicKey pub2 = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv2 = new PrivateKey("RSA", kp.getPrivate());
         String publicString2 = Base64.getEncoder().encodeToString(pub2.exportKey());
         String pathPublicKey2 = URLEncoder.encode(publicString2, "UTF-8");
 
@@ -105,11 +102,26 @@ public class AppClient {
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
         Reply r = response.readEntity(Reply.class);
-        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
-        if(r.getNonce() != nonce+1){
-            System.out.println("Nonces dont match, reject message from server");
+
+        for (int i = 0; i < r.getMessages().size(); i++) {
+
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(pk);
+            sig.update(r.getMessages().get(i).getSerializedMessage());
+            if (sig.verify(r.getMessages().get(i).getSignature())) {
+                System.out.println("Replica message is authentic");
+            } else {
+                System.out.println("Signature of message is invalid");
+            }
+
         }
-        else {
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if (r.getNonce() != nonce + 1 && r.getOperationType() == OpType.TRANSFER) {
+            System.out.println("Nonces dont match, reject message from server");
+        } else {
 
 
             System.out.println("#################################");
@@ -140,14 +152,13 @@ public class AppClient {
         System.out.println("URI: " + baseURI);
 
         // TODO generate random public/private key
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
-        KeyPair kp = kpg.generateKeyPair() ;
+        KeyPair kp = kpg.generateKeyPair();
 
         //keys.add(kp);
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
-
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
 
 
         Double value = 50.5;
@@ -169,14 +180,29 @@ public class AppClient {
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
-        if(response.getStatus() == 401){
+        if (response.getStatus() == 401) {
             System.out.println("Sorry, you dont have permissions to add Money");
             System.out.println();
-        }else {
+        } else {
             Reply r = response.readEntity(Reply.class);
 
+            for (int i = 0; i < r.getMessages().size(); i++) {
+
+                KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+                java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+                Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+                sig.initVerify(pk);
+                sig.update(r.getMessages().get(i).getSerializedMessage());
+                if (sig.verify(r.getMessages().get(i).getSignature())) {
+                    System.out.println("Replica message is authentic");
+                } else {
+                    System.out.println("Signature of message is invalid");
+                }
+
+            }
+
             // Check if response nonce(which is nonce+1) is equals to original nonce + 1
-            if (r.getNonce() != nonce + 1) {
+            if (r.getNonce() != nonce + 1 && r.getOperationType() == OpType.ADD_MONEY) {
                 System.out.println("Nonces dont match, reject message from server");
             } else {
 
@@ -221,14 +247,14 @@ public class AppClient {
         Scanner sc = new Scanner(file);
         Scanner sc2 = new Scanner(file2);
 
-        while (sc.hasNextLine() && sc2.hasNextLine()){
+        while (sc.hasNextLine() && sc2.hasNextLine()) {
             adminPublicString = sc.next();
             adminPrivateString = sc2.next();
         }
 
 
-        System.out.println("publicKey : "+ adminPublicString);
-        System.out.println("privateKey : "+ adminPrivateString);
+        System.out.println("publicKey : " + adminPublicString);
+        System.out.println("privateKey : " + adminPrivateString);
 
         byte[] pubByte = Base64.getDecoder().decode(adminPublicString);
         PublicKey adminPub = PublicKey.createKey(pubByte);
@@ -236,13 +262,13 @@ public class AppClient {
         PrivateKey adminPriv = PrivateKey.createKey(privByte);
 
 
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
-        KeyPair kp = kpg.generateKeyPair() ;
+        KeyPair kp = kpg.generateKeyPair();
 
         keys.add(kp);
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
 
@@ -267,17 +293,16 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
         // TODO
-        for (int i = 0; i<r.getMessages().size(); i++){
+        for (int i = 0; i < r.getMessages().size(); i++) {
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
             sig.update(r.getMessages().get(i).getSerializedMessage());
-            if(sig.verify(r.getMessages().get(i).getSignature())){
+            if (sig.verify(r.getMessages().get(i).getSignature())) {
                 System.out.println("Replica message is authentic");
-            }
-            else{
+            } else {
                 System.out.println("Signature of message is invalid");
             }
 
@@ -285,10 +310,9 @@ public class AppClient {
 
 
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1
-        if(r.getNonce() != nonce+1){
+        if (r.getNonce() != nonce + 1 && r.getOperationType() == OpType.ADD_MONEY) {
             System.out.println("Nonces dont match, reject message from server");
-        }
-        else {
+        } else {
 
             System.out.println("#################################");
             System.out.println("####### A D D - M O N E Y #######");
@@ -318,8 +342,8 @@ public class AppClient {
         System.out.println("URI: " + baseURI);
 
         KeyPair kp = keys.get(random.nextInt(keys.size()));
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
 
@@ -338,11 +362,26 @@ public class AppClient {
                 .request()
                 .get();
         Reply r = response.readEntity(Reply.class);
-        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
-        if(r.getNonce() != nonce+1){
-            System.out.println("Nonces dont match, reject message from server");
+
+        for (int i = 0; i < r.getMessages().size(); i++) {
+
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(pk);
+            sig.update(r.getMessages().get(i).getSerializedMessage());
+            if (sig.verify(r.getMessages().get(i).getSignature())) {
+                System.out.println("Replica message is authentic");
+            } else {
+                System.out.println("Signature of message is invalid");
+            }
+
         }
-        else {
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if (r.getNonce() != nonce + 1 && r.getOperationType() == OpType.GET_MONEY) {
+            System.out.println("Nonces dont match, reject message from server");
+        } else {
 
             System.out.println("#################################");
             System.out.println("####### G E T - M O N E Y #######");
@@ -360,31 +399,7 @@ public class AppClient {
     }
 
 
-    /* READS CORRESPONDENT PUBKEY FROM config/keys
-    
-    private static String readFromFile(Integer replicaID){
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
-            StringBuilder b = new StringBuilder();
-
-
-                String line = br.readLine();
-                while (line != null) {
-                    b.append(line);
-                    line = br.readLine();
-                }
-
-            System.out.println(b.toString());
-            return b.toString();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-
-    }
-*/
-    static public class InsecureHostnameVerifier implements HostnameVerifier{
+    static public class InsecureHostnameVerifier implements HostnameVerifier {
 
         @Override
         public boolean verify(String s, SSLSession sslSession) {

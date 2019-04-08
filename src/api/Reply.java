@@ -11,14 +11,17 @@ public class Reply {
     double amount;
     long nonce;
 
+    OpType operationType;
 
 
 
-    public Reply(ArrayList<ReplicaResponseMessage> messages, String publicKey, double amount, long nonce){
+
+    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, double amount, long nonce){
         this.messages = messages;
         this.publicKey = publicKey;
         this.amount = amount;
         this.nonce = nonce;
+        this.operationType = operationType;
 
     }
 
@@ -35,6 +38,14 @@ public class Reply {
 
     public ArrayList<ReplicaResponseMessage> getMessages() {
         return messages;
+    }
+
+    public OpType getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(OpType operationType) {
+        this.operationType = operationType;
     }
 
     public void setMessages(ArrayList<ReplicaResponseMessage> messages) {

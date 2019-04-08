@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static api.OpType.*;
+
 
 @Path("/users")
 public class WalletResources {
@@ -44,11 +46,11 @@ public class WalletResources {
         keyLoader = new RSAKeyLoader(replicaNumber, "config", false, "sha512WithRSAEncryption");
         serviceProxy = new ServiceProxy(replicaNumber, "config", null, captureMessages, keyLoader);
 
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA") ;
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
-        KeyPair kp = kpg.generateKeyPair() ;
-        PublicKey pub = new PublicKey( "RSA", kp.getPublic() ) ;
-        PrivateKey priv = new PrivateKey( "RSA", kp.getPrivate() ) ;
+        KeyPair kp = kpg.generateKeyPair();
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
 
 
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
@@ -57,7 +59,6 @@ public class WalletResources {
 
         File publicKey = new File("./publicKey.txt");
         File privateKey = new File("./privateKey.txt");
-
 
 
         FileWriter pb = new FileWriter(publicKey, false);
@@ -72,12 +73,7 @@ public class WalletResources {
     }
 
 
-    public enum opType {
-        TRANSFER,
-        ADD_MONEY,
-        GET_MONEY,
-        ADD_USER
-    }
+
 
     private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
 
@@ -97,7 +93,7 @@ public class WalletResources {
         File file = new File("./publicKey.txt");
         String adminPublicString = null;
         Scanner sc = new Scanner(file);
-        while (sc.hasNextLine() ){
+        while (sc.hasNextLine()) {
             adminPublicString = sc.next();
         }
         byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
@@ -115,16 +111,12 @@ public class WalletResources {
         byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
 
-
-
-
-
         if (Arrays.equals(hashDecriptPriv, hash)) {
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                objOut.writeObject(opType.ADD_MONEY);
+                objOut.writeObject(ADD_MONEY);
                 objOut.writeObject(publicKey);
                 objOut.writeObject(value);
                 objOut.writeObject(nonce);
@@ -139,9 +131,9 @@ public class WalletResources {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM ADD MONEY IS:");
-                    Reply r = new Reply(captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println("message 1 is from replica: "+captureMessages.getReplicaMessages().get(1).getSender());
-                    System.out.println("message 1 content: "+captureMessages.getReplicaMessages().get(1));
+                    Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println("message 1 is from replica: " + captureMessages.getReplicaMessages().get(1).getSender());
+                    System.out.println("message 1 content: " + captureMessages.getReplicaMessages().get(1));
                     System.out.println("RESPONSE: " + r);
 
                     return r;
@@ -151,7 +143,7 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-       return null;
+        return null;
 
     }
 
@@ -180,7 +172,7 @@ public class WalletResources {
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                objOut.writeObject(opType.TRANSFER);
+                objOut.writeObject(TRANSFER);
                 objOut.writeObject(fpublicKey);
                 objOut.writeObject(tpublicKey);
                 objOut.writeObject(value);
@@ -197,7 +189,7 @@ public class WalletResources {
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    return new Reply(captureMessages.getReplicaMessages(), fpublicKey, money, replyNonce + 1);
+                    return new Reply(TRANSFER, captureMessages.getReplicaMessages(), fpublicKey, money, replyNonce + 1);
                 }
 
             } catch (IOException | ClassNotFoundException e) {
@@ -234,7 +226,7 @@ public class WalletResources {
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                objOut.writeObject(opType.GET_MONEY);
+                objOut.writeObject(GET_MONEY);
                 objOut.writeObject(publicKey);
                 objOut.writeObject(nonce);
 
@@ -249,7 +241,7 @@ public class WalletResources {
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    return new Reply(captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                 }
 
             } catch (IOException | ClassNotFoundException e) {

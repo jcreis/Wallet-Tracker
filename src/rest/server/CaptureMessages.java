@@ -1,6 +1,5 @@
 package rest.server;
 
-//import api.User;
 import api.ReplicaResponseMessage;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.Extractor;

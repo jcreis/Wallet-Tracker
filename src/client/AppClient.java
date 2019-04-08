@@ -120,8 +120,22 @@ public class AppClient {
 
         Reply r = response.readEntity(Reply.class);
 
-        for (int i = 0; i < r.getMessages().size(); i++) {
+        ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<Long> lNonces = new ArrayList<Long>();
+
+        for (int i = 0; i < r.getMessages().size(); i++){
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+            Double replicaMsgAmount = (Double) objIn.readObject();
+            //System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+            //System.out.println("replica nonce: " + replicaNonce);
+
+
+            amounts.add(replicaMsgAmount);
+            lNonces.add(replicaNonce);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
@@ -136,6 +150,32 @@ public class AppClient {
                 System.out.println("Signature of message is invalid");
             }
 
+        }
+
+        int majority = 0;
+        int numbNonces = 0;
+        for (Double amount: amounts) {
+            if(amount == r.getAmount())
+                majority ++;
+        }
+        for (Long n: lNonces) {
+            if(n+1 == r.getNonce())
+                numbNonces ++;
+        }
+
+        // Verify majority of nonces of replicas
+        if(numbNonces >= (lNonces.size()/2)+1){
+            System.out.println("majority of replicas returns the right nonce");
+        }else{
+            System.out.println("No majority reached for nonce");
+
+        }
+
+        // Verify majority from message replies of replicas
+        if((majority >= (amounts.size()/2)+1)){
+            System.out.println("majority of replicas returns the right value");
+        }else{
+            System.out.println("No majority reached");
         }
 
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1
@@ -173,7 +213,6 @@ public class AppClient {
         WebTarget target = client.target(baseURI);
         System.out.println("URI: " + baseURI);
 
-        // TODO generate random public/private key
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         KeyPair kp = kpg.generateKeyPair();
@@ -207,9 +246,23 @@ public class AppClient {
             System.out.println();
         } else {
             Reply r = response.readEntity(Reply.class);
-            for (int i = 0; i < r.getMessages().size(); i++) {
 
+            ArrayList<Double> amounts = new ArrayList<Double>();
+            ArrayList<Long> lNonces = new ArrayList<Long>();
+
+            for (int i = 0; i < r.getMessages().size(); i++){
                 ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+                ObjectInput objIn = new ObjectInputStream(byteIn);
+                Double replicaMsgAmount = (Double) objIn.readObject();
+                //System.out.println("replica amount: "+ replicaMsgAmount);
+                Long replicaNonce = (Long) objIn.readObject();
+                //System.out.println("replica nonce: " + replicaNonce);
+
+
+                amounts.add(replicaMsgAmount);
+                lNonces.add(replicaNonce);
 
 
                 KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
@@ -223,6 +276,32 @@ public class AppClient {
                     System.out.println("Signature of message is invalid");
                 }
 
+            }
+
+            int majority = 0;
+            int numbNonces = 0;
+            for (Double amount: amounts) {
+                if(amount == r.getAmount())
+                    majority ++;
+            }
+            for (Long n: lNonces) {
+                if(n+1 == r.getNonce())
+                    numbNonces ++;
+            }
+
+            // Verify majority of nonces of replicas
+            if(numbNonces >= (lNonces.size()/2)+1){
+                System.out.println("majority of replicas returns the right nonce");
+            }else{
+                System.out.println("No majority reached for nonce");
+
+            }
+
+            // Verify majority from message replies of replicas
+            if((majority >= (amounts.size()/2)+1)){
+                System.out.println("majority of replicas returns the right value");
+            }else{
+                System.out.println("No majority reached");
             }
 
             // Check if response nonce(which is nonce+1) is equals to original nonce + 1
@@ -317,7 +396,7 @@ public class AppClient {
 
         Reply r = response.readEntity(Reply.class);
 
-        // TODO
+
 
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
@@ -328,11 +407,10 @@ public class AppClient {
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
             ObjectInput objIn = new ObjectInputStream(byteIn);
             Double replicaMsgAmount = (Double) objIn.readObject();
-            System.out.println("replica amount: "+ replicaMsgAmount);
+            //System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
-            System.out.println("replica nonce: " + replicaNonce);
+            //System.out.println("replica nonce: " + replicaNonce);
 
-            //TODO FAZER POS OUTROS METODOS
 
             amounts.add(replicaMsgAmount);
             lNonces.add(replicaNonce);
@@ -364,6 +442,7 @@ public class AppClient {
                 numbNonces ++;
         }
 
+        // Verify majority of nonces of replicas
         if(numbNonces >= (lNonces.size()/2)+1){
             System.out.println("majority of replicas returns the right nonce");
         }else{
@@ -371,6 +450,7 @@ public class AppClient {
 
         }
 
+        // Verify majority from message replies of replicas
         if((majority >= (amounts.size()/2)+1)){
             System.out.println("majority of replicas returns the right value");
         }else{
@@ -433,20 +513,61 @@ public class AppClient {
                 .get();
         Reply r = response.readEntity(Reply.class);
 
-        for (int i = 0; i < r.getMessages().size(); i++) {
+        ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<Long> lNonces = new ArrayList<Long>();
+
+        for (int i = 0; i < r.getMessages().size(); i++){
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+            Double replicaMsgAmount = (Double) objIn.readObject();
+            //System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+            //System.out.println("replica nonce: " + replicaNonce);
+            
+
+            amounts.add(replicaMsgAmount);
+            lNonces.add(replicaNonce);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
             sig.update(currentReplicaMsg.getSerializedMessage());
+
             if (sig.verify(currentReplicaMsg.getSignature())) {
                 System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
             }
 
+        }
+
+        int majority = 0;
+        int numbNonces = 0;
+        for (Double amount: amounts) {
+            if(amount == r.getAmount())
+                majority ++;
+        }
+        for (Long n: lNonces) {
+            if(n+1 == r.getNonce())
+                numbNonces ++;
+        }
+
+        // Verify majority of nonces of replicas
+        if(numbNonces >= (lNonces.size()/2)+1){
+            System.out.println("majority of replicas returns the right nonce");
+        }else{
+            System.out.println("No majority reached for nonce");
+
+        }
+
+        // Verify majority from message replies of replicas
+        if((majority >= (amounts.size()/2)+1)){
+            System.out.println("majority of replicas returns the right value");
+        }else{
+            System.out.println("No majority reached");
         }
 
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1

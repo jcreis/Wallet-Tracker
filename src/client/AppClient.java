@@ -28,7 +28,10 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.Signature;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Scanner;
 
 public class AppClient {
 
@@ -37,42 +40,75 @@ public class AppClient {
 
     private static List<KeyPair> keys = new ArrayList<KeyPair>();
 
+    private static List<Long> transferRequestTimes = new ArrayList<Long>();
+
+    private static List<Long> addMoneyRequestTimes = new ArrayList<Long>();
+
+    private static List<Long> getMoneyRequestTimes = new ArrayList<Long>();
+
     public static void main(String[] args) throws Exception {
 
-        boolean timeout = false;
-        // Makes addMoney() every 2s
-        Thread task = new Thread()
+        long initAddMoneyTime = System.currentTimeMillis();
+        while(true){
+                addMoney();
+            if(System.currentTimeMillis()-initAddMoneyTime >= 100*60){
+                break;
+            }
+        }
+
+        @SuppressWarnings("Duplicates")
+        Thread transferThread1 = new Thread()
         {
             @Override
             public void run()
             {
-                long initAddMoneyTime = System.currentTimeMillis();
-                while(true){
-                    try {
-                        addMoney();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    if(System.currentTimeMillis()-initAddMoneyTime >= 1000*60){
-                        break;
-                    }
-                }
-
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
                         transferMoney();
+                        getMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
+                    if(System.currentTimeMillis()-initTransferTime >= 1000*60)
+                        break;
+                }
+
+
+            }
+        };
+
+        @SuppressWarnings("Duplicates")
+        Thread transferThread2 = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                long initTransferTime = System.currentTimeMillis();
+                while (true){
+                    try {
+                        getMoney();
+                        transferMoney();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if(System.currentTimeMillis()-initTransferTime >= 1000*60)
                         break;
                 }
             }
         };
 
-        task.start();
+
+        transferThread1.start();
+        transferThread2.start();
+        transferThread2.join();
+
+        System.out.println("####################################");
+        System.out.println("###### AVERAGE REQUEST TIMES########");
+        System.out.println("####################################");
+        System.out.println("Average time of transfer requests: "+ getTransferAvgTime()+"ms");
+        System.out.println("Average time of getMoney requests: "+ getGetMoneyAvgTime()+"ms");
+        System.out.println("Average time of addMoney requests: "+ getAddMoneyAvgTime()+"ms");
 
     }
 
@@ -130,6 +166,8 @@ public class AppClient {
         byte[] hashEncriptPriv = priv.encrypt(hash);
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
+        // Calculate time for request
+        long initRequestTime = System.currentTimeMillis();
 
         Response response = target.path("transfer/" + pathPublicKey).queryParam("tpublicKey", pathPublicKey2)
                 .queryParam("value", value)
@@ -137,6 +175,9 @@ public class AppClient {
                 .queryParam("msg", msgHashStr)
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
+        transferRequestTimes.add(finalRequestTime);
 
         Reply r = response.readEntity(Reply.class);
 
@@ -407,12 +448,19 @@ public class AppClient {
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
 
+
+        // Calculate time for request
+        long initRequestTime = System.currentTimeMillis();
+
         Response response = target.path(pathPublicKey)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
+        addMoneyRequestTimes.add(finalRequestTime);
 
         Reply r = response.readEntity(Reply.class);
 
@@ -524,11 +572,17 @@ public class AppClient {
         byte[] hashEncriptPriv = priv.encrypt(hash);
         String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
+        long initRequestTime = System.currentTimeMillis();
+
         Response response = target.path(pathPublicKey + "/money")
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
                 .request()
                 .get();
+
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
+        getMoneyRequestTimes.add(finalRequestTime);
+
         Reply r = response.readEntity(Reply.class);
 
         ArrayList<Double> amounts = new ArrayList<Double>();
@@ -605,6 +659,28 @@ public class AppClient {
         }
     }
 
+
+    public static long getTransferAvgTime(){
+        long totalTimeCounter=0;
+        for(int i=0; i<transferRequestTimes.size(); i++){
+            totalTimeCounter += transferRequestTimes.get(i);
+        }
+        return totalTimeCounter/transferRequestTimes.size();
+    }
+    public static long getGetMoneyAvgTime(){
+        long totalTimeCounter=0;
+        for(int i=0; i<getMoneyRequestTimes.size(); i++){
+            totalTimeCounter += getMoneyRequestTimes.get(i);
+        }
+        return totalTimeCounter/getMoneyRequestTimes.size();
+    }
+    public static long getAddMoneyAvgTime(){
+        long totalTimeCounter=0;
+        for(int i=0; i<addMoneyRequestTimes.size(); i++){
+            totalTimeCounter += addMoneyRequestTimes.get(i);
+        }
+        return totalTimeCounter/addMoneyRequestTimes.size();
+    }
 
 
     static public class InsecureHostnameVerifier implements HostnameVerifier {

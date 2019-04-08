@@ -105,13 +105,14 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
         for (int i = 0; i < r.getMessages().size(); i++) {
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
-            sig.update(r.getMessages().get(i).getSerializedMessage());
-            if (sig.verify(r.getMessages().get(i).getSignature())) {
+            sig.update(currentReplicaMsg.getSerializedMessage());
+            if (sig.verify(currentReplicaMsg.getSignature())) {
                 System.out.println("Replica message is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
@@ -189,12 +190,14 @@ public class AppClient {
 
             for (int i = 0; i < r.getMessages().size(); i++) {
 
+                ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
                 KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-                java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+                java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
                 Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
                 sig.initVerify(pk);
-                sig.update(r.getMessages().get(i).getSerializedMessage());
-                if (sig.verify(r.getMessages().get(i).getSignature())) {
+                sig.update(currentReplicaMsg.getSerializedMessage());
+                if (sig.verify(currentReplicaMsg.getSignature())) {
                     System.out.println("Replica message is authentic");
                 } else {
                     System.out.println("Signature of message is invalid");
@@ -369,13 +372,14 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
         for (int i = 0; i < r.getMessages().size(); i++) {
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(r.getMessages().get(i).getSender());
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
             Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
             sig.initVerify(pk);
-            sig.update(r.getMessages().get(i).getSerializedMessage());
-            if (sig.verify(r.getMessages().get(i).getSignature())) {
+            sig.update(currentReplicaMsg.getSerializedMessage());
+            if (sig.verify(currentReplicaMsg.getSignature())) {
                 System.out.println("Replica message is authentic");
             } else {
                 System.out.println("Signature of message is invalid");

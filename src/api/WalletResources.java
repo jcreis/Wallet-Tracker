@@ -142,7 +142,7 @@ public class WalletResources {
                     Reply r = new Reply(captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                     System.out.println("message 1 is from replica: "+captureMessages.getReplicaMessages().get(1).getSender());
                     System.out.println("message 1 content: "+captureMessages.getReplicaMessages().get(1));
-                    System.out.println(r);
+                    System.out.println("RESPONSE: " + r);
                     return r;
                 }
 
@@ -150,7 +150,7 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
         }
-        throw new NotAuthorizedException("Don't have permission to add money");
+       return null;
 
     }
 

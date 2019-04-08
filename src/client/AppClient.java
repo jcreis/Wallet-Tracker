@@ -1,6 +1,7 @@
 package client;
 
 import api.Reply;
+import bftsmart.tom.core.messages.TOMMessage;
 import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
@@ -36,12 +37,14 @@ public class AppClient {
     private static List<KeyPair> keys = new ArrayList<KeyPair>();
 
     public static void main(String[] args) throws Exception {
-        /*addMoneyWNoPermission();
+
         addMoney();
+        /*addMoneyWNoPermission();
+
         addMoney();
         transferMoney();
         getMoney();*/
-        readFromFile("0");
+        readFromFile(0);
 
     }
 
@@ -205,9 +208,6 @@ public class AppClient {
         System.out.println("URI: " + baseURI);
 
 
-
-
-
         Double value = 50.5;
 
 
@@ -245,9 +245,6 @@ public class AppClient {
         String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
 
 
-
-
-
         Long nonce = random.nextLong();
 
         String msg = publicString + value + nonce;
@@ -264,7 +261,25 @@ public class AppClient {
                 .request()
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
+        System.out.println(response);
         Reply r = response.readEntity(Reply.class);
+
+        // TODO
+       /* for (int i = 0; i<r.getMessages().size(); i++){
+            String publicKey = readFromFile(i);
+            byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
+
+            byte[] content =  r.getMessages().get(i).getContent();
+
+            String stringContent = Base64.getEncoder().encodeToString(content);
+
+            System.out.println("String content - " + i + " : " + stringContent);
+
+            byte[] contentDecoded = Base64.getDecoder().decode(content);
+        }
+*/
+
+
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1
         if(r.getNonce() != nonce+1){
             System.out.println("Nonces dont match, reject message from server");
@@ -319,7 +334,6 @@ public class AppClient {
                 .queryParam("msg", msgHashStr)
                 .request()
                 .get();
-
         Reply r = response.readEntity(Reply.class);
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1
         if(r.getNonce() != nonce+1){
@@ -342,10 +356,10 @@ public class AppClient {
         }
     }
 
-    //TODO so retorna a 1ª linha (tem 3) - ver se a 2ª e 3ª linha é pa concatenar à 1ª (se tbm fazem parte da pubKey)
-    private static void readFromFile(String replicaID){
+
+    private static String readFromFile(Integer replicaID){
         try {
-            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
+            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publicKey"+replicaID));
             StringBuilder b = new StringBuilder();
 
 
@@ -354,12 +368,14 @@ public class AppClient {
                     b.append(line);
                     line = br.readLine();
                 }
-            System.out.println(b.toString());
 
+            System.out.println(b.toString());
+            return b.toString();
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
 
     }
 

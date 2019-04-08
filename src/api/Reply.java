@@ -1,10 +1,12 @@
 package api;
 
+import bftsmart.tom.core.messages.TOMMessage;
+
 import java.util.ArrayList;
 
 public class Reply {
 
-    ArrayList messages;
+    ArrayList<TOMMessage> messages;
     String publicKey;
     double amount;
     long nonce;
@@ -12,7 +14,7 @@ public class Reply {
 
 
 
-    public Reply(ArrayList messages, String publicKey, double amount, long nonce){
+    public Reply(ArrayList<TOMMessage> messages, String publicKey, double amount, long nonce){
         this.messages = messages;
         this.publicKey = publicKey;
         this.amount = amount;
@@ -31,11 +33,11 @@ public class Reply {
         this.publicKey = publicKey;
     }
 
-    public ArrayList getMessages() {
+    public ArrayList<TOMMessage> getMessages() {
         return messages;
     }
 
-    public void setMessages(ArrayList messages) {
+    public void setMessages(ArrayList<TOMMessage> messages) {
         this.messages = messages;
     }
 

@@ -33,6 +33,8 @@ public class CaptureMessages implements Extractor {
                 ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
                 replicaMsg.setSender(tomMessages[i].getSender());
                 replicaMsg.setContent(tomMessages[i].getContent());
+                replicaMsg.setSignature(tomMessages[i].serializedMessageSignature);
+                replicaMsg.setSerializedMessage(tomMessages[i].serializedMessage);
                 messages.add(replicaMsg);
 
             } catch (IOException e) {

@@ -143,6 +143,7 @@ public class WalletResources {
                     System.out.println("message 1 is from replica: "+captureMessages.getReplicaMessages().get(1).getSender());
                     System.out.println("message 1 content: "+captureMessages.getReplicaMessages().get(1));
                     System.out.println("RESPONSE: " + r);
+
                     return r;
                 }
 

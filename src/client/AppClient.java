@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.security.Signature;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -265,19 +266,30 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
         // TODO
-       /* for (int i = 0; i<r.getMessages().size(); i++){
+        for (int i = 0; i<r.getMessages().size(); i++){
+
             String publicKey = readFromFile(i);
             byte[] pubKeyArr = Base64.getDecoder().decode(publicKey);
+            PublicKey repPub = PublicKey.createKey(pubKeyArr);
 
             byte[] content =  r.getMessages().get(i).getContent();
 
+
+
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(repPub);
+            sig.update(r.getMessages().get(i).getSerializedMessage());
+            System.out.println(sig.verify(r.getMessages().get(i).getSignature()));
+
+
+
+
             String stringContent = Base64.getEncoder().encodeToString(content);
 
-            System.out.println("String content - " + i + " : " + stringContent);
+            System.out.println(" ---------------- String content - " + i + " : " + stringContent);
 
-            byte[] contentDecoded = Base64.getDecoder().decode(content);
+
         }
-*/
 
 
         // Check if response nonce(which is nonce+1) is equals to original nonce + 1
@@ -292,7 +304,6 @@ public class AppClient {
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("From pubKey: " + publicString);
-            System.out.println("To pubKey(????): " + r.getPublicKey());
             System.out.println("New amount: " + r.getAmount());
             System.out.println("Client nonce: " + nonce);
             System.out.println("Nonce from response: " + r.getNonce());

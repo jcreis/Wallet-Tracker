@@ -41,18 +41,38 @@ public class AppClient {
 
         boolean timeout = false;
         // Makes addMoney() every 2s
-        Timer t = new Timer();
-        TimerTask addMoneyThread = new TimerTask() {
+        Thread task = new Thread()
+        {
             @Override
-            public void run() {
-                try {
-                    addMoney();
-                } catch (Exception e) {
-                    e.printStackTrace();
+            public void run()
+            {
+                long initAddMoneyTime = System.currentTimeMillis();
+                while(true){
+                    try {
+                        addMoney();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if(System.currentTimeMillis()-initAddMoneyTime >= 1000*60){
+                        break;
+                    }
+                }
+
+                long initTransferTime = System.currentTimeMillis();
+                while (true){
+                    try {
+                        transferMoney();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
+                        break;
                 }
             }
         };
-        t.schedule(addMoneyThread, 0L, 2000L);
+
+        task.start();
 
     }
 
@@ -587,31 +607,6 @@ public class AppClient {
         }
     }
 
-
-    /* READS CORRESPONDENT PUBKEY FROM config/keys
-
-    private static String readFromFile(Integer replicaID){
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
-            StringBuilder b = new StringBuilder();
-
-
-                String line = br.readLine();
-                while (line != null) {
-                    b.append(line);
-                    line = br.readLine();
-                }
-
-            System.out.println(b.toString());
-            return b.toString();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-
-    }
-*/
     static public class InsecureHostnameVerifier implements HostnameVerifier{
 
         @Override

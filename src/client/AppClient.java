@@ -346,19 +346,17 @@ public class AppClient {
     private static void readFromFile(String replicaID){
         try {
             BufferedReader br = new BufferedReader(new FileReader("./config/keys/publickey"+replicaID));
+            StringBuilder b = new StringBuilder();
 
-            /*StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
 
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            String everything = sb.toString();*/
+                String line = br.readLine();
+                while (line != null) {
+                    b.append(line);
+                    line = br.readLine();
+                }
+            System.out.println(b.toString());
 
-            System.out.println(br.readLine());
-            br.close();
+
         } catch (IOException e) {
             e.printStackTrace();
         }

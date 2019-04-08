@@ -69,11 +69,8 @@ public class WalletResources {
         pb.close();
         pr.close();
 
-        //TODO: to test nonces comment the next 2 lines and add @Query nonce from methods bellow
 
     }
-
-
 
 
     private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
@@ -135,7 +132,7 @@ public class WalletResources {
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM ADD MONEY IS:");
                     Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println("User: "+publicKey.substring(0,50)+" has now "+money+"€");
+                    System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
                     return r;
                 }
 
@@ -191,7 +188,7 @@ public class WalletResources {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM TRANSFER MONEY IS:");
-                    System.out.println("User "+fpublicKey.substring(0,50)+" transfered "+value+"€"+" to user "+tpublicKey.substring(0,50));
+                    System.out.println("User " + fpublicKey.substring(0, 50) + " transfered " + value + "€" + " to user " + tpublicKey.substring(0, 50));
                     return new Reply(TRANSFER, captureMessages.getReplicaMessages(), fpublicKey, money, replyNonce + 1);
                 }
 
@@ -246,7 +243,7 @@ public class WalletResources {
                     double money = (Double) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM GET MONEY IS:");
-                    System.out.println("User "+publicKey.substring(0,50)+" has "+money+"€ in the his account");
+                    System.out.println("User " + publicKey.substring(0, 50) + " has " + money + "€ in the his account");
 
                     return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
                 }

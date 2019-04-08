@@ -30,9 +30,6 @@ public class CaptureMessages implements Extractor {
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
 
-                /*byte[] x = tomMessages[i].serializedMessageSignature;
-                System.out.println(x);
-                System.out.println(tomMessages[i].signed);*/
                     ReplicaResponseMessage replicaMsg = new ReplicaResponseMessage();
                     replicaMsg.setSender(tomMessages[i].getSender());
                     replicaMsg.setContent(tomMessages[i].getContent());
@@ -48,7 +45,7 @@ public class CaptureMessages implements Extractor {
             }
 
         }
-        //System.out.println("prints");
+        
         return tomMessages[lastReceived];
     }
 

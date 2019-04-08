@@ -1,10 +1,10 @@
 package rest.server;
 
 
-import model.OpType;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import model.OpType;
 
 import java.io.*;
 import java.util.Map;
@@ -73,8 +73,6 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         hasReply = true;
                     }
                     break;
-
-
 
 
                 case TRANSFER:

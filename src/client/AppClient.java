@@ -1,11 +1,10 @@
 package client;
 
-import model.OpType;
-import model.ReplicaResponseMessage;
-
-import model.Reply;
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
+import model.OpType;
+import model.ReplicaResponseMessage;
+import model.Reply;
 import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
@@ -37,6 +36,7 @@ public class AppClient {
     private static SecureRandom random = new SecureRandom();
 
     private static List<KeyPair> keys = new ArrayList<KeyPair>();
+
     public static void main(String[] args) throws Exception {
 
         boolean timeout = false;
@@ -111,7 +111,7 @@ public class AppClient {
         String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
 
         KeyPair kp2 = keys.get(random.nextInt(keys.size()));
-        if(kp2.getPublic().equals(kp.getPublic())){
+        if (kp2.getPublic().equals(kp.getPublic())) {
             kp2 = keys.get(random.nextInt(keys.size()));
         }
         //kp = keys.get(random.nextInt(keys.size()));
@@ -143,7 +143,7 @@ public class AppClient {
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
-        for (int i = 0; i < r.getMessages().size(); i++){
+        for (int i = 0; i < r.getMessages().size(); i++) {
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
@@ -165,7 +165,7 @@ public class AppClient {
 
 
             if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
             }
@@ -174,27 +174,27 @@ public class AppClient {
 
         int majority = 0;
         int numbNonces = 0;
-        for (Double amount: amounts) {
-            if(amount == r.getAmount())
-                majority ++;
+        for (Double amount : amounts) {
+            if (amount == r.getAmount())
+                majority++;
         }
-        for (Long n: lNonces) {
-            if(n+1 == r.getNonce())
-                numbNonces ++;
+        for (Long n : lNonces) {
+            if (n + 1 == r.getNonce())
+                numbNonces++;
         }
 
         // Verify majority of nonces of replicas
-        if(numbNonces >= (lNonces.size()/2)+1){
+        if (numbNonces >= (lNonces.size() / 2) + 1) {
             System.out.println("majority of replicas returns the right nonce");
-        }else{
+        } else {
             System.out.println("No majority reached for nonce");
 
         }
 
         // Verify majority from message replies of replicas
-        if((majority >= (amounts.size()/2)+1)){
+        if ((majority >= (amounts.size() / 2) + 1)) {
             System.out.println("majority of replicas returns the right value");
-        }else{
+        } else {
             System.out.println("No majority reached");
         }
 
@@ -205,11 +205,11 @@ public class AppClient {
 
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("From pubKey: " + publicString.substring(0,50));
-            System.out.println("To pubKey: " + publicString2.substring(0,50));
+            System.out.println("From pubKey: " + publicString.substring(0, 50));
+            System.out.println("To pubKey: " + publicString2.substring(0, 50));
             System.out.println("Transferring amount : " + value);
-            System.out.println(publicString2.substring(0,50) + " now has " + r.getAmount());
-            if(nonce+1 == r.getNonce()){
+            System.out.println(publicString2.substring(0, 50) + " now has " + r.getAmount());
+            if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }
             System.out.println();
@@ -270,7 +270,7 @@ public class AppClient {
             ArrayList<Double> amounts = new ArrayList<Double>();
             ArrayList<Long> lNonces = new ArrayList<Long>();
 
-            for (int i = 0; i < r.getMessages().size(); i++){
+            for (int i = 0; i < r.getMessages().size(); i++) {
                 ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
                 ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
@@ -291,7 +291,7 @@ public class AppClient {
                 sig.initVerify(pk);
                 sig.update(currentReplicaMsg.getSerializedMessage());
                 if (sig.verify(currentReplicaMsg.getSignature())) {
-                    System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
+                    System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
                 } else {
                     System.out.println("Signature of message is invalid");
                 }
@@ -300,27 +300,27 @@ public class AppClient {
 
             int majority = 0;
             int numbNonces = 0;
-            for (Double amount: amounts) {
-                if(amount == r.getAmount())
-                    majority ++;
+            for (Double amount : amounts) {
+                if (amount == r.getAmount())
+                    majority++;
             }
-            for (Long n: lNonces) {
-                if(n+1 == r.getNonce())
-                    numbNonces ++;
+            for (Long n : lNonces) {
+                if (n + 1 == r.getNonce())
+                    numbNonces++;
             }
 
             // Verify majority of nonces of replicas
-            if(numbNonces >= (lNonces.size()/2)+1){
+            if (numbNonces >= (lNonces.size() / 2) + 1) {
                 System.out.println("majority of replicas returns the right nonce");
-            }else{
+            } else {
                 System.out.println("No majority reached for nonce");
 
             }
 
             // Verify majority from message replies of replicas
-            if((majority >= (amounts.size()/2)+1)){
+            if ((majority >= (amounts.size() / 2) + 1)) {
                 System.out.println("majority of replicas returns the right value");
-            }else{
+            } else {
                 System.out.println("No majority reached");
             }
 
@@ -332,10 +332,10 @@ public class AppClient {
 
                 System.out.println();
                 System.out.println("Status: " + response.getStatusInfo());
-                System.out.println("From pubKey: " + publicString.substring(0,50));
-                System.out.println("To pubKey: " + r.getPublicKey().substring(0,50));
+                System.out.println("From pubKey: " + publicString.substring(0, 50));
+                System.out.println("To pubKey: " + r.getPublicKey().substring(0, 50));
                 System.out.println("New amount: " + r.getAmount());
-                if(nonce+1 == r.getNonce()){
+                if (nonce + 1 == r.getNonce()) {
                     System.out.println("Nonces match");
                 }
                 System.out.println();
@@ -417,11 +417,10 @@ public class AppClient {
         Reply r = response.readEntity(Reply.class);
 
 
-
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
-        for (int i = 0; i < r.getMessages().size(); i++){
+        for (int i = 0; i < r.getMessages().size(); i++) {
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
@@ -442,10 +441,9 @@ public class AppClient {
             sig.update(currentReplicaMsg.getSerializedMessage());
 
 
-            if(sig.verify(currentReplicaMsg.getSignature())){
-                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
-            }
-            else{
+            if (sig.verify(currentReplicaMsg.getSignature())) {
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+            } else {
 
                 System.out.println("Signature of message is invalid");
             }
@@ -453,27 +451,27 @@ public class AppClient {
         }
         int majority = 0;
         int numbNonces = 0;
-        for (Double amount: amounts) {
-            if(amount == r.getAmount())
-                majority ++;
+        for (Double amount : amounts) {
+            if (amount == r.getAmount())
+                majority++;
         }
-        for (Long n: lNonces) {
-            if(n+1 == r.getNonce())
-                numbNonces ++;
+        for (Long n : lNonces) {
+            if (n + 1 == r.getNonce())
+                numbNonces++;
         }
 
         // Verify majority of nonces of replicas
-        if(numbNonces >= (lNonces.size()/2)+1){
+        if (numbNonces >= (lNonces.size() / 2) + 1) {
             System.out.println("majority of replicas returns the right nonce");
-        }else{
+        } else {
             System.out.println("No majority reached for nonce");
 
         }
 
         // Verify majority from message replies of replicas
-        if((majority >= (amounts.size()/2)+1)){
+        if ((majority >= (amounts.size() / 2) + 1)) {
             System.out.println("majority of replicas returns the right value");
-        }else{
+        } else {
             System.out.println("No majority reached");
         }
 
@@ -485,9 +483,9 @@ public class AppClient {
 
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("Add money to pubKey: " + publicString.substring(0,50));
+            System.out.println("Add money to pubKey: " + publicString.substring(0, 50));
             System.out.println("Amount: " + r.getAmount());
-            if(nonce+1 == r.getNonce()){
+            if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }
             System.out.println();
@@ -536,7 +534,7 @@ public class AppClient {
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
-        for (int i = 0; i < r.getMessages().size(); i++){
+        for (int i = 0; i < r.getMessages().size(); i++) {
             ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
@@ -545,7 +543,7 @@ public class AppClient {
             //System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
             //System.out.println("replica nonce: " + replicaNonce);
-            
+
 
             amounts.add(replicaMsgAmount);
             lNonces.add(replicaNonce);
@@ -557,7 +555,7 @@ public class AppClient {
             sig.update(currentReplicaMsg.getSerializedMessage());
 
             if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message coming from replica "+currentReplicaMsg.getSender()+" is authentic");
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
             } else {
                 System.out.println("Signature of message is invalid");
             }
@@ -566,27 +564,27 @@ public class AppClient {
 
         int majority = 0;
         int numbNonces = 0;
-        for (Double amount: amounts) {
-            if(amount == r.getAmount())
-                majority ++;
+        for (Double amount : amounts) {
+            if (amount == r.getAmount())
+                majority++;
         }
-        for (Long n: lNonces) {
-            if(n+1 == r.getNonce())
-                numbNonces ++;
+        for (Long n : lNonces) {
+            if (n + 1 == r.getNonce())
+                numbNonces++;
         }
 
         // Verify majority of nonces of replicas
-        if(numbNonces >= (lNonces.size()/2)+1){
+        if (numbNonces >= (lNonces.size() / 2) + 1) {
             System.out.println("majority of replicas returns the right nonce");
-        }else{
+        } else {
             System.out.println("No majority reached for nonce");
 
         }
 
         // Verify majority from message replies of replicas
-        if((majority >= (amounts.size()/2)+1)){
+        if ((majority >= (amounts.size() / 2) + 1)) {
             System.out.println("majority of replicas returns the right value");
-        }else{
+        } else {
             System.out.println("No majority reached");
         }
 
@@ -597,9 +595,9 @@ public class AppClient {
 
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
-            System.out.println("From pubKey: " + publicString.substring(0,50));
+            System.out.println("From pubKey: " + publicString.substring(0, 50));
             System.out.println("New amount: " + r.getAmount());
-            if(nonce+1 == r.getNonce()){
+            if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }
             System.out.println();
@@ -607,7 +605,9 @@ public class AppClient {
         }
     }
 
-    static public class InsecureHostnameVerifier implements HostnameVerifier{
+
+
+    static public class InsecureHostnameVerifier implements HostnameVerifier {
 
         @Override
         public boolean verify(String s, SSLSession sslSession) {

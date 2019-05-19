@@ -39,6 +39,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         boolean hasReply = false;
         Long nonce;
 
+        //PHASE 2
+        Double initValue;
+        String type; //HOMO_ADD or HOMO_OPE_INT
+
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -101,6 +105,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             System.out.println("User making the transfer does not have enough money.");
                         }
                     }
+                    break;
+
+                case CREATE:
+                    publicKey = (String) objIn.readObject();
+                    initValue = (Double) objIn.readObject();
+                    type = (String) objIn.readObject();
+
                     break;
 
             }

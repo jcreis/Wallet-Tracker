@@ -2,6 +2,9 @@ package api;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
+import hj.mlib.HelpSerial;
+import hj.mlib.HomoAdd;
+import hj.mlib.PaillierKey;
 import model.Reply;
 import model.CaptureMessages;
 import rest.server.ReplicaServer;
@@ -12,6 +15,7 @@ import security.PublicKey;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -82,7 +86,8 @@ public class WalletResources {
     public Reply addMoney(@PathParam("publicKey") String publicKey,
                           @QueryParam("value") Double value,
                           @QueryParam("nonce") Long nonce,
-                          @QueryParam("msg") String msg) throws Exception {
+                          @QueryParam("msg") String msg)
+            throws Exception {
 
 
         Long replyNonce;
@@ -148,8 +153,12 @@ public class WalletResources {
     @POST
     @Path("/transfer/{fpublicKey}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey, @QueryParam("tpublicKey") String tpublicKey, @QueryParam("value")
-            Double value, @QueryParam("nonce") Long nonce, @QueryParam("msg") String msg) throws Exception {
+    public Reply transferMoney(@PathParam("fpublicKey") String fpublicKey,
+                               @QueryParam("tpublicKey") String tpublicKey,
+                               @QueryParam("value") Double value,
+                               @QueryParam("nonce") Long nonce,
+                               @QueryParam("msg") String msg)
+            throws Exception {
 
 
         Long replyNonce;
@@ -204,8 +213,10 @@ public class WalletResources {
     @GET
     @Path("/{publicKey}/money")
     @Produces(MediaType.APPLICATION_JSON)
-    public Reply getMoney(@PathParam("publicKey") String publicKey, @QueryParam("nonce") Long nonce,
-                          @QueryParam("msg") String msg) throws Exception {
+    public Reply getMoney(@PathParam("publicKey") String publicKey,
+                          @QueryParam("nonce") Long nonce,
+                          @QueryParam("msg") String msg)
+            throws Exception {
 
         Long replyNonce;
 
@@ -254,5 +265,76 @@ public class WalletResources {
         return null;
     }
 
+    // key, initial_value, “HOMO_ADD”
+    @SuppressWarnings("Duplicates")
+    @POST
+    @Path("/create/{publicKey}/")
+    public Reply create(@PathParam("publicKey") String publicKey,
+                        @QueryParam("initValue") Double initValue,
+                        @QueryParam("type") String type)
+            throws Exception {
+
+
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+
+            objOut.writeObject(CREATE);
+            objOut.writeObject(publicKey);
+            objOut.writeObject(initValue);
+            objOut.writeObject(type);
+        }catch (Exception e){
+
+        }
+
+        PaillierKey key = HomoAdd.generateKey();
+        key.printValues();
+
+        BigInteger value = new BigInteger(""+initValue.intValue());
+        BigInteger dbValue = new BigInteger("0");
+        /*
+        BigInteger big1 = new BigInteger("11");
+        BigInteger big2 = new BigInteger("22");
+        */
+        BigInteger valueCode = HomoAdd.encrypt(value, key);
+        BigInteger dbValueCode = HomoAdd.encrypt(dbValue, key);
+        /*
+        BigInteger big1Code = HomoAdd.encrypt(big1, pk);
+        BigInteger big2Code = HomoAdd.encrypt(big2, pk);
+        */
+        /*System.out.println("big1:     " + big1);
+        System.out.println("big2:     " + big2);
+        System.out.println("big1Code: " + big1Code);
+        System.out.println("big2Code: " + big2Code);*/
+
+        BigInteger valuePlusDbValueCode = HomoAdd.sum(valueCode, dbValueCode, key.getNsquare());
+        //BigInteger big1plus2Code = HomoAdd.sum(big1Code, big2Code, pk.getNsquare());
+        //System.out.println("big1+big2 Code: " + big1plus2Code);
+
+        BigInteger valuePlusDbValue = HomoAdd.decrypt(valuePlusDbValueCode, key);
+        //BigInteger big1plus2 = HomoAdd.decrypt(big1plus2Code, pk);
+        //System.out.println("Resultado = " + big1plus2.intValue());
+
+        /*System.out.println("Teste de subtracao");
+        BigInteger big1minus2Code = HomoAdd.dif(big1Code, big2Code, pk.getNsquare());
+        System.out.println("big1-big2 Code: " + big1minus2Code);
+        BigInteger big1minus2 = HomoAdd.decrypt(big1minus2Code, pk);
+        System.out.println("Resultado = " + big1minus2.intValue());*/
+
+        // Test key serialization
+        String chaveGuardada = "";
+
+        chaveGuardada = HelpSerial.toString(key);
+
+        /*System.out.println("Chave guardada: " + chaveGuardada);
+        // Test with saved key
+        PaillierKey key2 = null;
+        BigInteger op3 = null;
+        key2 = (PaillierKey) HelpSerial.fromString(chaveGuardada);
+        op3 = HomoAdd.decrypt(big1minus2, pk2);
+        System.out.println("Subtracao: " + op3);*/
+
+
+        return null;
+    }
 
 }

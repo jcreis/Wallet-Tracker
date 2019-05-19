@@ -2,6 +2,8 @@ package client;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
+import hj.mlib.HomoAdd;
+import hj.mlib.PaillierKey;
 import model.OpType;
 import model.ReplicaResponseMessage;
 import model.Reply;
@@ -22,12 +24,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
-import java.security.Signature;
+import java.security.*;
 import java.util.*;
 
 public class AppClient {
@@ -660,6 +660,55 @@ public class AppClient {
             System.out.println();
 
         }
+    }
+
+    @SuppressWarnings("Duplicates")
+    public static void create() throws Exception {
+        System.out.println("#################################");
+        System.out.println("########## C R E A T E ##########");
+        System.out.println("#################################");
+        System.out.println();
+
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+
+
+        Random randomm = new Random();
+        Double value = randomm.nextInt(899) + 100.0;
+
+        String type = "HOMO_ADD"; //ALSO HOMO_OPE_INT
+
+        /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(1024);
+        KeyPair kp = kpg.generateKeyPair();
+
+        keys.add(kp);
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());*/
+
+        PaillierKey key = HomoAdd.generateKey();
+        key.printValues();
+
+        BigInteger initValue = new BigInteger(""+value.intValue());
+
+        BigInteger valueCode = HomoAdd.encrypt(initValue, key);
+
+
+        //TODO just for example, to change
+        String pathPublicKey = "key";
+
+        Response response = target.path(pathPublicKey)
+                .queryParam("value", valueCode)
+                .queryParam("type", type)
+                /*.queryParam("msg", msgHashStr)*/
+                .request()
+                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
     }
 
 

@@ -7,6 +7,7 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import model.OpType;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,7 +36,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         byte[] reply = null;
         String publicKey;
         String publicKey2;
-        Double value;
+        String value;
 
         boolean hasReply = false;
         Long nonce;
@@ -55,27 +56,43 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 case ADD_MONEY:
 
                     publicKey = (String) objIn.readObject();
-                    value = (Double) objIn.readObject();
+                    value = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
 
-                    if (db.containsKey(publicKey)) {
-                        if (value >= 0) {
-                            db.put(publicKey, db.get(publicKey) + value);
-                            // returns updated money
-                            objOut.writeObject(db.get(publicKey));
-                            objOut.writeObject(nonce);
+                    switch(type) {
 
-                            hasReply = true;
-                        } else {
-                            System.out.println("Invalid amount.");
-                        }
-                    } else {
-                        db.put(publicKey, value);
-                        objOut.writeObject(db.get(publicKey));
-                        objOut.writeObject(nonce);
+                        case "WALLET":
 
-                        hasReply = true;
+                            Double doubleValue = Double.parseDouble(value);
+                            if (db.containsKey(publicKey)) {
+                                if (doubleValue >= 0) {
+                                    db.put(publicKey, db.get(publicKey) + doubleValue);
+                                    // returns updated money
+                                    objOut.writeObject(db.get(publicKey));
+                                    objOut.writeObject(nonce);
+
+                                    hasReply = true;
+                                } else {
+                                    System.out.println("Invalid amount.");
+                                }
+                            } else {
+                                db.put(publicKey, doubleValue);
+                                objOut.writeObject(db.get(publicKey));
+                                objOut.writeObject(nonce);
+
+                                hasReply = true;
+                            }
+                            break;
+                        case "HOMO_ADD":
+                            BigInteger BigIntegerValue = new BigInteger(value);
+
+                            break;
+
+                        case "HOMO_OPE_INT":
+
+                            float floatValue = Float.parseFloat(value);
+                            break;
                     }
                     break;
 
@@ -84,19 +101,20 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     publicKey = (String) objIn.readObject();
                     publicKey2 = (String) objIn.readObject();
-                    value = (Double) objIn.readObject();
+                    value = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
 
+                    Double doubleValue = Double.parseDouble(value);
 
                     if (!db.containsKey(publicKey) || !db.containsKey(publicKey2)) {
                         System.out.println("User not found.");
-                    } else if (value < 0) {
+                    } else if (doubleValue < 0) {
                         System.out.println("Invalid amount.");
                     } else {
 
-                        if (db.get(publicKey) >= value) {
-                            db.put(publicKey, db.get(publicKey) - value);
-                            db.put(publicKey2, db.get(publicKey2) + value);
+                        if (db.get(publicKey) >= doubleValue) {
+                            db.put(publicKey, db.get(publicKey) - doubleValue);
+                            db.put(publicKey2, db.get(publicKey2) + doubleValue);
                             objOut.writeObject(db.get(publicKey2));
                             //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
                             objOut.writeObject(nonce);

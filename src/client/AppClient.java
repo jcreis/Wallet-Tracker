@@ -3,6 +3,7 @@ package client;
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
 import hj.mlib.HomoAdd;
+import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
 import model.OpType;
 import model.ReplicaResponseMessage;
@@ -47,7 +48,7 @@ public class AppClient {
 
         long initAddMoneyTime = System.currentTimeMillis();
         while(true){
-            addMoney();
+            addMoney("WALLET");
             if(System.currentTimeMillis()-initAddMoneyTime >= 300*60){
                 break;
             }
@@ -386,7 +387,7 @@ public class AppClient {
     }
 
     @SuppressWarnings("Duplicates")
-    public static void addMoney() throws Exception {
+    public static void addMoney(String type) throws Exception {
         System.out.println("#################################");
         System.out.println("####### A D D - M O N E Y #######");
         System.out.println("#################################");
@@ -401,11 +402,10 @@ public class AppClient {
         System.out.println("URI: " + baseURI);
 
 
-
         Random randomm = new Random();
 
+        //Adicionar um valor random
         Double value = randomm.nextInt(899) + 100.0;
-
 
 
         File file = new File("./publicKey.txt");
@@ -444,6 +444,8 @@ public class AppClient {
 
         Long nonce = random.nextLong();
 
+        Reply r;
+
         String msg = publicString + value + nonce;
         byte[] hash = Digest.getDigest(msg.getBytes());
 
@@ -455,18 +457,66 @@ public class AppClient {
         // Calculate time for request
         long initRequestTime = System.currentTimeMillis();
 
-        Response response = target.path(pathPublicKey)
-                .queryParam("value", value)
-                .queryParam("nonce", nonce)
-                .queryParam("msg", msgHashStr)
-                .request()
-                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+        Response response;
+
+
+        switch (type) {
+
+            case "WALLET":
+                response = target.path(pathPublicKey)
+                        .queryParam("value", value.toString())
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .queryParam("type", type)
+                        .request()
+                        .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
+                r = response.readEntity(Reply.class);
+                break;
+
+            case "HOMO_INT":
+                PaillierKey pk = HomoAdd.generateKey();
+                pk.printValues();
+
+                BigInteger big1 =  BigInteger.valueOf(value.intValue());
+                BigInteger encryptValue = HomoAdd.encrypt(big1, pk);
+                System.out.println("value: " + value);
+                System.out.println("encrypt Value: " + encryptValue);
+
+                response = target.path(pathPublicKey)
+                        .queryParam("value", encryptValue.toString())
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .queryParam("type", type)
+                        .request()
+                        .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
+                r = response.readEntity(Reply.class);
+                break;
+
+            case "HOMO_OPE_INT":
+                
+                long key = HomoOpeInt.generateKey();
+                HomoOpeInt ope = new HomoOpeInt(key);
+                Long openValue = ope.encrypt(value.intValue());
+                response = target.path(pathPublicKey)
+                        .queryParam("value", openValue.toString())
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .queryParam("type", type)
+                        .request()
+                        .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+
+                r = response.readEntity(Reply.class);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected type: " + type);
+        }
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
         addMoneyRequestTimes.add(finalRequestTime);
 
-        Reply r = response.readEntity(Reply.class);
-
+        
 
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();

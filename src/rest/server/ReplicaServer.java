@@ -36,11 +36,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String publicKey;
         String publicKey2;
         Double value;
+
         boolean hasReply = false;
         Long nonce;
 
         //PHASE 2
-        Double initValue;
+
         String type; //HOMO_ADD or HOMO_OPE_INT
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
@@ -56,10 +57,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     publicKey = (String) objIn.readObject();
                     value = (Double) objIn.readObject();
                     nonce = (Long) objIn.readObject();
+                    type = (String) objIn.readObject();
 
                     if (db.containsKey(publicKey)) {
                         if (value >= 0) {
-                            System.out.println("2");
                             db.put(publicKey, db.get(publicKey) + value);
                             // returns updated money
                             objOut.writeObject(db.get(publicKey));
@@ -107,12 +108,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     }
                     break;
 
-                case CREATE:
+                /*case CREATE:
                     publicKey = (String) objIn.readObject();
                     initValue = (Double) objIn.readObject();
                     type = (String) objIn.readObject();
 
-                    break;
+                    break;*/
 
             }
             if (hasReply) {

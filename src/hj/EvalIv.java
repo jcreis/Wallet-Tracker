@@ -1,7 +1,7 @@
 package hj;
 
 import javax.crypto.SecretKey;
-import hlib.hj.mlib.HomoRand;
+import hj.mlib.HomoRand;
 
 /**
  * Testa tempo de geracao de chaves e vetores de inicializacao

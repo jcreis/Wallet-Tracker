@@ -2,8 +2,8 @@ package hj;
 
 import javax.crypto.SecretKey;
 
-import hlib.hj.mlib.HelpSerial;
-import hlib.hj.mlib.HomoSearch;
+import hj.mlib.HelpSerial;
+import hj.mlib.HomoSearch;
 
 
 /**

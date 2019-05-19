@@ -2,7 +2,7 @@ package hj;
 
 import java.io.UnsupportedEncodingException;
 import javax.crypto.SecretKey;
-import hlib.hj.mlib.HomoDet;
+import hj.mlib.HomoDet;
 
 /**
  * Testa utilizacao da cifra determinista

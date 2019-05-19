@@ -1,6 +1,6 @@
 package hj.demos;
 
-import hlib.hj.mlib.HomoOpeInt;
+import hj.mlib.HomoOpeInt;
 
 public class ExampleOPEInt {
 

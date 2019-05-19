@@ -84,67 +84,72 @@ public class WalletResources {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Reply addMoney(@PathParam("publicKey") String publicKey,
-                          @QueryParam("value") Double value,
+                          @QueryParam("value") String value,
                           @QueryParam("nonce") Long nonce,
-                          @QueryParam("msg") String msg)
+                          @QueryParam("msg") String msg,
+                          @QueryParam("type") String type)
+
             throws Exception {
 
 
-        Long replyNonce;
+            Long replyNonce;
 
-        // Reads admin pubKey
-        File file = new File("./publicKey.txt");
-        String adminPublicString = null;
-        Scanner sc = new Scanner(file);
-        while (sc.hasNextLine()) {
-            adminPublicString = sc.next();
-        }
-        byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
-        PublicKey adminPubKey = PublicKey.createKey(adminPublic);
+            // Reads admin pubKey
+            File file = new File("./publicKey.txt");
+            String adminPublicString = null;
+            Scanner sc = new Scanner(file);
+            while (sc.hasNextLine()) {
+                adminPublicString = sc.next();
+            }
+            byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
+            PublicKey adminPubKey = PublicKey.createKey(adminPublic);
 
-        // Prepares Hash of message H(N), N = (pubKey, value, nonce)
-        URLDecoder.decode(publicKey, "UTF-8");
-        String verify = publicKey + value + nonce;
-        byte[] hash = Digest.getDigest(verify.getBytes());
+            // Prepares Hash of message H(N), N = (pubKey, value, nonce)
+            URLDecoder.decode(publicKey, "UTF-8");
+            String verify = publicKey + value + nonce;
+            byte[] hash = Digest.getDigest(verify.getBytes());
 
-        // UnHash H(N)
-        byte[] decodedBytes = Base64.getDecoder().decode(msg);
-        byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
+            // UnHash H(N)
+            byte[] decodedBytes = Base64.getDecoder().decode(msg);
+            byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
-        // Checks if Hashes match
-        if (Arrays.equals(hashDecriptPriv, hash)) {
+            // Checks if Hashes match
+            if (Arrays.equals(hashDecriptPriv, hash)) {
 
-            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+                try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                     ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                objOut.writeObject(ADD_MONEY);
-                objOut.writeObject(publicKey);
-                objOut.writeObject(value);
-                objOut.writeObject(nonce);
+                    objOut.writeObject(ADD_MONEY);
+                    objOut.writeObject(publicKey);
+                    objOut.writeObject(value);
+                    objOut.writeObject(nonce);
+                    objOut.writeObject(type);
 
-                objOut.flush();
-                byteOut.flush();
-                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                    objOut.flush();
+                    byteOut.flush();
+                    byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
 
-                if (reply.length == 0)
-                    return null;
+                    if (reply.length == 0)
+                        return null;
 
-                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                    try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                         ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                    double money = (Double) objIn.readObject();
-                    replyNonce = (Long) objIn.readObject();
-                    System.out.println("RESPONSE FROM ADD MONEY IS:");
-                    Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
-                    return r;
+                        double money = (Double) objIn.readObject();
+                        replyNonce = (Long) objIn.readObject();
+                        System.out.println("RESPONSE FROM ADD MONEY IS:");
+                        Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                        System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
+                        return r;
+                    }
+
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("Exception putting value into map: " + e.getMessage());
                 }
 
-            } catch (IOException | ClassNotFoundException e) {
-                System.out.println("Exception putting value into map: " + e.getMessage());
-            }
         }
         throw new NotAuthorizedException("Don't have permission to add money.");
+
 
     }
 
@@ -265,7 +270,7 @@ public class WalletResources {
         return null;
     }
 
-    // key, initial_value, “HOMO_ADD”
+    /*// key, initial_value, “HOMO_ADD”
     @SuppressWarnings("Duplicates")
     @POST
     @Path("/create/{publicKey}/")
@@ -289,22 +294,22 @@ public class WalletResources {
         PaillierKey key = HomoAdd.generateKey();
         key.printValues();
 
-        BigInteger value = new BigInteger(""+initValue.intValue());
+        BigInteger value = new BigInteger(""+ initValue.intValue());
         BigInteger dbValue = new BigInteger("0");
-        /*
+        *//*
         BigInteger big1 = new BigInteger("11");
         BigInteger big2 = new BigInteger("22");
-        */
+        *//*
         BigInteger valueCode = HomoAdd.encrypt(value, key);
         BigInteger dbValueCode = HomoAdd.encrypt(dbValue, key);
-        /*
+        *//*
         BigInteger big1Code = HomoAdd.encrypt(big1, pk);
         BigInteger big2Code = HomoAdd.encrypt(big2, pk);
-        */
-        /*System.out.println("big1:     " + big1);
+        *//*
+        *//*System.out.println("big1:     " + big1);
         System.out.println("big2:     " + big2);
         System.out.println("big1Code: " + big1Code);
-        System.out.println("big2Code: " + big2Code);*/
+        System.out.println("big2Code: " + big2Code);*//*
 
         BigInteger valuePlusDbValueCode = HomoAdd.sum(valueCode, dbValueCode, key.getNsquare());
         //BigInteger big1plus2Code = HomoAdd.sum(big1Code, big2Code, pk.getNsquare());
@@ -314,27 +319,27 @@ public class WalletResources {
         //BigInteger big1plus2 = HomoAdd.decrypt(big1plus2Code, pk);
         //System.out.println("Resultado = " + big1plus2.intValue());
 
-        /*System.out.println("Teste de subtracao");
+        *//*System.out.println("Teste de subtracao");
         BigInteger big1minus2Code = HomoAdd.dif(big1Code, big2Code, pk.getNsquare());
         System.out.println("big1-big2 Code: " + big1minus2Code);
         BigInteger big1minus2 = HomoAdd.decrypt(big1minus2Code, pk);
-        System.out.println("Resultado = " + big1minus2.intValue());*/
+        System.out.println("Resultado = " + big1minus2.intValue());*//*
 
         // Test key serialization
         String chaveGuardada = "";
 
         chaveGuardada = HelpSerial.toString(key);
 
-        /*System.out.println("Chave guardada: " + chaveGuardada);
+        *//*System.out.println("Chave guardada: " + chaveGuardada);
         // Test with saved key
         PaillierKey key2 = null;
         BigInteger op3 = null;
         key2 = (PaillierKey) HelpSerial.fromString(chaveGuardada);
         op3 = HomoAdd.decrypt(big1minus2, pk2);
-        System.out.println("Subtracao: " + op3);*/
+        System.out.println("Subtracao: " + op3);*//*
 
 
         return null;
-    }
+    }*/
 
 }

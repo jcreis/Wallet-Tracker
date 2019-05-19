@@ -2,9 +2,9 @@ package hj;
 
 import java.math.BigInteger;
 
-import hlib.hj.mlib.HelpSerial;
-import hlib.hj.mlib.HomoAdd;
-import hlib.hj.mlib.PaillierKey;
+import hj.mlib.HelpSerial;
+import hj.mlib.HomoAdd;
+import hj.mlib.PaillierKey;
 
 /**
  * Testa utilizacao de cifra que permite adicionar valores com dados cifrados.

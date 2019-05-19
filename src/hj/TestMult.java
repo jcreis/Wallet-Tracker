@@ -5,7 +5,7 @@ import java.security.KeyPair;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
-import hlib.hj.mlib.HomoMult;
+import hj.mlib.HomoMult;
 
 /**
  * Testa utilizacao da cifra que permite multiplicacoes

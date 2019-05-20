@@ -9,6 +9,8 @@ import model.OpType;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -91,6 +93,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             BigInteger BigIntegerValue = new BigInteger(value);
                             if (db.containsKey(publicKey)) {
                                 BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey));
+                                //TODO
                                 //BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, pk.);
                                 //db.put(publicKey, sum.toString());
 
@@ -179,6 +182,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         boolean hasReply = false;
         String publicKey;
         Long nonce;
+        int higher = Integer.MAX_VALUE;
+        int lower= Integer.MIN_VALUE;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -191,16 +196,39 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 case GET_MONEY:
                     publicKey = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
+                    higher = (Integer) objIn.readObject();
+                    lower = (Integer) objIn.readObject();
+                    boolean moreThanOne = false;
 
-                    if (db.containsKey(publicKey)) {
-                        //System.out.println("Amount: " + db.get(publicKey));
+                    if( higher != Integer.MAX_VALUE && lower != Integer.MIN_VALUE ){
+                        // HOMO_OPE_INT
+                        moreThanOne = true;
+                        int iterationKey = lower;
+                        List<String> moneyList = new ArrayList<String>();
 
-                        objOut.writeObject(db.get(publicKey));
-                        objOut.writeObject(nonce);
+                        objOut.writeObject(moreThanOne);
 
-                        hasReply = true;
-                    } else {
-                        System.out.println("User not found in the database.");
+                        // prepara output - lista de moneys de todas as contas entre low e high
+                        while(iterationKey <=higher){
+                            if(db.containsKey(iterationKey)){
+                                moneyList.add(db.get(iterationKey));
+                            }
+                            iterationKey++;
+                        }
+                        objOut.writeObject(moneyList);
+                    }
+                    else {
+                        // WALLET
+                        if (db.containsKey(publicKey)) {
+                            //System.out.println("Amount: " + db.get(publicKey));
+                            objOut.writeObject(moreThanOne);
+                            objOut.writeObject(db.get(publicKey));
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
+                        } else {
+                            System.out.println("User not found in the database.");
+                        }
                     }
                     break;
 

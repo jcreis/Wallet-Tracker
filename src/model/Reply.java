@@ -1,12 +1,14 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Reply {
 
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
     double amount;
+    List<String> listAmounts;
     long nonce;
 
     OpType operationType;
@@ -18,6 +20,14 @@ public class Reply {
         this.messages = messages;
         this.publicKey = publicKey;
         this.amount = amount;
+        this.nonce = nonce;
+        this.operationType = operationType;
+
+    }
+    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, List<String> listAmounts, long nonce){
+        this.messages = messages;
+        this.publicKey = publicKey;
+        this.listAmounts = listAmounts;
         this.nonce = nonce;
         this.operationType = operationType;
 

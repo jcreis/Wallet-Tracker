@@ -64,7 +64,7 @@ public class AppClient {
                 while (true){
                     try {
                         transferMoney();
-                        getMoney();
+                        getMoney("WALLET");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -86,7 +86,7 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
-                        getMoney();
+                        getMoney("WALLET");
                         transferMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -497,7 +497,7 @@ public class AppClient {
                 break;
 
             case "HOMO_OPE_INT":
-                
+
                 long key = HomoOpeInt.generateKey();
                 HomoOpeInt ope = new HomoOpeInt(key);
                 Long openValue = ope.encrypt(value.intValue());
@@ -518,7 +518,7 @@ public class AppClient {
         long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
         addMoneyRequestTimes.add(finalRequestTime);
 
-        
+
 
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
@@ -598,7 +598,7 @@ public class AppClient {
     }
 
     @SuppressWarnings("Duplicates")
-    public static void getMoney() throws Exception {
+    public static void getMoney(String type) throws Exception {
         System.out.println("#################################");
         System.out.println("####### G E T - M O N E Y #######");
         System.out.println("#################################");
@@ -621,6 +621,8 @@ public class AppClient {
 
         Long nonce = random.nextLong();
 
+        Reply r;
+
         String msg = publicString + nonce;
         byte[] hash = Digest.getDigest(msg.getBytes());
 
@@ -629,19 +631,53 @@ public class AppClient {
 
         long initRequestTime = System.currentTimeMillis();
 
-        Response response = target.path(pathPublicKey + "/money")
-                .queryParam("nonce", nonce)
-                .queryParam("msg", msgHashStr)
-                .request()
-                .get();
+        Response response;
+        switch (type) {
+
+            case "WALLET":
+                response = target.path(pathPublicKey + "/money")
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .request()
+                        .get();
+                r = response.readEntity(Reply.class);
+                break;
+
+            case "HOMO_OPE_INT":
+                int randValue1= random.nextInt();
+                int randValue2=random.nextInt();
+                while(randValue1 < randValue2) {
+                    randValue1 = random.nextInt();
+                }
+
+                long key = HomoOpeInt.generateKey();
+                HomoOpeInt ope = new HomoOpeInt(key);
+                Long higher = ope.encrypt(randValue1);
+                Long lower = ope.encrypt(randValue2);
+
+                //TODO  pathPublicKey nao é preciso no url, deixamos?
+                response = target.path(pathPublicKey+"/money")
+                        .queryParam("higher", higher)
+                        .queryParam("lower", lower)
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .request()
+                        .get();
+                r = response.readEntity(Reply.class);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected type: " + type);
+        }
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime ;
         getMoneyRequestTimes.add(finalRequestTime);
 
-        Reply r = response.readEntity(Reply.class);
+
 
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
+
+
 
         for (ReplicaResponseMessage currentReplicaMsg: r.getMessages()) {
             if (currentReplicaMsg != null) {
@@ -712,55 +748,6 @@ public class AppClient {
             System.out.println();
 
         }
-    }
-
-    @SuppressWarnings("Duplicates")
-    public static void create() throws Exception {
-        System.out.println("#################################");
-        System.out.println("########## C R E A T E ##########");
-        System.out.println("#################################");
-        System.out.println();
-
-        Client client = ClientBuilder.newBuilder()
-                .hostnameVerifier(new InsecureHostnameVerifier())
-                .build();
-
-        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
-        WebTarget target = client.target(baseURI);
-        System.out.println("URI: " + baseURI);
-
-
-        Random randomm = new Random();
-        Double value = randomm.nextInt(899) + 100.0;
-
-        String type = "HOMO_ADD"; //ALSO HOMO_OPE_INT
-
-        /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(1024);
-        KeyPair kp = kpg.generateKeyPair();
-
-        keys.add(kp);
-        PublicKey pub = new PublicKey("RSA", kp.getPublic());
-        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());*/
-
-        PaillierKey key = HomoAdd.generateKey();
-        key.printValues();
-
-        BigInteger initValue = new BigInteger(""+value.intValue());
-
-        BigInteger valueCode = HomoAdd.encrypt(initValue, key);
-
-
-        //TODO just for example, to change
-        String pathPublicKey = "key";
-
-        Response response = target.path(pathPublicKey)
-                .queryParam("value", valueCode)
-                .queryParam("type", type)
-                /*.queryParam("msg", msgHashStr)*/
-                .request()
-                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
-
     }
 
 

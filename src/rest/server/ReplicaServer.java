@@ -4,6 +4,7 @@ package rest.server;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import hj.mlib.HomoAdd;
 import model.OpType;
 
 import java.io.*;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaServer extends DefaultSingleRecoverable {
 
-    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
+    private Map<String, String> db = new ConcurrentHashMap<>();
 
 
     public ReplicaServer(int id) {
@@ -67,17 +68,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             Double doubleValue = Double.parseDouble(value);
                             if (db.containsKey(publicKey)) {
                                 if (doubleValue >= 0) {
-                                    db.put(publicKey, db.get(publicKey) + doubleValue);
+                                    Double newValue = Double.parseDouble(db.get(publicKey)) + doubleValue;
+                                    db.put(publicKey, newValue.toString());
                                     // returns updated money
                                     objOut.writeObject(db.get(publicKey));
                                     objOut.writeObject(nonce);
+                                    objOut.writeObject(type);
 
                                     hasReply = true;
                                 } else {
                                     System.out.println("Invalid amount.");
                                 }
                             } else {
-                                db.put(publicKey, doubleValue);
+                                db.put(publicKey, doubleValue.toString());
                                 objOut.writeObject(db.get(publicKey));
                                 objOut.writeObject(nonce);
 
@@ -86,12 +89,29 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             break;
                         case "HOMO_ADD":
                             BigInteger BigIntegerValue = new BigInteger(value);
+                            if (db.containsKey(publicKey)) {
+                                BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey));
+                                //BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, pk.);
+                                //db.put(publicKey, sum.toString());
+
+                            } else {
+                                db.put(publicKey, BigIntegerValue.toString());
+                                objOut.writeObject(db.get(publicKey));
+                                objOut.writeObject(nonce);
+
+                                hasReply = true;
+                            }
 
                             break;
 
                         case "HOMO_OPE_INT":
 
-                            float floatValue = Float.parseFloat(value);
+                            //Long longValue = Long.getLong(value);
+                            if (db.containsKey(publicKey)) {
+                                db.put(publicKey, value);
+
+
+                            }
                             break;
                     }
                     break;
@@ -111,10 +131,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     } else if (doubleValue < 0) {
                         System.out.println("Invalid amount.");
                     } else {
-
-                        if (db.get(publicKey) >= doubleValue) {
-                            db.put(publicKey, db.get(publicKey) - doubleValue);
-                            db.put(publicKey2, db.get(publicKey2) + doubleValue);
+                        Double doubleValueDb = Double.parseDouble(db.get(publicKey));
+                        Double doubleValueDb2 = Double.parseDouble(db.get(publicKey2));
+                        if (doubleValueDb >= doubleValue) {
+                            Double transfSum = doubleValueDb2 + doubleValue;
+                            Double transfMin = doubleValueDb - doubleValue;
+                            db.put(publicKey, transfMin.toString());
+                            db.put(publicKey2, transfSum.toString());
                             objOut.writeObject(db.get(publicKey2));
                             //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
                             objOut.writeObject(nonce);

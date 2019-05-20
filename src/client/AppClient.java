@@ -410,11 +410,13 @@ public class AppClient {
 
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");
+        File file3 = new File("./homoAddKey.txt");
         String adminPublicString = null;
         String adminPrivateString = null;
 
         Scanner sc = new Scanner(file);
         Scanner sc2 = new Scanner(file2);
+        Scanner sc3 = new Scanner(file3);
 
         while (sc.hasNextLine() && sc2.hasNextLine()) {
             adminPublicString = sc.next();

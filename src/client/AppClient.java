@@ -645,10 +645,15 @@ public class AppClient {
                 break;
 
             case "HOMO_OPE_INT":
-                int randValue1= random.nextInt();
-                int randValue2=random.nextInt();
-                while(randValue1 < randValue2) {
-                    randValue1 = random.nextInt();
+                int randValue1 = random.nextInt();
+                int randValue2 = random.nextInt();
+                // higher is less than lower
+                if(randValue1 < randValue2) {
+                    int temp = randValue2;
+                    // lower becomes higher
+                    randValue2 = randValue1;
+                    // higher becomes lower
+                    randValue1 = randValue2;
                 }
 
                 long key = HomoOpeInt.generateKey();
@@ -656,8 +661,7 @@ public class AppClient {
                 Long higher = ope.encrypt(randValue1);
                 Long lower = ope.encrypt(randValue2);
 
-                //TODO  pathPublicKey nao é preciso no url, deixamos?
-                response = target.path(pathPublicKey+"/money")
+                response = target.path("/money")
                         .queryParam("higher", higher)
                         .queryParam("lower", lower)
                         .queryParam("nonce", nonce)

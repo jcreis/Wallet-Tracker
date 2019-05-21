@@ -288,76 +288,49 @@ public class WalletResources {
 
 
 
-    /*// key, initial_value, “HOMO_ADD”
     @SuppressWarnings("Duplicates")
-    @POST
-    @Path("/create/{publicKey}/")
-    public Reply create(@PathParam("publicKey") String publicKey,
-                        @QueryParam("initValue") Double initValue,
-                        @QueryParam("type") String type)
+    @GET
+    @Path("/money/")
+    public Reply getHOMO_OPE(@QueryParam("higher") Long higher,
+                             @QueryParam("lower") Long lower,
+                             @QueryParam("nonce") Long nonce,
+                             @QueryParam("msg") String msg)
             throws Exception {
 
 
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-            objOut.writeObject(CREATE);
-            objOut.writeObject(publicKey);
-            objOut.writeObject(initValue);
-            objOut.writeObject(type);
+            objOut.writeObject(GET_HOMO_OPE);
+            objOut.writeObject(higher.doubleValue());
+            objOut.writeObject(lower.doubleValue());
+            objOut.writeObject(nonce);
+            objOut.writeObject(msg);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            if (reply.length == 0)
+                return null;
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+                if(true){
+
+                }else{
+
+                }
+
+            }
         }catch (Exception e){
 
         }
 
-        PaillierKey key = HomoAdd.generateKey();
-        key.printValues();
 
-        BigInteger value = new BigInteger(""+ initValue.intValue());
-        BigInteger dbValue = new BigInteger("0");
-        *//*
-        BigInteger big1 = new BigInteger("11");
-        BigInteger big2 = new BigInteger("22");
-        *//*
-        BigInteger valueCode = HomoAdd.encrypt(value, key);
-        BigInteger dbValueCode = HomoAdd.encrypt(dbValue, key);
-        *//*
-        BigInteger big1Code = HomoAdd.encrypt(big1, pk);
-        BigInteger big2Code = HomoAdd.encrypt(big2, pk);
-        *//*
-        *//*System.out.println("big1:     " + big1);
-        System.out.println("big2:     " + big2);
-        System.out.println("big1Code: " + big1Code);
-        System.out.println("big2Code: " + big2Code);*//*
-
-        BigInteger valuePlusDbValueCode = HomoAdd.sum(valueCode, dbValueCode, key.getNsquare());
-        //BigInteger big1plus2Code = HomoAdd.sum(big1Code, big2Code, pk.getNsquare());
-        //System.out.println("big1+big2 Code: " + big1plus2Code);
-
-        BigInteger valuePlusDbValue = HomoAdd.decrypt(valuePlusDbValueCode, key);
-        //BigInteger big1plus2 = HomoAdd.decrypt(big1plus2Code, pk);
-        //System.out.println("Resultado = " + big1plus2.intValue());
-
-        *//*System.out.println("Teste de subtracao");
-        BigInteger big1minus2Code = HomoAdd.dif(big1Code, big2Code, pk.getNsquare());
-        System.out.println("big1-big2 Code: " + big1minus2Code);
-        BigInteger big1minus2 = HomoAdd.decrypt(big1minus2Code, pk);
-        System.out.println("Resultado = " + big1minus2.intValue());*//*
-
-        // Test key serialization
-        String chaveGuardada = "";
-
-        chaveGuardada = HelpSerial.toString(key);
-
-        *//*System.out.println("Chave guardada: " + chaveGuardada);
-        // Test with saved key
-        PaillierKey key2 = null;
-        BigInteger op3 = null;
-        key2 = (PaillierKey) HelpSerial.fromString(chaveGuardada);
-        op3 = HomoAdd.decrypt(big1minus2, pk2);
-        System.out.println("Subtracao: " + op3);*//*
 
 
         return null;
-    }*/
+    }
 
 }

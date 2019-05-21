@@ -6,6 +6,7 @@ import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import hj.mlib.HomoAdd;
 import model.OpType;
+import model.TypeAmount;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaServer extends DefaultSingleRecoverable {
 
-    private Map<String, String> db = new ConcurrentHashMap<>();
+    private Map<String, TypeAmount> db = new ConcurrentHashMap<>();
 
 
     public ReplicaServer(int id) {
@@ -66,17 +67,17 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     nSquare = (BigInteger) objIn.readObject();
 
 
-                    switch(type) {
+                    switch (type) {
 
                         case "WALLET":
 
                             Double doubleValue = Double.parseDouble(value);
                             if (db.containsKey(publicKey)) {
                                 if (doubleValue >= 0) {
-                                    Double newValue = Double.parseDouble(db.get(publicKey)) + doubleValue;
-                                    db.put(publicKey, newValue.toString());
+                                    Double newValue = Double.parseDouble(db.get(publicKey).getAmount()) + doubleValue;
+                                    db.put(publicKey, new TypeAmount(type, newValue.toString()));
                                     // returns updated money
-                                    objOut.writeObject(db.get(publicKey));
+                                    objOut.writeObject(db.get(publicKey).getAmount());
                                     objOut.writeObject(nonce);
                                     objOut.writeObject(type);
 
@@ -85,8 +86,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     System.out.println("Invalid amount.");
                                 }
                             } else {
-                                db.put(publicKey, doubleValue.toString());
-                                objOut.writeObject(db.get(publicKey));
+                                db.put(publicKey, new TypeAmount(type, doubleValue.toString()));
+                                objOut.writeObject(db.get(publicKey).getAmount());
                                 objOut.writeObject(nonce);
 
                                 hasReply = true;
@@ -95,14 +96,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         case "HOMO_ADD":
                             BigInteger BigIntegerValue = new BigInteger(value);
                             if (db.containsKey(publicKey)) {
-                                BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey));
+                                BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey).getAmount());
 
                                 BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
-                                db.put(publicKey, sum.toString());
+                                db.put(publicKey, new TypeAmount(type, sum.toString()));
 
                             } else {
-                                db.put(publicKey, BigIntegerValue.toString());
-                                objOut.writeObject(db.get(publicKey));
+                                db.put(publicKey, new TypeAmount(type, BigIntegerValue.toString()));
+                                objOut.writeObject(db.get(publicKey).getAmount());
                                 objOut.writeObject(nonce);
 
                                 hasReply = true;
@@ -112,9 +113,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                         case "HOMO_OPE_INT":
 
-                            //Long longValue = Long.getLong(value);
+
                             if (db.containsKey(publicKey)) {
-                                db.put(publicKey, value);
+                                db.put(publicKey, new TypeAmount(type, value));
 
 
                             }
@@ -137,14 +138,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     } else if (doubleValue < 0) {
                         System.out.println("Invalid amount.");
                     } else {
-                        Double doubleValueDb = Double.parseDouble(db.get(publicKey));
-                        Double doubleValueDb2 = Double.parseDouble(db.get(publicKey2));
+                        Double doubleValueDb = Double.parseDouble(db.get(publicKey).getAmount());
+                        Double doubleValueDb2 = Double.parseDouble(db.get(publicKey2).getAmount());
                         if (doubleValueDb >= doubleValue) {
                             Double transfSum = doubleValueDb2 + doubleValue;
                             Double transfMin = doubleValueDb - doubleValue;
-                            db.put(publicKey, transfMin.toString());
-                            db.put(publicKey2, transfSum.toString());
-                            objOut.writeObject(db.get(publicKey2));
+                            db.put(publicKey, new TypeAmount("WALLET", transfMin.toString()));
+                            db.put(publicKey2, new TypeAmount("WALLET", transfSum.toString()));
+                            objOut.writeObject(db.get(publicKey2).getAmount());
                             //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
                             objOut.writeObject(nonce);
 
@@ -185,8 +186,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         boolean hasReply = false;
         String publicKey;
         Long nonce;
-        int higher = Integer.MAX_VALUE;
-        int lower= Integer.MIN_VALUE;
+        String type;
+
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -199,40 +200,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 case GET_MONEY:
                     publicKey = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
-                    higher = (Integer) objIn.readObject();
-                    lower = (Integer) objIn.readObject();
-                    boolean moreThanOne = false;
 
-                    if( higher != Integer.MAX_VALUE && lower != Integer.MIN_VALUE ){
-                        // HOMO_OPE_INT
-                        moreThanOne = true;
-                        int iterationKey = lower;
-                        List<String> moneyList = new ArrayList<String>();
 
-                        objOut.writeObject(moreThanOne);
+                    // WALLET
+                    if (db.containsKey(publicKey)) {
+                        //System.out.println("Amount: " + db.get(publicKey));
+                        objOut.writeObject(db.get(publicKey).getAmount());
+                        objOut.writeObject(nonce);
 
-                        // prepara output - lista de moneys de todas as contas entre low e high
-                        while(iterationKey <=higher){
-                            if(db.containsKey(iterationKey)){
-                                moneyList.add(db.get(iterationKey));
-                            }
-                            iterationKey++;
-                        }
-                        objOut.writeObject(moneyList);
+                        hasReply = true;
+                    } else {
+                        System.out.println("User not found in the database.");
                     }
-                    else {
-                        // WALLET
-                        if (db.containsKey(publicKey)) {
-                            //System.out.println("Amount: " + db.get(publicKey));
-                            objOut.writeObject(moreThanOne);
-                            objOut.writeObject(db.get(publicKey));
-                            objOut.writeObject(nonce);
 
-                            hasReply = true;
-                        } else {
-                            System.out.println("User not found in the database.");
-                        }
-                    }
                     break;
 
                 default:

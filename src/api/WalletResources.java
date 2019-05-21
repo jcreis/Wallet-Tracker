@@ -134,7 +134,7 @@ public class WalletResources {
                     try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                          ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                        double money = (Double) objIn.readObject();
+                        String money = (String) objIn.readObject();
                         replyNonce = (Long) objIn.readObject();
                         System.out.println("RESPONSE FROM ADD MONEY IS:");
                         Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
@@ -197,7 +197,7 @@ public class WalletResources {
                 try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                    double money = (Double) objIn.readObject();
+                    String money = (String) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
                     System.out.println("RESPONSE FROM TRANSFER MONEY IS:");
                     System.out.println("User " + fpublicKey.substring(0, 50) + " transfered " + value + "€" + " to user " + tpublicKey.substring(0, 50));
@@ -220,8 +220,7 @@ public class WalletResources {
     public Reply getMoney(@PathParam("publicKey") String publicKey,
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg,
-                          @QueryParam("higher") int higher,
-                          @QueryParam("lower") int lower)
+                          @QueryParam("type") String type)
             throws Exception {
 
         Long replyNonce;
@@ -245,8 +244,7 @@ public class WalletResources {
                 objOut.writeObject(GET_MONEY);
                 objOut.writeObject(publicKey);
                 objOut.writeObject(nonce);
-                objOut.writeObject(higher);
-                objOut.writeObject(lower);
+                objOut.writeObject(type);
 
 
                 objOut.flush();
@@ -258,25 +256,14 @@ public class WalletResources {
                 try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                      ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                    // ve se vem lista de resultados - HOMO_OPE_INT
-                    boolean moreThanOne = (Boolean) objIn.readObject();
-                    if(moreThanOne){
-                        // HOMO_OPE_INT
-                        List<String> moneyList = (List<String>) objIn.readObject();
-                        replyNonce = (Long) objIn.readObject();
 
-                        // agora manda money em lista em vez de double
-                        return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, moneyList, replyNonce + 1);
-                    }
-                    else {
-                        // WALLET
-                        double money = (Double) objIn.readObject();
-                        replyNonce = (Long) objIn.readObject();
-                        System.out.println("RESPONSE FROM GET MONEY IS:");
-                        System.out.println("User " + publicKey.substring(0, 50) + " has " + money + "€ in the his account");
+                    String money = (String) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    System.out.println("RESPONSE FROM GET MONEY IS:");
+                    System.out.println("User " + publicKey.substring(0, 50) + " has " + money + "€ in the his account");
 
                         return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    }
+
                 }
 
             } catch (IOException | ClassNotFoundException e) {

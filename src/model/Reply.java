@@ -7,7 +7,7 @@ public class Reply {
 
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
-    double amount;
+    String amount;
     List<String> listAmounts;
     long nonce;
 
@@ -16,7 +16,7 @@ public class Reply {
 
 
 
-    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, double amount, long nonce){
+    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, String amount, long nonce){
         this.messages = messages;
         this.publicKey = publicKey;
         this.amount = amount;
@@ -60,11 +60,11 @@ public class Reply {
         this.messages = messages;
     }
 
-    public double getAmount() {
+    public String getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 

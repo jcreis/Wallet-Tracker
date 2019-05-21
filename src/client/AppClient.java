@@ -252,7 +252,7 @@ public class AppClient {
             System.out.println("From pubKey: " + publicString.substring(0, 50));
             System.out.println("To pubKey: " + publicString2.substring(0, 50));
             System.out.println("Transferring amount : " + value);
-            System.out.println(publicString2.substring(0, 50) + " now has " + r.getAmount());
+            System.out.println(publicString2.substring(0, 50) + " now has " + Double.parseDouble(r.getAmount()));
             if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }
@@ -461,7 +461,7 @@ public class AppClient {
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("Add money to pubKey: " + publicString.substring(0, 50));
-            System.out.println("Amount: " + r.getAmount());
+            System.out.println("Amount: " + Double.parseDouble(r.getAmount()));
             if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }

@@ -478,7 +478,7 @@ public class AppClient {
 
             case "HOMO_INT":
                 PaillierKey pk = HomoAdd.generateKey();
-                pk.printValues();
+                BigInteger nSquare = pk.getNsquare();
 
                 BigInteger big1 =  BigInteger.valueOf(value.intValue());
                 BigInteger encryptValue = HomoAdd.encrypt(big1, pk);
@@ -490,6 +490,7 @@ public class AppClient {
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("nSquare", nSquare)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 

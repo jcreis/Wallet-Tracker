@@ -47,6 +47,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         //PHASE 2
 
         String type; //HOMO_ADD or HOMO_OPE_INT
+        BigInteger nSquare;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -62,6 +63,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     value = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
+                    nSquare = (BigInteger) objIn.readObject();
+
 
                     switch(type) {
 
@@ -93,9 +96,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             BigInteger BigIntegerValue = new BigInteger(value);
                             if (db.containsKey(publicKey)) {
                                 BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey));
-                                //TODO
-                                //BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, pk.);
-                                //db.put(publicKey, sum.toString());
+
+                                BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
+                                db.put(publicKey, sum.toString());
 
                             } else {
                                 db.put(publicKey, BigIntegerValue.toString());

@@ -84,7 +84,8 @@ public class WalletResources {
                           @QueryParam("value") String value,
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg,
-                          @QueryParam("type") String type)
+                          @QueryParam("type") String type,
+                          @QueryParam("nSquare") BigInteger nSquare)
 
             throws Exception {
 
@@ -121,6 +122,7 @@ public class WalletResources {
                     objOut.writeObject(value);
                     objOut.writeObject(nonce);
                     objOut.writeObject(type);
+                    objOut.writeObject(nSquare);
 
                     objOut.flush();
                     byteOut.flush();

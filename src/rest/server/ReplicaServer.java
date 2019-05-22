@@ -224,6 +224,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             returnList.add(keyList.get(i));
                         }
                     }
+                    objOut.writeObject(returnList);
 
 
                     break;

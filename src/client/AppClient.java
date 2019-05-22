@@ -642,7 +642,113 @@ public class AppClient {
 
 
 
+    }
+
+    @SuppressWarnings("Duplicates")
+    public static void OPE_GetMoney(String type) throws Exception {
+        System.out.println("#################################");
+        System.out.println("####### GetOPEMoney #######");
+        System.out.println("#################################");
+        System.out.println();
+
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+
+        KeyPair kp = keys.get(random.nextInt(keys.size()));
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
+        String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
+        String pathPublicKey = URLEncoder.encode(publicString, "UTF-8");
+
+
+        Long nonce = random.nextLong();
+
+        Reply r;
+
+        String msg = publicString + nonce;
+        byte[] hash = Digest.getDigest(msg.getBytes());
+
+        byte[] hashEncriptPriv = priv.encrypt(hash);
+        String msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
+
+        long initRequestTime = System.currentTimeMillis();
+
+        Response response;
+
+
+        ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<Long> lNonces = new ArrayList<Long>();
+
+        int majority = 0;
+        int numbNonces = 0;
+
+        // Prepare HTTP Request
+
+        Double randValue1 = random.nextDouble();
+        Double randValue2 = random.nextDouble();
+        // higher is less than lower
+        if(randValue1 < randValue2) {
+            Double temp = randValue2;
+            // lower becomes higher
+            randValue2 = randValue1;
+            // higher becomes lower
+            randValue1 = randValue2;
         }
+        Double higher = randValue1;
+        Double lower = randValue2;
+        response = target.path("/money")
+                .queryParam("higher", higher)
+                .queryParam("lower", lower)
+                .queryParam("nonce", nonce)
+                .queryParam("msg", msgHashStr)
+                .request()
+                .get();
+        r = response.readEntity(Reply.class);
+
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime;
+        getMoneyRequestTimes.add(finalRequestTime);
+
+        for (Long n : lNonces) {
+            if (n + 1 == r.getNonce())
+                numbNonces++;
+        }
+
+        // Verify majority of nonces of replicas
+        if (numbNonces >= (lNonces.size() / 2) + 1) {
+            System.out.println("majority of replicas returns the right nonce");
+        } else {
+            System.out.println("No majority reached for nonce");
+
+        }
+
+        // Verify majority from message replies of replicas
+        if ((majority >= (amounts.size() / 2) + 1)) {
+            System.out.println("majority of replicas returns the right value");
+        } else {
+            System.out.println("No majority reached");
+        }
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if (r.getNonce() != nonce + 1 && r.getOperationType() == OpType.GET_MONEY) {
+            System.out.println("Nonces dont match, reject message from server");
+        } else {
+            System.out.println();
+            System.out.println("Status: " + response.getStatusInfo());
+            System.out.println("From pubKey: " + publicString.substring(0, 50));
+            //TODO Verificar este print está mal tratar pa cada caso nao e sempre double
+            if (nonce + 1 == r.getNonce()) {
+                System.out.println("Nonces match");
+            }
+            System.out.println("The keys are: " + r.getListAmounts());
+            System.out.println();
+        }
+
+    }
 
 
     public static long getTransferAvgTime() {

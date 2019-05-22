@@ -90,61 +90,61 @@ public class WalletResources {
             throws Exception {
 
 
-            Long replyNonce;
+        Long replyNonce;
 
-            // Reads admin pubKey
-            File file = new File("./publicKey.txt");
-            String adminPublicString = null;
-            Scanner sc = new Scanner(file);
-            while (sc.hasNextLine()) {
-                adminPublicString = sc.next();
-            }
-            byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
-            PublicKey adminPubKey = PublicKey.createKey(adminPublic);
+        // Reads admin pubKey
+        File file = new File("./publicKey.txt");
+        String adminPublicString = null;
+        Scanner sc = new Scanner(file);
+        while (sc.hasNextLine()) {
+            adminPublicString = sc.next();
+        }
+        byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
+        PublicKey adminPubKey = PublicKey.createKey(adminPublic);
 
-            // Prepares Hash of message H(N), N = (pubKey, value, nonce)
-            URLDecoder.decode(publicKey, "UTF-8");
-            String verify = publicKey + value + nonce;
-            byte[] hash = Digest.getDigest(verify.getBytes());
+        // Prepares Hash of message H(N), N = (pubKey, value, nonce)
+        URLDecoder.decode(publicKey, "UTF-8");
+        String verify = publicKey + value + nonce;
+        byte[] hash = Digest.getDigest(verify.getBytes());
 
-            // UnHash H(N)
-            byte[] decodedBytes = Base64.getDecoder().decode(msg);
-            byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
+        // UnHash H(N)
+        byte[] decodedBytes = Base64.getDecoder().decode(msg);
+        byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
-            // Checks if Hashes match
-            if (Arrays.equals(hashDecriptPriv, hash)) {
+        // Checks if Hashes match
+        if (Arrays.equals(hashDecriptPriv, hash)) {
 
-                try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                     ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+            try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                 ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-                    objOut.writeObject(ADD_MONEY);
-                    objOut.writeObject(publicKey);
-                    objOut.writeObject(value);
-                    objOut.writeObject(nonce);
-                    objOut.writeObject(type);
-                    objOut.writeObject(nSquare);
+                objOut.writeObject(ADD_MONEY);
+                objOut.writeObject(publicKey);
+                objOut.writeObject(value);
+                objOut.writeObject(nonce);
+                objOut.writeObject(type);
+                objOut.writeObject(nSquare);
 
-                    objOut.flush();
-                    byteOut.flush();
-                    byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
+                objOut.flush();
+                byteOut.flush();
+                byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
 
-                    if (reply.length == 0)
-                        return null;
+                if (reply.length == 0)
+                    return null;
 
-                    try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
-                         ObjectInput objIn = new ObjectInputStream(byteIn)) {
+                try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                     ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                        String money = (String) objIn.readObject();
-                        replyNonce = (Long) objIn.readObject();
-                        System.out.println("RESPONSE FROM ADD MONEY IS:");
-                        Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                        System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
-                        return r;
-                    }
-
-                } catch (IOException | ClassNotFoundException e) {
-                    System.out.println("Exception putting value into map: " + e.getMessage());
+                    String money = (String) objIn.readObject();
+                    replyNonce = (Long) objIn.readObject();
+                    System.out.println("RESPONSE FROM ADD MONEY IS:");
+                    Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
+                    return r;
                 }
+
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println("Exception putting value into map: " + e.getMessage());
+            }
 
         }
         throw new NotAuthorizedException("Don't have permission to add money.");
@@ -262,7 +262,7 @@ public class WalletResources {
                     System.out.println("RESPONSE FROM GET MONEY IS:");
                     System.out.println("User " + publicKey.substring(0, 50) + " has " + money + "€ in the his account");
 
-                        return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
 
                 }
 
@@ -285,6 +285,8 @@ public class WalletResources {
             throws Exception {
 
 
+
+
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -303,16 +305,20 @@ public class WalletResources {
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
-                if(true){
+                List<String> keyList = (List<String>) objIn.readObject();
+                Long replyNonce = (Long) objIn.readObject();
 
-                }else{
-
+                System.out.println("GET_OPE within the interval of amounts "+lower+" -> "+higher+" got the keys:");
+                for(String key : keyList){
+                    System.out.println(key);
                 }
+                return new Reply(GET_HOMO_OPE, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
 
             }
-        }catch (Exception e){
-
+        } catch (Exception e) {
+            System.out.println("Exception getting values from map: " + e.getMessage());
         }
+
 
 
 

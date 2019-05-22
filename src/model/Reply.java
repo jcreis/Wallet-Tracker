@@ -24,9 +24,10 @@ public class Reply {
         this.operationType = operationType;
 
     }
-    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, List<String> listAmounts, long nonce){
+
+    // For OPE_INT - without pubKey and a List<String> amounts instead of a single amount
+    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, List<String> listAmounts, long nonce){
         this.messages = messages;
-        this.publicKey = publicKey;
         this.listAmounts = listAmounts;
         this.nonce = nonce;
         this.operationType = operationType;
@@ -74,5 +75,13 @@ public class Reply {
 
     public void setNonce(long nonce) {
         this.nonce = nonce;
+    }
+
+    public List<String> getListAmounts() {
+        return listAmounts;
+    }
+
+    public void setListAmounts(List<String> listAmounts) {
+        this.listAmounts = listAmounts;
     }
 }

@@ -67,7 +67,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     nSquare = (BigInteger) objIn.readObject();
 
 
-                    switch(type) {
+                    switch (type) {
 
                         case "WALLET":
 
@@ -77,7 +77,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     Double newValue = Double.parseDouble(db.get(publicKey).getAmount()) + doubleValue;
                                     db.put(publicKey, new TypeAmount(type, newValue.toString()));
                                     // returns updated money
-                                    objOut.writeObject(db.get(publicKey));
+                                    objOut.writeObject(db.get(publicKey).getAmount());
                                     objOut.writeObject(nonce);
                                     objOut.writeObject(type);
 
@@ -87,7 +87,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                 }
                             } else {
                                 db.put(publicKey, new TypeAmount(type, doubleValue.toString()));
-                                objOut.writeObject(db.get(publicKey));
+                                objOut.writeObject(db.get(publicKey).getAmount());
                                 objOut.writeObject(nonce);
 
                                 hasReply = true;
@@ -103,7 +103,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                             } else {
                                 db.put(publicKey, new TypeAmount(type, BigIntegerValue.toString()));
-                                objOut.writeObject(db.get(publicKey));
+
+                                objOut.writeObject(db.get(publicKey).getAmount());
                                 objOut.writeObject(nonce);
 
                                 hasReply = true;
@@ -113,7 +114,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                         case "HOMO_OPE_INT":
 
-                            //Long longValue = Long.getLong(value);
+
                             if (db.containsKey(publicKey)) {
                                 db.put(publicKey, new TypeAmount(type, value));
 
@@ -142,9 +143,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         if (doubleValueDb >= doubleValue) {
                             Double transfSum = doubleValueDb2 + doubleValue;
                             Double transfMin = doubleValueDb - doubleValue;
-                            db.put(publicKey, new TypeAmount("TRANSFER", transfMin.toString()));
-                            db.put(publicKey2, new TypeAmount("TRANSFER", transfSum.toString()));
-                            objOut.writeObject(db.get(publicKey2));
+
+                            db.put(publicKey, new TypeAmount("WALLET", transfMin.toString()));
+                            db.put(publicKey2, new TypeAmount("WALLET", transfSum.toString()));
+                            objOut.writeObject(db.get(publicKey2).getAmount());
                             //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
                             objOut.writeObject(nonce);
 
@@ -182,6 +184,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         Double higher;
         Double lower;
 
+
+
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -197,14 +201,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     // WALLET
                     if (db.containsKey(publicKey)) {
                         //System.out.println("Amount: " + db.get(publicKey));
-                        objOut.writeObject(db.get(publicKey));
+                        objOut.writeObject(db.get(publicKey).getAmount());
                         objOut.writeObject(nonce);
 
                         hasReply = true;
                     } else {
                         System.out.println("User not found in the database.");
                     }
-
                     break;
 
                 case GET_HOMO_OPE:
@@ -225,11 +228,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         }
                     }
                     objOut.writeObject(returnList);
+                    objOut.writeObject(nonce);
 
 
-                    break;
-
-                    default:
+                default:
                     System.out.println("error");
 
 

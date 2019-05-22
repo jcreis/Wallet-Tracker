@@ -2,6 +2,7 @@ package model;
 
 public class TypeAmount {
 
+
     private String type;
     private String amount;
 
@@ -11,6 +12,7 @@ public class TypeAmount {
     }
 
     public TypeAmount() {
+
     }
 
     public String getType() {
@@ -28,4 +30,5 @@ public class TypeAmount {
     public void setAmount(String amount) {
         this.amount = amount;
     }
+
 }

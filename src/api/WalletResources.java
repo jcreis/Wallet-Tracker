@@ -85,6 +85,7 @@ public class WalletResources {
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg,
                           @QueryParam("type") String type,
+                          @QueryParam("encryptType") String encryptType,
                           @QueryParam("nSquare") BigInteger nSquare)
 
             throws Exception {
@@ -122,6 +123,7 @@ public class WalletResources {
                 objOut.writeObject(value);
                 objOut.writeObject(nonce);
                 objOut.writeObject(type);
+                objOut.writeObject(encryptType);
                 objOut.writeObject(nSquare);
 
                 objOut.flush();
@@ -220,7 +222,8 @@ public class WalletResources {
     public Reply getMoney(@PathParam("publicKey") String publicKey,
                           @QueryParam("nonce") Long nonce,
                           @QueryParam("msg") String msg,
-                          @QueryParam("type") String type)
+                          @QueryParam("type") String type,
+                          @QueryParam("encryptType") String encryptType)
             throws Exception {
 
         Long replyNonce;
@@ -245,6 +248,7 @@ public class WalletResources {
                 objOut.writeObject(publicKey);
                 objOut.writeObject(nonce);
                 objOut.writeObject(type);
+                objOut.writeObject(encryptType);
 
 
                 objOut.flush();
@@ -277,11 +281,13 @@ public class WalletResources {
 
     @SuppressWarnings("Duplicates")
     @GET
-    @Path("/money/")
+    @Path("/money")
     public Reply getHOMO_OPE(@QueryParam("higher") Long higher,
                              @QueryParam("lower") Long lower,
                              @QueryParam("nonce") Long nonce,
-                             @QueryParam("msg") String msg)
+                             @QueryParam("msg") String msg,
+                             @QueryParam("type") String type,
+                             @QueryParam("encryptType") String encryptType)
             throws Exception {
 
 
@@ -290,11 +296,14 @@ public class WalletResources {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-            objOut.writeObject(GET_HOMO_OPE);
+            objOut.writeObject(GET_MONEY_OPE);
             objOut.writeObject(higher.doubleValue());
             objOut.writeObject(lower.doubleValue());
             objOut.writeObject(nonce);
-            objOut.writeObject(msg);
+            objOut.writeObject(type);
+            objOut.writeObject(encryptType);
+
+
 
             objOut.flush();
             byteOut.flush();
@@ -312,7 +321,7 @@ public class WalletResources {
                 for(String key : keyList){
                     System.out.println(key);
                 }
-                return new Reply(GET_HOMO_OPE, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
+                return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
 
             }
         } catch (Exception e) {

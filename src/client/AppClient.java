@@ -5,9 +5,7 @@ import bftsmart.tom.util.KeyLoader;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
-import model.OpType;
-import model.ReplicaResponseMessage;
-import model.Reply;
+import model.*;
 import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
@@ -53,10 +51,15 @@ public class AppClient {
 
     public static void main(String[] args) throws Exception {
 
-        long initAddMoneyTime = System.currentTimeMillis();
+        addMoney("WALLET", EncryptOpType_ADD.SUM);
+        addMoney("WALLET", EncryptOpType_ADD.SET);
+        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+
+        /*long initAddMoneyTime = System.currentTimeMillis();
         while (true) {
-            addMoney("WALLET");
-            if (System.currentTimeMillis() - initAddMoneyTime >= 300 * 60) {
+            //addMoney("WALLET", "HOMO_ADD");
+            // TODO after tests done -> runtime = 300*60
+            if (System.currentTimeMillis() - initAddMoneyTime >= 30 * 60) {
                 break;
             }
         }
@@ -69,12 +72,13 @@ public class AppClient {
                 while (true) {
                     try {
                         transferMoney();
-                        getMoney("WALLET");
+                        //getMoney("WALLET", );
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     // run during 3 min
-                    if (System.currentTimeMillis() - initTransferTime >= 3000 * 60)
+                    // TODO after tests done -> runtime = 3000*60
+                    if (System.currentTimeMillis() - initTransferTime >= 300 * 60)
                         break;
                 }
 
@@ -89,12 +93,13 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true) {
                     try {
-                        getMoney("WALLET");
+                        //getMoney("WALLET", "HOMO_ADD");
                         transferMoney();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    if (System.currentTimeMillis() - initTransferTime >= 3000 * 60)
+                    // TODO after tests done -> runtime = 3000*60
+                    if (System.currentTimeMillis() - initTransferTime >= 300 * 60)
                         break;
                 }
             }
@@ -111,7 +116,7 @@ public class AppClient {
         System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
         System.out.println("Average time of getMoney requests: " + getGetMoneyAvgTime() + "ms");
         System.out.println("Average time of addMoney requests: " + getAddMoneyAvgTime() + "ms");
-
+*/
     }
 
 
@@ -259,7 +264,7 @@ public class AppClient {
 
 
     @SuppressWarnings("Duplicates")
-    public static void addMoney(String type) throws Exception {
+    public static void addMoney(String type, EncryptOpType_ADD encryptType) throws Exception {
         System.out.println("#################################");
         System.out.println("####### A D D - M O N E Y #######");
         System.out.println("#################################");
@@ -341,13 +346,14 @@ public class AppClient {
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
                 r = response.readEntity(Reply.class);
                 break;
 
-            case "HOMO_INT":
+            case "HOMO_ADD":
 
 
                 BigInteger big1 = BigInteger.valueOf(value.intValue());
@@ -360,6 +366,7 @@ public class AppClient {
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
                         .queryParam("nSquare", nSquare)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
@@ -376,6 +383,7 @@ public class AppClient {
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
@@ -468,7 +476,7 @@ public class AppClient {
     }
 
     @SuppressWarnings("Duplicates")
-    public static void getMoney(String type) throws Exception {
+    public static void getMoney(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
         System.out.println("####### G E T - M O N E Y #######");
         System.out.println("#################################");
@@ -515,6 +523,7 @@ public class AppClient {
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
                         .request()
                         .get();
                 r = response.readEntity(Reply.class);
@@ -573,28 +582,6 @@ public class AppClient {
 
                 break;
 
-            case "HOMO_OPE_INT":
-                Double randValue1 = random.nextDouble();
-                Double randValue2 = random.nextDouble();
-                // higher is less than lower
-                if(randValue1 < randValue2) {
-                    Double temp = randValue2;
-                    // lower becomes higher
-                    randValue2 = randValue1;
-                    // higher becomes lower
-                    randValue1 = randValue2;
-                }
-                Double higher = randValue1;
-                Double lower = randValue2;
-                response = target.path("/money")
-                        .queryParam("higher", higher)
-                        .queryParam("lower", lower)
-                        .queryParam("nonce", nonce)
-                        .queryParam("msg", msgHashStr)
-                        .request()
-                        .get();
-                r = response.readEntity(Reply.class);
-                break;
             default:
                 throw new IllegalStateException("Unexpected type: " + type);
         }
@@ -645,7 +632,7 @@ public class AppClient {
     }
 
     @SuppressWarnings("Duplicates")
-    public static void OPE_GetMoney(String type) throws Exception {
+    public static void OPE_GetMoney(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
         System.out.println("####### GetOPEMoney #######");
         System.out.println("#################################");
@@ -706,6 +693,7 @@ public class AppClient {
                 .queryParam("lower", lower)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
+                .queryParam("encryptType", encryptType)
                 .request()
                 .get();
         r = response.readEntity(Reply.class);

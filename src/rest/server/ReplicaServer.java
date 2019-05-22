@@ -5,6 +5,7 @@ import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import hj.mlib.HomoAdd;
+import hj.mlib.HomoOpeInt;
 import model.OpType;
 import model.TypeAmount;
 
@@ -35,6 +36,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return new byte[0];
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public byte[] appExecuteOrdered(byte[] bytes, MessageContext messageContext) {
         byte[] reply = null;
@@ -49,6 +51,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
         String type; //HOMO_ADD or HOMO_OPE_INT
         BigInteger nSquare;
+        String encryptType;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -64,64 +67,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     value = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
+                    encryptType = (String) objIn.readObject();
                     nSquare = (BigInteger) objIn.readObject();
 
-
-                    switch (type) {
-
-                        case "WALLET":
-
-                            Double doubleValue = Double.parseDouble(value);
-                            if (db.containsKey(publicKey)) {
-                                if (doubleValue >= 0) {
-                                    Double newValue = Double.parseDouble(db.get(publicKey).getAmount()) + doubleValue;
-                                    db.put(publicKey, new TypeAmount(type, newValue.toString()));
-                                    // returns updated money
-                                    objOut.writeObject(db.get(publicKey).getAmount());
-                                    objOut.writeObject(nonce);
-                                    objOut.writeObject(type);
-
-                                    hasReply = true;
-                                } else {
-                                    System.out.println("Invalid amount.");
-                                }
-                            } else {
-                                db.put(publicKey, new TypeAmount(type, doubleValue.toString()));
-                                objOut.writeObject(db.get(publicKey).getAmount());
-                                objOut.writeObject(nonce);
-
-                                hasReply = true;
-                            }
-                            break;
-                        case "HOMO_ADD":
-                            BigInteger BigIntegerValue = new BigInteger(value);
-                            if (db.containsKey(publicKey)) {
-                                BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey).getAmount());
-
-                                BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
-                                db.put(publicKey, new TypeAmount(type, sum.toString()));
-
-                            } else {
-                                db.put(publicKey, new TypeAmount(type, BigIntegerValue.toString()));
-
-                                objOut.writeObject(db.get(publicKey).getAmount());
-                                objOut.writeObject(nonce);
-
-                                hasReply = true;
-                            }
-
-                            break;
-
-                        case "HOMO_OPE_INT":
-
-
-                            if (db.containsKey(publicKey)) {
-                                db.put(publicKey, new TypeAmount(type, value));
-
-                            }
-                            break;
-                    }
-                    break;
+                    hasReply = selectionOfType_ADD(objOut, type, encryptType, publicKey, value, nonce, nSquare);
 
 
                 case TRANSFER:
@@ -173,6 +122,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
+
     @SuppressWarnings("unchecked")
     @Override
     public byte[] appExecuteUnordered(byte[] command, MessageContext msgCtx) {
@@ -183,7 +133,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String msg;
         Double higher;
         Double lower;
-
+        String type;
+        String encryptType;
 
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
@@ -197,39 +148,21 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 case GET_MONEY:
                     publicKey = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
+                    type = (String) objIn.readObject();
+                    encryptType = (String) objIn.readObject();
 
-                    // WALLET
-                    if (db.containsKey(publicKey)) {
-                        //System.out.println("Amount: " + db.get(publicKey));
-                        objOut.writeObject(db.get(publicKey).getAmount());
-                        objOut.writeObject(nonce);
+                    hasReply = selectionOfType_GET(objOut, type, encryptType, publicKey, nonce, 0.0, 0.0);
 
-                        hasReply = true;
-                    } else {
-                        System.out.println("User not found in the database.");
-                    }
-                    break;
-
-                case GET_HOMO_OPE:
+                case GET_MONEY_OPE:
                     higher = (Double) objIn.readObject();
                     lower = (Double) objIn.readObject();
                     nonce = (Long) objIn.readObject();
-                    msg = (String) objIn.readObject();
+                    type = (String) objIn.readObject();
+                    encryptType = (String) objIn.readObject();
 
-                    List<String> keyList = new ArrayList<>();
-                    for( String key : db.keySet()){
-                        keyList.add(key);
-                    }
-                    List<String> returnList = new ArrayList<>();
-                    for(int i=0; i<keyList.size(); i++){
-                        Double doubleValue = Double.parseDouble(db.get(i).getAmount());
-                        if(doubleValue >= lower && doubleValue <= higher){
-                            returnList.add(keyList.get(i));
-                        }
-                    }
-                    objOut.writeObject(returnList);
-                    objOut.writeObject(nonce);
+                    hasReply = selectionOfType_GET(objOut, type, encryptType, "", nonce, higher, lower);
 
+                    break;
 
                 default:
                     System.out.println("error");
@@ -250,5 +183,162 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-}
+    private boolean selectionOfType_ADD(ObjectOutput objOut, String type, String encryptType, String publicKey, String value, Long nonce, BigInteger nsquare) throws IOException {
+        boolean hasReply = false;
+        switch (type) {
+            case "WALLET":
+                Double doubleValue = Double.parseDouble(value);
+                if (db.containsKey(publicKey)) {
+                    if (doubleValue >= 0) {
+                        Double newValue = Double.parseDouble(db.get(publicKey).getAmount()) + doubleValue;
+                        db.put(publicKey, new TypeAmount(type, newValue.toString()));
+                        // returns updated money
+                        objOut.writeObject(db.get(publicKey).getAmount());
+                        objOut.writeObject(nonce);
+                        objOut.writeObject(type);
 
+                        hasReply = true;
+                    } else {
+                        System.out.println("Account doesnt exists in the database");
+                    }
+                } else {
+                    db.put(publicKey, new TypeAmount("WALLET", value));
+                }
+                break;
+
+            case "HOMO_ADD":
+                selectionOfEncryptType(objOut, type, encryptType, publicKey, value, nonce, nsquare);
+                break;
+
+            case "HOMO_OPE_INT":
+                selectionOfEncryptType(objOut, type, encryptType, publicKey, value, nonce, nsquare);
+                break;
+
+            default:
+                System.out.println("Type not valid.");
+                break;
+        }
+        return hasReply;
+    }
+
+    private boolean selectionOfEncryptType(ObjectOutput objOut, String type, String encryptType, String publicKey, String value, Long nonce, BigInteger nSquare) throws IOException {
+        boolean hasReply = false;
+        switch (encryptType) {
+
+
+            case "SUM":
+                BigInteger BigIntegerValue = new BigInteger(value);
+                if (type.equals("HOMO_ADD")) {
+                    //valid
+                    if (db.containsKey(publicKey)) {
+                        BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey).getAmount());
+
+                        BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
+                        db.put(publicKey, new TypeAmount(type, sum.toString()));
+
+                        objOut.writeObject(db.get(publicKey).getAmount());
+                        objOut.writeObject(nonce);
+
+                        hasReply = true;
+                    } else {
+                        System.out.println("User not in the database.");
+                    }
+
+                } else {
+                    System.out.println("This type of encryption is not supported to HOMO_OPE_INT");
+                }
+                break;
+            case "SET":
+                if (type.equals("HOMO_ADD")) {
+                    if (db.containsKey(publicKey)) {
+                        TypeAmount aux = db.get(publicKey);
+                        aux.setAmount(value);
+                        db.put(publicKey, aux);
+                        // returns updated money
+                        objOut.writeObject(db.get(publicKey).getAmount());
+                        objOut.writeObject(nonce);
+                        objOut.writeObject(type);
+
+                        hasReply = true;
+                    } else {
+                        System.out.println("Account doesnt exists in the database");
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (db.containsKey(publicKey)) {
+                        db.put(publicKey, new TypeAmount(type, value));
+
+                        objOut.writeObject(db.get(publicKey).getAmount());
+                        objOut.writeObject(nonce);
+                        objOut.writeObject(type);
+
+                        hasReply = true;
+                    } else {
+                        System.out.println("Account doenst exists in the database");
+                    }
+                } else {
+                    System.out.println("Type not supported.");
+                }
+
+                break;
+
+            case "CREATE":
+                BigIntegerValue = new BigInteger(value);
+                db.put(publicKey, new TypeAmount(type, BigIntegerValue.toString()));
+
+                objOut.writeObject(db.get(publicKey).getAmount());
+                objOut.writeObject(nonce);
+
+                hasReply = true;
+                break;
+
+            default:
+                break;
+        }
+        return hasReply;
+
+    }
+
+    private boolean selectionOfType_GET(ObjectOutput objOut, String type, String encryptType, String publicKey, Long nonce, Double higher, Double lower) throws IOException {
+        boolean hasReply = false;
+
+        if(encryptType.equals("GET_LOWER_HIGHER")){
+            if(type.equals("HOMO_OPE_INT")){
+
+                List<String> keyList = new ArrayList<>();
+                for (String key : db.keySet()) {
+                    keyList.add(key);
+                }
+                List<String> returnList = new ArrayList<>();
+                for (int i = 0; i < keyList.size(); i++) {
+                    Double doubleValue = Double.parseDouble(db.get(i).getAmount());
+                    if (doubleValue >= lower && doubleValue <= higher) {
+                        returnList.add(keyList.get(i));
+                    }
+                }
+                objOut.writeObject(returnList);
+                objOut.writeObject(nonce);
+
+                hasReply = true;
+            }
+            else{
+                System.out.println("Operation not supported in that type.");
+            }
+        }
+        else{
+
+            if (db.containsKey(publicKey)) {
+                //System.out.println("Amount: " + db.get(publicKey));
+                objOut.writeObject(db.get(publicKey).getAmount());
+                objOut.writeObject(nonce);
+
+                hasReply = true;
+            } else {
+                System.out.println("User not found in the database.");
+            }
+
+        }
+
+        return hasReply;
+    }
+
+}

@@ -52,8 +52,9 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
         try {
-            addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-        }catch (Exception e ){
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         //addMoney("WALLET", EncryptOpType_ADD.SET);
@@ -122,7 +123,6 @@ public class AppClient {
         System.out.println("Average time of addMoney requests: " + getAddMoneyAvgTime() + "ms");
 */
     }
-
 
 
     @SuppressWarnings("Duplicates")
@@ -386,10 +386,9 @@ public class AppClient {
                 r = response.readEntity(Reply.class);
 
                 System.out.println("recebi a conta com o valor (encriptado)" + r.getAmount());
-                if(r.getAmount().equals("-1")){
+                if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
-                }
-                else {
+                } else {
                     BigInteger BigIntegerValue = new BigInteger(r.getAmount());
                     int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
                     System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
@@ -398,8 +397,13 @@ public class AppClient {
 
             case "HOMO_OPE_INT":
 
-
                 Long openValue = ope.encrypt(value.intValue());
+                msg = publicString + openValue + nonce;
+                hash = Digest.getDigest(msg.getBytes());
+                hashEncriptPriv = adminPriv.encrypt(hash);
+                msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
+
+
                 response = target.path(pathPublicKey)
                         .queryParam("value", openValue.toString())
                         .queryParam("nonce", nonce)
@@ -410,6 +414,14 @@ public class AppClient {
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
                 r = response.readEntity(Reply.class);
+                System.out.println("recebi a conta com o valor (encriptado)" + r.getAmount());
+                if (r.getAmount().equals("-1")) {
+                    System.out.println("Something went wrong.");
+                } else {
+                    BigInteger BigIntegerValue = new BigInteger(r.getAmount());
+                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
+                    System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
+                }
                 break;
             default:
                 throw new IllegalStateException("Unexpected type: " + type);
@@ -428,7 +440,8 @@ public class AppClient {
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
             ObjectInput objIn = new ObjectInputStream(byteIn);
             String msgStringAmount = (String) objIn.readObject();
-            Double replicaMsgAmount = Double.parseDouble(msgStringAmount);;
+            Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
+            ;
             //System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
             //System.out.println("replica nonce: " + replicaNonce);
@@ -551,8 +564,6 @@ public class AppClient {
                 r = response.readEntity(Reply.class);
 
 
-
-
                 for (ReplicaResponseMessage currentReplicaMsg : r.getMessages()) {
                     if (currentReplicaMsg != null) {
 
@@ -582,7 +593,6 @@ public class AppClient {
                 }
 
 
-
                 for (Double amount : amounts) {
                     if (amount == Double.parseDouble(r.getAmount()))
                         majority++;
@@ -590,19 +600,49 @@ public class AppClient {
 
                 break;
 
-            case "HOMO_ADD" :
+            case "HOMO_ADD":
                 response = target.path(pathPublicKey + "/money")
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
                         .request()
                         .get();
                 r = response.readEntity(Reply.class);
 
                 BigInteger BigIntegerValue = new BigInteger(r.getAmount());
-                int addValue = HomoAdd.decrypt(BigIntegerValue ,pk).intValue();
+                int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
                 System.out.println("value = " + addValue);
                 break;
+
+            case "HOMO_OPE_INT":
+                response = target.path(pathPublicKey + "/money")
+                        .queryParam("nonce", nonce)
+                        .queryParam("msg", msgHashStr)
+                        .queryParam("type", type)
+                        .queryParam("encryptType", encryptType)
+                        .request()
+                        .get();
+                r = response.readEntity(Reply.class);
+
+                if (encryptType.equals("GET")) {
+                    Long val = Long.parseLong(r.getAmount());
+                    int recVal = ope.decrypt(val);
+                    System.out.println("value = " + recVal);
+                } else if (encryptType.equals("GET_LOWER_HIGHER")) {
+                    for (String amount : r.getListAmounts()) {
+                        Long val = Long.parseLong(amount);
+                        int recVal = ope.decrypt(val);
+                        System.out.println(recVal);
+                    }
+
+                } else {
+                    System.out.println("Unexpected type: " + encryptType);
+                }
+
+
+                break;
+
 
             default:
                 throw new IllegalStateException("Unexpected type: " + type);
@@ -648,7 +688,6 @@ public class AppClient {
             System.out.println();
 
         }
-
 
 
     }
@@ -701,7 +740,7 @@ public class AppClient {
         Double randValue1 = random.nextDouble();
         Double randValue2 = random.nextDouble();
         // higher is less than lower
-        if(randValue1 < randValue2) {
+        if (randValue1 < randValue2) {
             Double temp = randValue2;
             // lower becomes higher
             randValue2 = randValue1;

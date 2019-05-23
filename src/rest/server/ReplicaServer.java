@@ -149,18 +149,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
         String publicKey;
         Long nonce;
-        String msg;
         Double higher;
         Double lower;
         String type;
         String encryptType;
+        List<String> rec_val = new ArrayList<>();
+        String rec2_val;
 
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(command);
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-            OpType reqType = (OpType) objIn.readObject();
+             OpType reqType = (OpType) objIn.readObject();
             switch (reqType) {
 
 
@@ -170,7 +171,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
 
-                    hasReply = selectionOfType_GET(objOut, type, encryptType, publicKey, nonce, 0.0, 0.0);
+                    rec2_val = selectionOfType_GET(type, encryptType, publicKey, 0.0, 0.0);
+
+                    objOut.writeObject(rec2_val);
+                    objOut.writeObject(nonce);
+                    hasReply = true;
+                    break;
 
                 case GET_MONEY_OPE:
                     higher = (Double) objIn.readObject();
@@ -179,8 +185,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
 
-                    hasReply = selectionOfType_GET(objOut, type, encryptType, "", nonce, higher, lower);
-
+                    rec_val = selectionOfType_GET_LOWER_HIGHER(type, encryptType, "", higher, lower);
+                    objOut.writeObject(rec_val);
+                    objOut.writeObject(nonce);
+                    hasReply = true;
                     break;
 
                 default:
@@ -320,9 +328,25 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
     }
 
-    private boolean selectionOfType_GET(ObjectOutput objOut, String type, String encryptType, String publicKey, Long nonce, Double higher, Double lower) throws IOException {
-        boolean hasReply = false;
+    @SuppressWarnings("Duplicates")
+    private String selectionOfType_GET(String type, String encryptType, String publicKey, Double higher, Double lower) throws IOException {
+        String reply;
+            if (db.containsKey(publicKey)) {
+                //System.out.println("Amount: " + db.get(publicKey));
+                reply = db.get(publicKey).getAmount();
+            } else {
 
+                System.out.println("User not found in the database.");
+                return null;
+            }
+
+
+        return reply;
+    }
+
+    @SuppressWarnings("Duplicates")
+    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Double higher, Double lower) throws IOException {
+        List<String> reply = new ArrayList<>();
         if (encryptType.equals("GET_LOWER_HIGHER")) {
             if (type.equals("HOMO_OPE_INT")) {
 
@@ -337,28 +361,15 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         returnList.add(keyList.get(i));
                     }
                 }
-                objOut.writeObject(returnList);
-                objOut.writeObject(nonce);
 
-                hasReply = true;
+                reply = returnList;
             } else {
                 System.out.println("Operation not supported in that type.");
+                return null;
             }
-        } else {
+         }
 
-            if (db.containsKey(publicKey)) {
-                //System.out.println("Amount: " + db.get(publicKey));
-                objOut.writeObject(db.get(publicKey).getAmount());
-                objOut.writeObject(nonce);
-
-                hasReply = true;
-            } else {
-                System.out.println("User not found in the database.");
-            }
-
-        }
-
-        return hasReply;
+        return reply;
     }
 
 }

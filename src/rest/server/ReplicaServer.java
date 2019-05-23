@@ -70,11 +70,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
                     if (type.equals("HOMO_ADD")) {
+                        System.out.println("Entrei no Homo_add");;
                         nSquare = (BigInteger) objIn.readObject();
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare);
 
                     } else {
-                        System.out.println("selection_ADD");
+                        System.out.println("Entrei no Homo_ope ou Wallet");
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
                     }
 
@@ -228,6 +229,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "HOMO_ADD":
+                System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type CREATE");
                 ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
                 break;
 
@@ -245,9 +247,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare) throws IOException {
-        boolean hasReply = false;
-        switch (encryptType) {
 
+        switch (encryptType) {
 
             case "SUM":
                 BigInteger BigIntegerValue = new BigInteger(value);
@@ -293,17 +294,16 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "CREATE":
-
-                    db.put(publicKey, new TypeAmount(type, value));
-
-
+                System.out.println("Entrei no CREATE!!!");
+                System.out.println("Vou dar set do value para "+value);
+                db.put(publicKey, new TypeAmount(type, value));
 
                 break;
 
             default:
                 break;
         }
-        System.out.println("going to return " + db.get(publicKey).getAmount());
+        System.out.println("going to return the value: " + db.get(publicKey).getAmount() + " back to the server");
         return db.get(publicKey).getAmount();
 
     }

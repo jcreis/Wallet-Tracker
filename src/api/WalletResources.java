@@ -90,6 +90,7 @@ public class WalletResources {
 
             throws Exception {
 
+        System.out.println("Server received value (encrypted) "+value);
 
         Long replyNonce;
 
@@ -113,11 +114,15 @@ public class WalletResources {
         byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
         // Checks if Hashes match
+        System.out.println("HashDecriptPriv: "+hashDecriptPriv);
+        System.out.println("hash: "+hash);
         if (Arrays.equals(hashDecriptPriv, hash)) {
+            System.out.println("AQUI CARALHO");
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
+                System.out.println("Gonna send value "+value+" to replica");
                 objOut.writeObject(ADD_MONEY);
                 objOut.writeObject(publicKey);
                 objOut.writeObject(value);
@@ -128,7 +133,6 @@ public class WalletResources {
 
                 objOut.flush();
                 byteOut.flush();
-                System.out.println("CHeguei, e vou outra vez");
                 byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
 
                 if (reply.length == 0)
@@ -139,9 +143,10 @@ public class WalletResources {
 
                     String money = (String) objIn.readObject();
                     replyNonce = (Long) objIn.readObject();
-                    System.out.println("RESPONSE FROM ADD MONEY IS:");
+                    System.out.println("Recebi o valor "+ money +" da replica.");
                     Reply r = new Reply(ADD_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
-                    System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
+                    System.out.println("Retornei uma reply com o valor "+money+" para o cliente.");
+                    //System.out.println("User: " + publicKey.substring(0, 50) + " has now " + money + "€");
                     return r;
                 }
 
@@ -149,10 +154,12 @@ public class WalletResources {
                 System.out.println("Exception putting value into map: " + e.getMessage());
             }
 
+        }else{
+            throw new NotAuthorizedException("Don't have permission to add money.");
+
         }
-        throw new NotAuthorizedException("Don't have permission to add money.");
 
-
+        return null;
     }
 
 

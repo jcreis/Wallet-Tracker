@@ -345,7 +345,6 @@ public class AppClient {
         switch (type) {
 
             case "WALLET":
-                System.out.println("la vou eu");
                 response = target.path(pathPublicKey)
                         .queryParam("value", value.toString())
                         .queryParam("nonce", nonce)
@@ -363,8 +362,17 @@ public class AppClient {
 
                 BigInteger big1 = BigInteger.valueOf(value.intValue());
                 BigInteger encryptValue = HomoAdd.encrypt(big1, pk);
+
+                // Value changed, it's now encrypted
+                // therefore we needed to update all hashes before sending it to the server
+                msg = publicString + encryptValue + nonce;
+                hash = Digest.getDigest(msg.getBytes());
+                hashEncriptPriv = adminPriv.encrypt(hash);
+                msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
+
                 System.out.println("value: " + value);
                 System.out.println("encrypt Value: " + encryptValue);
+                System.out.println("send encrypt value to server");
 
                 response = target.path(pathPublicKey)
                         .queryParam("value", encryptValue.toString())
@@ -378,10 +386,10 @@ public class AppClient {
 
                 r = response.readEntity(Reply.class);
 
-                System.out.println("amount" + r.getAmount());
+                System.out.println("recebi a conta com o valor (encriptado)" + r.getAmount());
                 BigInteger BigIntegerValue = new BigInteger(r.getAmount());
                 int addValue = HomoAdd.decrypt(BigIntegerValue ,pk).intValue();
-                System.out.println("amount " + addValue);
+                System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
                 break;
 
             case "HOMO_OPE_INT":

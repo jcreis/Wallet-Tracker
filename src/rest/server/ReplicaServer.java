@@ -239,11 +239,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "HOMO_ADD":
-                System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type "+type);
+                System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type "+encryptType);
                 ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
                 break;
 
             case "HOMO_OPE_INT":
+                System.out.println("Tou no selectionType HOMO_OPE_INT, vou reencaminhar po encrypt type "+encryptType);
                 ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
                 break;
 
@@ -315,7 +316,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "CREATE":
-
+                System.out.println("Vou criar com o valor encriptado: " + value);
                 db.put(publicKey, new TypeAmount(type, value));
 
                 break;

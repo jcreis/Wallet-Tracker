@@ -52,9 +52,12 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
         try {
+            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
+            //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
             addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+
+            //OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -289,6 +292,8 @@ public class AppClient {
         //Adicionar um valor random
         Double value = randomm.nextInt(899) + 100.0;
 
+        System.out.println("Valor gerado (desencriptado)= "+value);
+
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");
         String adminPublicString = null;
@@ -359,7 +364,6 @@ public class AppClient {
 
             case "HOMO_ADD":
 
-
                 BigInteger big1 = BigInteger.valueOf(value.intValue());
                 BigInteger encryptValue = HomoAdd.encrypt(big1, pk);
 
@@ -404,6 +408,7 @@ public class AppClient {
                 hashEncriptPriv = adminPriv.encrypt(hash);
                 msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
+                System.out.println("Vou enviar o valor encriptado po server -> "+openValue);
 
                 response = target.path(pathPublicKey)
                         .queryParam("value", openValue.toString())
@@ -419,8 +424,7 @@ public class AppClient {
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
                 } else {
-                    BigInteger BigIntegerValue = new BigInteger(r.getAmount());
-                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
+                    int addValue = ope.decrypt(Long.parseLong(r.getAmount()));
                     System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
                 }
                 break;
@@ -501,7 +505,8 @@ public class AppClient {
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("Add money to pubKey: " + publicString.substring(0, 50));
-            System.out.println("Amount: " + Double.parseDouble(r.getAmount()));
+            /*int addValue = HomoAdd.decrypt(new BigInteger(r.getAmount()), pk).intValue();
+            System.out.println("Amount: " + addValue);*/
             if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }

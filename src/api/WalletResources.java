@@ -114,8 +114,6 @@ public class WalletResources {
         byte[] hashDecriptPriv = adminPubKey.decrypt(decodedBytes);
 
         // Checks if Hashes match
-        System.out.println("HashDecriptPriv: "+hashDecriptPriv);
-        System.out.println("hash: "+hash);
         if (Arrays.equals(hashDecriptPriv, hash)) {
             System.out.println("AQUI CARALHO");
 

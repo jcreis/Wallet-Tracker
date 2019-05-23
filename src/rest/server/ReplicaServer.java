@@ -6,8 +6,10 @@ import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
+import javassist.NotFoundException;
 import model.OpType;
 import model.TypeAmount;
+import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -131,7 +133,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 reply = new byte[0];
             }
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             System.out.println("Exception");
         }
 
@@ -200,7 +202,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-    private String selectionOfType_ADD(String type, String encryptType, String publicKey, String value, BigInteger nsquare) throws IOException {
+    private String selectionOfType_ADD(String type, String encryptType, String publicKey, String value, BigInteger nsquare) throws Exception {
         String ret = "";
 
         switch (type) {
@@ -229,7 +231,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "HOMO_ADD":
-                System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type CREATE");
+                System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type "+type);
                 ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
                 break;
 
@@ -246,7 +248,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return ret;
     }
 
-    private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare) throws IOException {
+    private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare) throws Exception {
 
         switch (encryptType) {
 
@@ -270,8 +272,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 }
                 break;
             case "SET":
+                System.out.println("Entrei no SET!!!");
+                System.out.println("Vou dar set do value para "+value);
                 if (type.equals("HOMO_ADD")) {
+                    System.out.println("Confere, tipo homo_add");
+
                     if (db.containsKey(publicKey)) {
+                        System.out.println("Database tem o user");
+                        System.out.println("posso entao dar set po valor "+value);
                         TypeAmount aux = db.get(publicKey);
                         aux.setAmount(value);
                         db.put(publicKey, aux);
@@ -279,6 +287,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     } else {
                         System.out.println("Account doesnt exists in the database");
+                        return "-1";
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
                     if (db.containsKey(publicKey)) {
@@ -286,6 +295,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     } else {
                         System.out.println("Account doenst exists in the database");
+                        return "-1";
                     }
                 } else {
                     System.out.println("Type not supported.");
@@ -294,8 +304,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "CREATE":
-                System.out.println("Entrei no CREATE!!!");
-                System.out.println("Vou dar set do value para "+value);
+
                 db.put(publicKey, new TypeAmount(type, value));
 
                 break;

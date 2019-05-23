@@ -52,7 +52,7 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
         try {
-            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
         }catch (Exception e ){
             e.printStackTrace();
         }
@@ -387,9 +387,14 @@ public class AppClient {
                 r = response.readEntity(Reply.class);
 
                 System.out.println("recebi a conta com o valor (encriptado)" + r.getAmount());
-                BigInteger BigIntegerValue = new BigInteger(r.getAmount());
-                int addValue = HomoAdd.decrypt(BigIntegerValue ,pk).intValue();
-                System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
+                if(r.getAmount().equals("-1")){
+                    System.out.println("Something went wrong.");
+                }
+                else {
+                    BigInteger BigIntegerValue = new BigInteger(r.getAmount());
+                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
+                    System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
+                }
                 break;
 
             case "HOMO_OPE_INT":

@@ -10,6 +10,8 @@ import java.net.URI;
 
 public class WalletServer {
 
+
+	@SuppressWarnings("Duplicates")
 	public static void main(String[] args) throws Exception {
 		int port = 8080;
 		int replicaNum = 0;
@@ -28,4 +30,14 @@ public class WalletServer {
 
 		System.err.println(" Wallet Server ready @ " + baseUri);
 	}
+
+	public void stop(){
+
+	}
+
+	public void launch(){
+		System.out.println("launching server");
+	}
+
+
 }

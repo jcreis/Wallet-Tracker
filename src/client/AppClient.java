@@ -61,9 +61,9 @@ public class AppClient {
             getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
             //getMoney("WALLET", EncryptOpType_GET.GET);
-            //OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+            //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
-            //OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+            //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -775,7 +775,7 @@ public class AppClient {
     }
 
     @SuppressWarnings("Duplicates")
-    public static void OPE_GetMoney(String type, EncryptOpType_GET encryptType) throws Exception {
+    public static void getMoney_LOW_HIGH(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
         System.out.println("####### GetOPEMoney #######");
         System.out.println("#################################");

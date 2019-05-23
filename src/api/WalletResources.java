@@ -128,6 +128,7 @@ public class WalletResources {
 
                 objOut.flush();
                 byteOut.flush();
+                System.out.println("CHeguei, e vou outra vez");
                 byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
 
                 if (reply.length == 0)

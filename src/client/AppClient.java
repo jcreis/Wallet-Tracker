@@ -51,9 +51,13 @@ public class AppClient {
 
     public static void main(String[] args) throws Exception {
 
-        addMoney("WALLET", EncryptOpType_ADD.SUM);
-        addMoney("WALLET", EncryptOpType_ADD.SET);
-        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        try {
+            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        }catch (Exception e ){
+            e.printStackTrace();
+        }
+        //addMoney("WALLET", EncryptOpType_ADD.SET);
+        //addMoney("WALLET", EncryptOpType_ADD.CREATE);
 
         /*long initAddMoneyTime = System.currentTimeMillis();
         while (true) {
@@ -341,6 +345,7 @@ public class AppClient {
         switch (type) {
 
             case "WALLET":
+                System.out.println("la vou eu");
                 response = target.path(pathPublicKey)
                         .queryParam("value", value.toString())
                         .queryParam("nonce", nonce)
@@ -372,6 +377,11 @@ public class AppClient {
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
                 r = response.readEntity(Reply.class);
+
+                System.out.println("amount" + r.getAmount());
+                BigInteger BigIntegerValue = new BigInteger(r.getAmount());
+                int addValue = HomoAdd.decrypt(BigIntegerValue ,pk).intValue();
+                System.out.println("amount " + addValue);
                 break;
 
             case "HOMO_OPE_INT":
@@ -579,7 +589,7 @@ public class AppClient {
 
                 BigInteger BigIntegerValue = new BigInteger(r.getAmount());
                 int addValue = HomoAdd.decrypt(BigIntegerValue ,pk).intValue();
-
+                System.out.println("value = " + addValue);
                 break;
 
             default:

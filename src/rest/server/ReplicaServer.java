@@ -253,10 +253,15 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         switch (encryptType) {
 
             case "SUM":
+                System.out.println("Entrei no SUM!!!");
+                System.out.println("Vou dar sum de "+value);
                 BigInteger BigIntegerValue = new BigInteger(value);
                 if (type.equals("HOMO_ADD")) {
+                    System.out.println("Confere, tipo homo_add");
                     //valid
                     if (db.containsKey(publicKey)) {
+                        System.out.println("Database tem o user");
+                        System.out.println("posso entao dar add do valor "+value);
                         BigInteger BigIntegerValueDb = new BigInteger(db.get(publicKey).getAmount());
 
                         BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
@@ -265,6 +270,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     } else {
                         System.out.println("User not in the database.");
+                        return "-1";
                     }
 
                 } else {
@@ -272,14 +278,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 }
                 break;
             case "SET":
-                System.out.println("Entrei no SET!!!");
-                System.out.println("Vou dar set do value para "+value);
+
                 if (type.equals("HOMO_ADD")) {
-                    System.out.println("Confere, tipo homo_add");
 
                     if (db.containsKey(publicKey)) {
-                        System.out.println("Database tem o user");
-                        System.out.println("posso entao dar set po valor "+value);
+
                         TypeAmount aux = db.get(publicKey);
                         aux.setAmount(value);
                         db.put(publicKey, aux);

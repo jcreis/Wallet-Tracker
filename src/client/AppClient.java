@@ -52,7 +52,7 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
         try {
-            addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
+            addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
         }catch (Exception e ){
             e.printStackTrace();
         }
@@ -287,7 +287,6 @@ public class AppClient {
 
         //Adicionar um valor random
         Double value = randomm.nextInt(899) + 100.0;
-
 
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");

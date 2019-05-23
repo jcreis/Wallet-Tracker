@@ -8,7 +8,6 @@ public class Reply {
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
     String amount;
-    List<String> listAmounts;
     long nonce;
 
     OpType operationType;

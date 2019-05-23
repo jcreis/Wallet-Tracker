@@ -273,7 +273,11 @@ public class WalletResources {
                     System.out.println("RESPONSE FROM GET MONEY IS:");
                     System.out.println("User " + publicKey.substring(0, 50) + " has " + money + "€ in the his account");
 
-                    return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
+                    Reply rep = new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce+1);
+                    System.out.println("I GOT + " + captureMessages.getReplicaMessages().size() + " MESSAGES From Rep");
+                    return rep;
+
+                    //return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), publicKey, money, replyNonce + 1);
 
                 }
 
@@ -328,6 +332,7 @@ public class WalletResources {
                 for(String key : keyList){
                     System.out.println(key);
                 }
+
 
                 return new Reply_OPE(GET_MONEY_OPE, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
 

@@ -45,13 +45,6 @@ public class Reply_OPE {
         this.publicKey = publicKey;
     }
 
-    public String getAmount() {
-        return amount;
-    }
-
-    public void setAmount(String amount) {
-        this.amount = amount;
-    }
 
     public List<String> getListAmounts() {
         return listAmounts;

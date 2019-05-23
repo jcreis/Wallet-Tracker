@@ -52,10 +52,16 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
         try {
+
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            //addMoney("WALLET", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
             addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
+            //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
+            //getMoney("WALLET", EncryptOpType_GET.GET);
+            //OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
             //OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
@@ -402,7 +408,8 @@ public class AppClient {
 
             case "HOMO_OPE_INT":
 
-                Long openValue = ope.encrypt(value.intValue());
+                //Long openValue = ope.encrypt(value.intValue());
+                Long openValue = ope.encrypt(1100);
                 msg = publicString + openValue + nonce;
                 hash = Digest.getDigest(msg.getBytes());
                 hashEncriptPriv = adminPriv.encrypt(hash);
@@ -446,10 +453,10 @@ public class AppClient {
             ObjectInput objIn = new ObjectInputStream(byteIn);
             String msgStringAmount = (String) objIn.readObject();
             Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
-            ;
-            //System.out.println("replica amount: "+ replicaMsgAmount);
+
+           // System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
-            //System.out.println("replica nonce: " + replicaNonce);
+           // System.out.println("replica nonce: " + replicaNonce);
 
 
             amounts.add(replicaMsgAmount);
@@ -553,6 +560,8 @@ public class AppClient {
         Response response;
 
         ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<Integer> amounts_add = new ArrayList<Integer>();
+        ArrayList<Integer> amounts_int = new ArrayList<Integer>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
         int majority = 0;
@@ -570,7 +579,7 @@ public class AppClient {
                 r = response.readEntity(Reply.class);
 
 
-                for (ReplicaResponseMessage currentReplicaMsg : r.getMessages()) {
+                /*for (ReplicaResponseMessage currentReplicaMsg : r.getMessages()) {
                     if (currentReplicaMsg != null) {
 
                         ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
@@ -602,7 +611,7 @@ public class AppClient {
                 for (Double amount : amounts) {
                     if (amount == Double.parseDouble(r.getAmount()))
                         majority++;
-                }
+                }*/
 
                 break;
 
@@ -637,17 +646,12 @@ public class AppClient {
 
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
-                } else if
-                (encryptType.equals("GET")) {
+                } else  {
                     Long val = Long.parseLong(r.getAmount());
                     int recVal = ope.decrypt(val);
-                    System.out.println("value = " + recVal);
+                    System.out.println("AMOUNT = " + recVal);
 
-
-                } else {
-                    System.out.println("Unexpected type: " + encryptType);
                 }
-
 
                 break;
 
@@ -659,6 +663,76 @@ public class AppClient {
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
         getMoneyRequestTimes.add(finalRequestTime);
+
+        for (int i = 0; i < r.getMessages().size(); i++) {
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+
+            String msgStringAmount = (String) objIn.readObject();
+            switch (type){
+                case "WALLET" :
+                    Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
+                    amounts.add(replicaMsgAmount);
+
+                    for (Double amount : amounts) {
+                        if (amount == Double.parseDouble(r.getAmount()))
+                            majority++;
+                    }
+                    break;
+                case "HOMO_ADD" :
+                    BigInteger BigIntegerValue = new BigInteger(msgStringAmount);
+                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
+                    amounts_add.add(addValue);
+                    for (Integer amount : amounts_add) {
+                        BigInteger BigIntegerValue_r = new BigInteger(r.getAmount());
+                        int r_addValue = HomoAdd.decrypt(BigIntegerValue_r, pk).intValue();
+                        if (amount == r_addValue)
+                            majority++;
+                    }
+
+                    break;
+
+
+                case "HOMO_OPE_INT" :
+                    int openValue = ope.decrypt(Long.parseLong(msgStringAmount));
+                    amounts_int.add(openValue);
+                    for (Integer amount : amounts_int) {
+                        int r_value = ope.decrypt(Long.parseLong(r.getAmount()));
+                        if (amount == r_value)
+                            majority++;
+                    }
+
+                    break;
+            }
+
+
+            // System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+            // System.out.println("replica nonce: " + replicaNonce);
+
+
+
+            lNonces.add(replicaNonce);
+
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(pk);
+            sig.update(currentReplicaMsg.getSerializedMessage());
+
+
+            if (sig.verify(currentReplicaMsg.getSignature())) {
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+            } else {
+
+                System.out.println("Signature of message is invalid");
+            }
+
+        }
+
+
 
         for (Long n : lNonces) {
             if (n + 1 == r.getNonce())
@@ -689,7 +763,7 @@ public class AppClient {
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("From pubKey: " + publicString.substring(0, 50));
             //TODO Verificar este print está mal tratar pa cada caso nao e sempre double
-            System.out.println("New amount: " + Double.parseDouble(r.getAmount()));
+            //System.out.println("New amount: " + Double.parseDouble(r.getAmount()));
             if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }
@@ -737,7 +811,7 @@ public class AppClient {
         Response response;
 
 
-        ArrayList<Double> amounts = new ArrayList<Double>();
+        ArrayList<String> amounts = new ArrayList<>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
         int majority = 0;
@@ -756,8 +830,10 @@ public class AppClient {
             // higher becomes lower
             randValue1 = randValue2;
         }
-        Long higher = ope.encrypt(randValue1.intValue());
-        Long lower = ope.encrypt(randValue2.intValue());
+        //Long higher = ope.encrypt(randValue1.intValue());
+        //Long lower = ope.encrypt(randValue2.intValue());
+        Long higher = ope.encrypt(1200);
+        Long lower = ope.encrypt(1000);
 
         response = target.path("/money")
                 .queryParam("higher", higher)
@@ -776,11 +852,57 @@ public class AppClient {
         }
 
 
-
-
-
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
         getMoneyRequestTimes.add(finalRequestTime);
+
+        for (int i = 0; i < r.getMessages().size(); i++) {
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+            List<String> msgStringKey = (List<String>) objIn.readObject();
+            for (String key : msgStringKey){
+
+                amounts.add(key);
+            }
+
+
+            // System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+            // System.out.println("replica nonce: " + replicaNonce);
+
+
+
+            lNonces.add(replicaNonce);
+
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(pk);
+            sig.update(currentReplicaMsg.getSerializedMessage());
+
+
+            if (sig.verify(currentReplicaMsg.getSignature())) {
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+            } else {
+
+                System.out.println("Signature of message is invalid");
+            }
+
+        }
+
+        for (String key : amounts) {
+
+                for (String k : r.getListAmounts()){
+
+                    if (key.equals(k))
+                        majority++;
+
+
+
+            }
+
+        }
 
         for (Long n : lNonces) {
             if (n + 1 == r.getNonce())
@@ -809,7 +931,6 @@ public class AppClient {
             System.out.println();
             System.out.println("Status: " + response.getStatusInfo());
             System.out.println("From pubKey: " + publicString.substring(0, 50));
-            //TODO Verificar este print está mal tratar pa cada caso nao e sempre double
             if (nonce + 1 == r.getNonce()) {
                 System.out.println("Nonces match");
             }

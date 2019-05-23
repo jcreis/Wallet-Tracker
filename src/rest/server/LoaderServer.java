@@ -15,7 +15,7 @@ public class LoaderServer {
 
         {
             try {
-                classLoaderUrls = new URL[]{new URL("")};
+                classLoaderUrls = new URL[]{new URL("file:WalletServer.jar")};
 
                 // Create a new URLClassLoader
                 URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);

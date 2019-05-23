@@ -149,11 +149,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
         String publicKey;
         Long nonce;
-        Double higher;
-        Double lower;
+        Long higher;
+        Long lower;
         String type;
         String encryptType;
-        List<String> rec_val = new ArrayList<>();
+        List<String> rec_val;
         String rec2_val;
 
 
@@ -179,8 +179,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     break;
 
                 case GET_MONEY_OPE:
-                    higher = (Double) objIn.readObject();
-                    lower = (Double) objIn.readObject();
+                    higher = (Long) objIn.readObject();
+                    lower = (Long) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
@@ -337,7 +337,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             } else {
 
                 System.out.println("User not found in the database.");
-                return null;
+                return "";
             }
 
 
@@ -345,27 +345,36 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     @SuppressWarnings("Duplicates")
-    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Double higher, Double lower) throws IOException {
+    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Long higher, Long lower) throws IOException {
         List<String> reply = new ArrayList<>();
         if (encryptType.equals("GET_LOWER_HIGHER")) {
             if (type.equals("HOMO_OPE_INT")) {
 
-                List<String> keyList = new ArrayList<>();
+                /*List<String> keyList = new ArrayList<>();
                 for (String key : db.keySet()) {
                     keyList.add(key);
-                }
+                }*/
                 List<String> returnList = new ArrayList<>();
-                for (int i = 0; i < keyList.size(); i++) {
-                    Double doubleValue = Double.parseDouble(db.get(i).getAmount());
-                    if (doubleValue >= lower && doubleValue <= higher) {
-                        returnList.add(keyList.get(i));
+                db.forEach((String key, TypeAmount value) -> {
+                    Long res = Long.parseLong(value.getAmount());
+                    if (res >= lower && res <= higher) {
+                        returnList.add(key);
                     }
-                }
+                });
+
+                /*List<String> returnList = new ArrayList<>();
+                for (int i = 0; i < db.keySet().size(); i++) {
+                    System.out.println(" OLA - " + db.get(i).getAmount());
+                    Long value = Long.parseLong(db.get(i).getAmount());
+                    if (value >= lower && value <= higher) {
+                        returnList.add(db.get(i));
+                    }
+                }*/
 
                 reply = returnList;
             } else {
                 System.out.println("Operation not supported in that type.");
-                return null;
+
             }
          }
 

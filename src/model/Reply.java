@@ -25,14 +25,7 @@ public class Reply {
 
     }
 
-    // For OPE_INT - without pubKey and a List<String> amounts instead of a single amount
-    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, List<String> listAmounts, long nonce){
-        this.messages = messages;
-        this.listAmounts = listAmounts;
-        this.nonce = nonce;
-        this.operationType = operationType;
 
-    }
 
     public Reply() {
     }
@@ -77,11 +70,7 @@ public class Reply {
         this.nonce = nonce;
     }
 
-    public List<String> getListAmounts() {
-        return listAmounts;
-    }
 
-    public void setListAmounts(List<String> listAmounts) {
-        this.listAmounts = listAmounts;
-    }
+
+
 }

@@ -7,6 +7,7 @@ import hj.mlib.HomoAdd;
 import hj.mlib.PaillierKey;
 import model.Reply;
 import model.CaptureMessages;
+import model.Reply_OPE;
 import rest.server.ReplicaServer;
 import security.Digest;
 import security.PrivateKey;
@@ -288,23 +289,23 @@ public class WalletResources {
     @SuppressWarnings("Duplicates")
     @GET
     @Path("/money")
-    public Reply getHOMO_OPE(@QueryParam("higher") Long higher,
+    @Produces(MediaType.APPLICATION_JSON)
+    public Reply_OPE getHOMO_OPE(@QueryParam("higher") Long higher,
                              @QueryParam("lower") Long lower,
                              @QueryParam("nonce") Long nonce,
-                             @QueryParam("msg") String msg,
                              @QueryParam("type") String type,
                              @QueryParam("encryptType") String encryptType)
             throws Exception {
 
 
-
+        System.out.println("TYPE RECEIVED - " + type);
 
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
             objOut.writeObject(GET_MONEY_OPE);
-            objOut.writeObject(higher.doubleValue());
-            objOut.writeObject(lower.doubleValue());
+            objOut.writeObject(higher);
+            objOut.writeObject(lower);
             objOut.writeObject(nonce);
             objOut.writeObject(type);
             objOut.writeObject(encryptType);
@@ -327,7 +328,8 @@ public class WalletResources {
                 for(String key : keyList){
                     System.out.println(key);
                 }
-                return new Reply(GET_MONEY, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
+
+                return new Reply_OPE(GET_MONEY_OPE, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
 
             }
         } catch (Exception e) {

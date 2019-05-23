@@ -53,7 +53,8 @@ public class AppClient {
 
         try {
             addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            OPE_GetMoney("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -610,9 +611,13 @@ public class AppClient {
                         .get();
                 r = response.readEntity(Reply.class);
 
-                BigInteger BigIntegerValue = new BigInteger(r.getAmount());
-                int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
-                System.out.println("value = " + addValue);
+                if (r.getAmount().equals("-1")) {
+                    System.out.println("Something went wrong.");
+                } else {
+                    BigInteger BigIntegerValue = new BigInteger(r.getAmount());
+                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
+                    System.out.println("value = " + addValue);
+                }
                 break;
 
             case "HOMO_OPE_INT":
@@ -625,16 +630,14 @@ public class AppClient {
                         .get();
                 r = response.readEntity(Reply.class);
 
-                if (encryptType.equals("GET")) {
+                if (r.getAmount().equals("-1")) {
+                    System.out.println("Something went wrong.");
+                } else if
+                (encryptType.equals("GET")) {
                     Long val = Long.parseLong(r.getAmount());
                     int recVal = ope.decrypt(val);
                     System.out.println("value = " + recVal);
-                } else if (encryptType.equals("GET_LOWER_HIGHER")) {
-                    for (String amount : r.getListAmounts()) {
-                        Long val = Long.parseLong(amount);
-                        int recVal = ope.decrypt(val);
-                        System.out.println(recVal);
-                    }
+
 
                 } else {
                     System.out.println("Unexpected type: " + encryptType);
@@ -716,7 +719,7 @@ public class AppClient {
 
         Long nonce = random.nextLong();
 
-        Reply r;
+        Reply_OPE r;
 
         String msg = publicString + nonce;
         byte[] hash = Digest.getDigest(msg.getBytes());
@@ -737,8 +740,9 @@ public class AppClient {
 
         // Prepare HTTP Request
 
-        Double randValue1 = random.nextDouble();
-        Double randValue2 = random.nextDouble();
+        Double randValue1 = random.nextInt(899) + 100.0;
+        Double randValue2 = random.nextInt(899) + 100.0;
+
         // higher is less than lower
         if (randValue1 < randValue2) {
             Double temp = randValue2;
@@ -747,17 +751,28 @@ public class AppClient {
             // higher becomes lower
             randValue1 = randValue2;
         }
-        Double higher = randValue1;
-        Double lower = randValue2;
+        Long higher = ope.encrypt(randValue1.intValue());
+        Long lower = ope.encrypt(randValue2.intValue());
+
         response = target.path("/money")
                 .queryParam("higher", higher)
                 .queryParam("lower", lower)
                 .queryParam("nonce", nonce)
-                .queryParam("msg", msgHashStr)
+                .queryParam("type",  type)
                 .queryParam("encryptType", encryptType)
                 .request()
                 .get();
-        r = response.readEntity(Reply.class);
+        r = response.readEntity(Reply_OPE.class);
+
+        System.out.println(response.getStatus());
+        for (String key : r.getListAmounts()) {
+
+            System.out.println(key);
+        }
+
+
+
+
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
         getMoneyRequestTimes.add(finalRequestTime);

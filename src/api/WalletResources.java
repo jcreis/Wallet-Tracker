@@ -307,7 +307,7 @@ public class WalletResources {
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
-            objOut.writeObject(GET_MONEY_OPE);
+            objOut.writeObject(GET_LOW_HIGH);
             objOut.writeObject(higher);
             objOut.writeObject(lower);
             objOut.writeObject(nonce);
@@ -334,7 +334,7 @@ public class WalletResources {
                 }
 
 
-                return new Reply_OPE(GET_MONEY_OPE, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
+                return new Reply_OPE(GET_LOW_HIGH, captureMessages.getReplicaMessages(), keyList, replyNonce+1);
 
             }
         } catch (Exception e) {

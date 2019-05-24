@@ -12,6 +12,7 @@ import model.TypeAmount;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -161,7 +162,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
-             OpType reqType = (OpType) objIn.readObject();
+            OpType reqType = (OpType) objIn.readObject();
             switch (reqType) {
 
 
@@ -178,7 +179,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     hasReply = true;
                     break;
 
-                case GET_MONEY_OPE:
+                case GET_LOW_HIGH:
                     higher = (Long) objIn.readObject();
                     lower = (Long) objIn.readObject();
                     nonce = (Long) objIn.readObject();
@@ -210,31 +211,51 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
+
+
+
+
     private String selectionOfType_ADD(String type, String encryptType, String publicKey, String value, BigInteger nsquare) throws Exception {
         String ret = "";
 
         switch (type) {
             case "WALLET":
                 if (encryptType.equals("SUM")) {
-                    System.out.println("Não pode fazer a operação");
-                } else {
                     Double doubleValue = Double.parseDouble(value);
-                    System.out.println("doubleValue = " + doubleValue);
+
+                    Double newValue = Double.parseDouble(db.get(publicKey).getAmount() + doubleValue);
+
+                    TypeAmount aux = db.get(publicKey);
+                    aux.setAmount(newValue.toString());
+                    db.put(publicKey, aux);
+
+                    ret = db.get(publicKey).getAmount();
+
+
+                } else if(encryptType.equals("SET")) {
+                    Double doubleValue = Double.parseDouble(value);
+
                     if (db.containsKey(publicKey)) {
                         if (doubleValue >= 0) {
-                            Double newValue = Double.parseDouble(db.get(publicKey).getAmount()) + doubleValue;
-                            db.put(publicKey, new TypeAmount(type, newValue.toString()));
+                            TypeAmount aux = db.get(publicKey);
+                            aux.setAmount(value);
+                            db.put(publicKey, aux);
+
                             ret = db.get(publicKey).getAmount();
                             // returns updated money
 
 
                         } else {
-                            System.out.println("Account doesnt exists in the database");
+                            System.out.println("Value not valid");
                         }
-                    } else {
-                        db.put(publicKey, new TypeAmount("WALLET", value));
-                        ret = db.get(publicKey).getAmount();
                     }
+                }
+
+                // CREATE
+                else {
+                    db.put(publicKey, new TypeAmount("WALLET", value));
+
+                    ret = db.get(publicKey).getAmount();
                 }
                 break;
 
@@ -251,8 +272,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             default:
                 System.out.println("Type not valid.");
                 break;
-
         }
+
+
+
 
         return ret;
     }
@@ -282,8 +305,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         return "-1";
                     }
 
-                } else {
-                    System.out.println("This type of encryption is not supported to HOMO_OPE_INT");
+                }
+                // HOMO OPE INT -> SUM
+                else {
+                    Long valueDb = Long.parseLong(db.get(publicKey).getAmount());
+                    //TODO send to sgx to process and return to client after
+
+
                 }
                 break;
             case "SET":
@@ -303,7 +331,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
                     if (db.containsKey(publicKey)) {
-                        db.put(publicKey, new TypeAmount(type, value));
+                        TypeAmount aux = db.get(publicKey);
+                        aux.setAmount(value);
+                        db.put(publicKey, aux);
 
                     } else {
                         System.out.println("Account doenst exists in the database");
@@ -316,6 +346,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 break;
 
             case "CREATE":
+                // para os 2 casos HOMO ADD && HOMO OPE INT
                 System.out.println("Vou criar com o valor encriptado: " + value);
                 db.put(publicKey, new TypeAmount(type, value));
 
@@ -332,14 +363,17 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     @SuppressWarnings("Duplicates")
     private String selectionOfType_GET(String type, String encryptType, String publicKey, Double higher, Double lower) throws IOException {
         String reply;
-            if (db.containsKey(publicKey)) {
-                //System.out.println("Amount: " + db.get(publicKey));
-                reply = db.get(publicKey).getAmount();
-            } else {
 
-                System.out.println("User not found in the database.");
-                return "";
-            }
+        // Igual para todos os tipos WALLET && HOMO ADD && HOMO OPE INT
+        // Quem desencripta quando tem que desencriptar é o client
+        if (db.containsKey(publicKey)) {
+            //System.out.println("Amount: " + db.get(publicKey));
+            reply = db.get(publicKey).getAmount();
+        } else {
+
+            System.out.println("User not found in the database.");
+            return "";
+        }
 
 
         return reply;
@@ -351,10 +385,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         if (encryptType.equals("GET_LOWER_HIGHER")) {
             if (type.equals("HOMO_OPE_INT")) {
 
-                /*List<String> keyList = new ArrayList<>();
-                for (String key : db.keySet()) {
-                    keyList.add(key);
-                }*/
+
                 List<String> returnList = new ArrayList<>();
                 db.forEach((String key, TypeAmount value) -> {
                     Long res = Long.parseLong(value.getAmount());
@@ -363,21 +394,25 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     }
                 });
 
-                /*List<String> returnList = new ArrayList<>();
-                for (int i = 0; i < db.keySet().size(); i++) {
-                    System.out.println(" OLA - " + db.get(i).getAmount());
-                    Long value = Long.parseLong(db.get(i).getAmount());
-                    if (value >= lower && value <= higher) {
-                        returnList.add(db.get(i));
+                reply = returnList;
+
+            } else if(type.equals("WALLET")){
+                List<String> returnList= new ArrayList<>();
+                db.forEach((String key, TypeAmount value) -> {
+                    Long longValue = Long.parseLong(value.getAmount());
+
+                    if(longValue >= lower && longValue <= higher){
+                        returnList.add(key);
                     }
-                }*/
+                });
 
                 reply = returnList;
-            } else {
-                System.out.println("Operation not supported in that type.");
-
             }
-         }
+            // HOMO_ADD
+            else{
+                //TODO send to be processed into SGX
+            }
+        }
 
         return reply;
     }

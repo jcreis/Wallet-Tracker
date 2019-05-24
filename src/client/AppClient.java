@@ -54,13 +54,13 @@ public class AppClient {
         try {
 
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-            //addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("WALLET", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
+            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-            //getMoney("WALLET", EncryptOpType_GET.GET);
+            getMoney("WALLET", EncryptOpType_GET.GET);
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -577,6 +577,8 @@ public class AppClient {
                         .request()
                         .get();
                 r = response.readEntity(Reply.class);
+
+                System.out.println("replica amount: "+ r.getAmount());
 
 
                 /*for (ReplicaResponseMessage currentReplicaMsg : r.getMessages()) {

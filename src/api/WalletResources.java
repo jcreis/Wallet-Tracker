@@ -42,6 +42,10 @@ public class WalletResources {
 
     SecureRandom random = new SecureRandom();
 
+
+
+    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
+
     public WalletResources(int replicaNumber) throws Exception {
         this.replicaNumber = replicaNumber;
         replicaServer = new ReplicaServer(replicaNumber);
@@ -73,8 +77,6 @@ public class WalletResources {
 
     }
 
-
-    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
 
     @SuppressWarnings("Duplicates")
     @POST

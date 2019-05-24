@@ -523,6 +523,24 @@ public class AppClient {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @SuppressWarnings("Duplicates")
     public static void getMoney(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
@@ -580,40 +598,6 @@ public class AppClient {
 
                 System.out.println("replica amount: "+ r.getAmount());
 
-
-                /*for (ReplicaResponseMessage currentReplicaMsg : r.getMessages()) {
-                    if (currentReplicaMsg != null) {
-
-                        ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
-                        ObjectInput objIn = new ObjectInputStream(byteIn);
-                        String replicaMsgAmount = (String) objIn.readObject();
-                        //System.out.println("replica amount: "+ replicaMsgAmount);
-                        Long replicaNonce = (Long) objIn.readObject();
-                        //System.out.println("replica nonce: " + replicaNonce);
-
-
-                        amounts.add(Double.parseDouble(replicaMsgAmount));
-                        lNonces.add(replicaNonce);
-
-                        KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-                        java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
-                        Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
-                        sig.initVerify(pk);
-                        sig.update(currentReplicaMsg.getSerializedMessage());
-
-                        if (sig.verify(currentReplicaMsg.getSignature())) {
-                            System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
-                        } else {
-                            System.out.println("Signature of message is invalid");
-                        }
-                    }
-                }
-
-
-                for (Double amount : amounts) {
-                    if (amount == Double.parseDouble(r.getAmount()))
-                        majority++;
-                }*/
 
                 break;
 
@@ -776,10 +760,12 @@ public class AppClient {
 
     }
 
+
+
     @SuppressWarnings("Duplicates")
     public static void getMoney_LOW_HIGH(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
-        System.out.println("####### GetOPEMoney #######");
+        System.out.println("####### Get Low High #######");
         System.out.println("#################################");
         System.out.println();
 
@@ -941,6 +927,16 @@ public class AppClient {
         }
 
     }
+
+
+
+
+
+
+
+
+
+
 
 
     public static long getTransferAvgTime() {

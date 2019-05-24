@@ -10,7 +10,7 @@ import java.net.URI;
 public class sconeServer {
 
     public static void main(String[] args) throws Exception {
-        int port = 8080;
+        int port = 8000;
         int replicaNum = 0;
         if( args.length > 0) {
             port = Integer.parseInt(args[0]);

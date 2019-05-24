@@ -1,5 +1,6 @@
 package rest.server;
 
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,33 +12,80 @@ public class LoaderServer {
 
 
     public static void main(String[] args) throws Exception {
-        URL[] classLoaderUrls;
+        //URL[] classLoaderUrls;
 
-        {
-            try {
-                classLoaderUrls = new URL[]{new URL("file:WalletServer.jar")};
+        System.setProperty("-Djavax.net.ssl.keyStore","server.jks");
+        System.setProperty("-Djavax.net.ssl.keyStorePassword","qwerty");
 
-                // Create a new URLClassLoader
-                URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
-
-                // Load the target class
-                Class<?> beanClass = urlClassLoader.loadClass("rest.server.WalletServer");
-
-                // Create a new instance from the loaded class
-                Constructor<?> constructor = beanClass.getConstructor();
-                Object beanObj = constructor.newInstance();
-
-                // Getting a method from the loaded class and invoke it
-                Method method = beanClass.getMethod("launch");
-                method.invoke(beanObj);
+        launchSeparateProcess();
 
 
-            } catch (MalformedURLException | InstantiationException | InvocationTargetException | NoSuchMethodException |
-                    IllegalAccessException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
+
+
+        //launchMain("10000", "0");
+
+
     }
+
+    private static void launchSeparateProcess() throws IOException, InterruptedException {
+
+        File f = new File("WalletServer.jar");
+        System.out.println(f.getAbsolutePath());
+        ProcessBuilder pb = new ProcessBuilder("/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java", "-cp", "target/rest-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "rest.server.WalletServer", "8080", "0");
+        ProcessBuilder pb2 = new ProcessBuilder("/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java", "-cp", "target/rest-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "rest.server.WalletServer", "8090", "1");
+        //Process p = pb.start();
+        //ProcessBuilder pb = new ProcessBuilder("java", "-jar", f.getAbsolutePath());
+        Process p = pb.start();
+        Process p2 = pb2.start();
+        InputStream is = p.getErrorStream();
+        for (; ; ) {
+            int ch = is.read();
+            if( ch == -1)
+                return;
+            System.out.write(ch);
+            System.out.flush();
+        }
+
+       /* System.out.println(p.isAlive());
+        System.out.println(p2.isAlive());*/
+
+
+    }
+
+    private static void launchMain(String port, String n) throws IOException {
+        URL[] classLoaderUrls;
+        try {
+            classLoaderUrls = new URL[]{new URL("file:WalletServer.jar")};
+
+            // Create a new URLClassLoader
+            URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
+
+            // Load the target class
+            Class<?> beanClass = urlClassLoader.loadClass("rest.server.WalletServer");
+
+            // Create a new instance from the loaded class
+            Constructor<?> constructor = beanClass.getConstructor();
+            Object beanObj = constructor.newInstance();
+
+            final Method method = beanClass.getMethod("main", String[].class);
+            final Object[] arg = new Object[1];
+            arg[0] = new String[] { port, n};
+
+            method.invoke(beanObj, arg);
+
+
+
+        } catch (MalformedURLException | InstantiationException | InvocationTargetException | NoSuchMethodException |
+                IllegalAccessException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+
+
+
 
 
 

@@ -2,6 +2,7 @@ package client;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
+import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
@@ -325,14 +326,17 @@ public class AppClient {
 
         byte[] sgxByte = Base64.getDecoder().decode(sgxPublicString);
         PublicKey sgxPublic = PublicKey.createKey(sgxByte);
+
         //HOMO_ADD KEY
-        byte[] addKey = sgxPublic.encrypt(pk.toString().getBytes());
-        String homo_add_Key_S = Base64.getEncoder().encodeToString(addKey);
-        String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");
+        String pk_S = pk.toString();
+        byte[] addKey = sgxPublic.encrypt(pk_S.getBytes());
+        String homo_add_Key = Base64.getEncoder().encodeToString(addKey);
+        //String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");
+
         //HOMO_OPE_INT
         byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
-        String homo_ope_int_Key_S = Base64.getEncoder().encodeToString(intKey);
-        String homo_ope_int_Key = URLEncoder.encode(homo_ope_int_Key_S, "UTF-8");
+        String homo_ope_int_Key = Base64.getEncoder().encodeToString(intKey);
+        //String homo_ope_int_Key = URLEncoder.encode(homo_ope_int_Key_S, "UTF-8");
 
 
 

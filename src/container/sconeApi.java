@@ -2,6 +2,7 @@ package container;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
@@ -13,15 +14,12 @@ import security.PublicKey;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @Path("/sgx")
@@ -55,17 +53,14 @@ public class sconeApi {
 
     @SuppressWarnings("Duplicates")
     @GET
-    @Path("")
+    //@Path("")
     @Produces(MediaType.APPLICATION_JSON)
-    public ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
-                               @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
-                               @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey) throws Exception {
+    public synchronized ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
+                                            @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
+                                            @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey) throws Exception {
 
 
         HashMap<String, TypeAmount> db_filtered = turnDbBackToHashMap(db);
-
-
-
         List<String> returnList = new ArrayList<String>();
 
         PrivateKey sgx_privateKey = getPrivKey();
@@ -73,27 +68,46 @@ public class sconeApi {
 
 
         // Decrypt the key to do the operation
-        String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
-        byte[] decryptedPrivate = sgx_privateKey.decrypt(sgxKey_D.getBytes());
+        /*String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
+        byte[] decryptedPrivate = sgx_privateKey.decrypt(sgxKey_D.getBytes());*/
 
-        PaillierKey sgxFinalKey = HomoAdd.keyFromString(decryptedPrivate.toString());
+        //String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
+        byte[] decodedBytes = Base64.getDecoder().decode(sgxKey);
 
+        System.out.println("1");
+        byte[] decryptedPrivate = sgx_privateKey.decrypt(decodedBytes);
+        System.out.println("22");
+
+        String decripted = new String(decryptedPrivate);
+        //String utfString = URLDecoder.decode(decripted, "UTF-8");
+
+        PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decripted);
+
+
+        System.out.println("23");
+
+        System.out.println("2");
 
         db_filtered.forEach((String key, TypeAmount value) -> {
 
             BigInteger valueToDecrypt = BigInteger.valueOf(Long.parseLong(value.getAmount()));
             Long valueToCheck = null;
+            System.out.println("3");
 
             try {
+                System.out.println("4");
                 BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, sgxFinalKey);
                 valueToCheck = decriptedBigInt.longValue();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            if(valueToCheck >= low && valueToCheck <= high){
+            System.out.println("5");
+            if (valueToCheck >= low && valueToCheck <= high) {
                 returnList.add(key);
+                System.out.println("6");
             }
+            System.out.println("7");
         });
 
         System.out.println("type; " + type);
@@ -101,6 +115,8 @@ public class sconeApi {
         System.out.println("list: " + returnList);
         ReplySGX response = new ReplySGX(type, encryptType, nonce+1, returnList, 0l);
         return response;
+
+
     }
 
 

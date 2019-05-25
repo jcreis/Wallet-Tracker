@@ -9,7 +9,7 @@ public class ReplySGX {
     Long nonce;
     List<String> returnList;
 
-    public ReplySGX(String type, String encryptType, Long nonce, List<String> returnList) {
+    public ReplySGX(String type, String encryptType, Long nonce, List<String> returnList, Long replyValue) {
 
         this.type = type;
         this.encryptType = encryptType;

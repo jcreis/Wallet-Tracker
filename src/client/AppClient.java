@@ -454,7 +454,6 @@ public class AppClient {
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
                 } else {
-                    System.out.println("Ola joao");
                     System.out.println("amount before decrypting"+r.getAmount());
                     int addValue = ope.decrypt(Long.parseLong(r.getAmount()));
                     System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);

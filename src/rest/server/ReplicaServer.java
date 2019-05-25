@@ -6,13 +6,17 @@ import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import client.AppClient;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import model.*;
 
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;
@@ -88,17 +92,17 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         nSquare = (BigInteger) objIn.readObject();
                         homoAddKey = (String) objIn.readObject();
                         keyData.put(publicKey, new TypeKey("HOMO_ADD", homoAddKey));
-                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare);
+                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare, nonce);
 
                     } else if ((type.equals("HOMO_OPE_INT"))){
                         System.out.println("Entrei no Homo ope int");
                         homoOpeIntKey = (String) objIn.readObject();
                         keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey));
-                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
+                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null, nonce);
 
                     } else {
                         System.out.println("Entrei no WALLET");
-                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
+                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null, nonce);
                     }
 
 
@@ -235,7 +239,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
 
-    private String selectionOfType_ADD(String type, String encryptType, String publicKey, String value, BigInteger nsquare) throws Exception {
+    private String selectionOfType_ADD(String type, String encryptType, String publicKey, String value, BigInteger nsquare, Long nonce) throws Exception {
         String ret = "";
 
         switch (type) {
@@ -295,12 +299,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
             case "HOMO_ADD":
                 System.out.println("Tou no selectionType HOMO_ADD, vou reencaminhar po Encrypt Type "+encryptType);
-                ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
+                ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare, nonce);
                 break;
 
             case "HOMO_OPE_INT":
                 System.out.println("Tou no selectionType HOMO_OPE_INT, vou reencaminhar po encrypt type "+encryptType);
-                ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare);
+                ret = selectionOfEncryptType(type, encryptType, publicKey, value, nsquare, nonce);
                 break;
 
             default:
@@ -314,7 +318,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return ret;
     }
 
-    private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare) throws Exception {
+    @SuppressWarnings("Duplicates")
+    private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare, Long nonce) throws Exception {
 
         switch (encryptType) {
 
@@ -333,17 +338,49 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         BigInteger sum = HomoAdd.sum(BigIntegerValue, BigIntegerValueDb, nSquare);
                         db.put(publicKey, new TypeAmount(type, sum.toString()));
 
-
                     } else {
                         System.out.println("User not in the database.");
                         return "-1";
                     }
 
                 }
+
+
+
                 // HOMO OPE INT -> SUM
                 else {
-                    Long valueDb = Long.parseLong(db.get(publicKey).getAmount());
+
+                    Client client = ClientBuilder.newBuilder()
+                            .hostnameVerifier(new AppClient.InsecureHostnameVerifier())
+                            .build();
+                    URI baseURI = UriBuilder.fromUri("https://localhost:8000/").build();
+                    WebTarget target = client.target(baseURI);
+
+                    Response response;
+                    ReplySGX r;
+
+                    Long balance=0l;
+
+                    if(db.get(publicKey).getType().equals("HOMO_OPE_INT")) {
+                        balance = Long.parseLong(db.get(publicKey).getAmount());
+                    }
+
+
+                    response = target.path("/sgx")
+                            .queryParam("balance", balance)
+                            .queryParam("value", value)
+                            .queryParam("nonce", nonce)
+                            .queryParam("type",  type)
+                            .queryParam("encryptType", encryptType)
+                            .queryParam("sgxKey", keyData.get(publicKey).getKey())
+                            .request()
+                            .post(Entity.entity(ReplySGX.class, MediaType.APPLICATION_JSON));
+                    r = response.readEntity(ReplySGX.class);
+
+
+
                     //TODO send to sgx to process and return to client after
+
 
 
                 }
@@ -464,8 +501,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     Response response;
                     ReplySGX r;
 
-                    Gson gson = new Gson();
-                    String dbJson_S = gson.toJson(db_filteredByType);
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+                    Gson gsonObject = gsonBuilder.create();
+                    String dbJson_S = gsonObject.toJson(db_filteredByType);
+
                     String dbJson = URLEncoder.encode(dbJson_S, "UTF-8");
 
 

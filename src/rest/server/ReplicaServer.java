@@ -21,6 +21,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -201,13 +202,14 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     break;
 
                 case GET_LOW_HIGH:
+                    publicKey = (String) objIn.readObject();
                     higher = (Long) objIn.readObject();
                     lower = (Long) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
 
-                    rec_val = selectionOfType_GET_LOWER_HIGHER(type, encryptType, "", higher, lower, nonce);
+                    rec_val = selectionOfType_GET_LOWER_HIGHER(type, encryptType, publicKey, higher, lower, nonce);
                     objOut.writeObject(rec_val);
                     objOut.writeObject(nonce);
                     hasReply = true;
@@ -383,7 +385,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             case "CREATE":
                 // para os 2 casos HOMO ADD && HOMO OPE INT
                 System.out.println("Vou criar com o valor encriptado: " + value);
-                System.out.println("tenho a chave "+keyData.get(publicKey).getKey());
+                System.out.println("tenho a chave "+ keyData.get(publicKey).getKey());
                 db.put(publicKey, new TypeAmount(type, value));
 
                 break;
@@ -459,23 +461,25 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     Client client = ClientBuilder.newBuilder()
                             .hostnameVerifier(new AppClient.InsecureHostnameVerifier())
                             .build();
-                    URI baseURI = UriBuilder.fromUri("https://localhost:8080/").build();
+                    URI baseURI = UriBuilder.fromUri("https://localhost:8000/").build();
                     WebTarget target = client.target(baseURI);
 
                     Response response;
                     Reply_OPE r;
 
                     Gson gson = new Gson();
-                    String dbJson = gson.toJson(db_filteredByType);
+                    String dbJson_S = gson.toJson(db_filteredByType);
+                    String dbJson = URLEncoder.encode(dbJson_S, "UTF-8");
+
 
                     System.out.println("SENDING GET LOW HIGH TO SGX");
-                    System.out.println("target is "+target);
-                    System.out.println("higher -> "+higher);
-                    System.out.println("lower -> "+lower);
-                    System.out.println("type -> "+type);
-                    System.out.println("encrypt type -> "+encryptType);
-                    System.out.println("db -> "+dbJson);
-                    System.out.println("sgxKey -> "+keyData.get(publicKey).getKey());
+                    System.out.println("target is " + target);
+                    System.out.println("higher -> " + higher);
+                    System.out.println("lower -> " + lower);
+                    System.out.println("type -> " + type);
+                    System.out.println("encrypt type -> " + encryptType);
+                    System.out.println("db -> " + dbJson);
+                    System.out.println("sgxKey -> "+ keyData.get(publicKey).getKey());
 
 
 

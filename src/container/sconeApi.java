@@ -15,6 +15,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.math.BigInteger;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 
 @Path("/sgx")
@@ -30,8 +32,9 @@ public class sconeApi {
         System.out.println("HI IM SGX GET_LOW_HIGH METHOD");
 
         Gson gson = new Gson();
+        String db_D = URLDecoder.decode(db, "UTF-8");
 
-        HashMap<String, TypeAmount> db_filtered = gson.fromJson(db, HashMap.class);
+        HashMap<String, TypeAmount> db_filtered = gson.fromJson(db_D, HashMap.class);
         List<String> returnList = new ArrayList<String>();
 
         File sgxPrivateKey = new File("./sgxPrivateKey.txt");

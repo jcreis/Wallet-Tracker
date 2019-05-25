@@ -302,7 +302,8 @@ public class WalletResources {
     @GET
     @Path("/money")
     @Produces(MediaType.APPLICATION_JSON)
-    public Reply_OPE getHOMO_OPE(@QueryParam("higher") Long higher,
+    public Reply_OPE getHOMO_OPE(@QueryParam("publicKey") String publicKey,
+                             @QueryParam("higher") Long higher,
                              @QueryParam("lower") Long lower,
                              @QueryParam("nonce") Long nonce,
                              @QueryParam("type") String type,
@@ -317,6 +318,7 @@ public class WalletResources {
 
 
                 objOut.writeObject(GET_LOW_HIGH);
+                objOut.writeObject(publicKey);
                 objOut.writeObject(higher);
                 objOut.writeObject(lower);
                 objOut.writeObject(nonce);

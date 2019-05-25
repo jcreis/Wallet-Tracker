@@ -327,10 +327,12 @@ public class AppClient {
         PublicKey sgxPublic = PublicKey.createKey(sgxByte);
         //HOMO_ADD KEY
         byte[] addKey = sgxPublic.encrypt(pk.toString().getBytes());
-        String homo_add_Key = Base64.getEncoder().encodeToString(addKey);
+        String homo_add_Key_S = Base64.getEncoder().encodeToString(addKey);
+        String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");
         //HOMO_OPE_INT
         byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
-        String homo_ope_int_Key = Base64.getEncoder().encodeToString(intKey);
+        String homo_ope_int_Key_S = Base64.getEncoder().encodeToString(intKey);
+        String homo_ope_int_Key = URLEncoder.encode(homo_ope_int_Key_S, "UTF-8");
 
 
 
@@ -878,6 +880,7 @@ public class AppClient {
 
 
         response = target.path("/money")
+                .queryParam("publicKey", pathPublicKey)
                 .queryParam("higher", higher)
                 .queryParam("lower", lower)
                 .queryParam("nonce", nonce)

@@ -1,6 +1,7 @@
 package container;
 
 import com.google.gson.Gson;
+import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.PaillierKey;
 import model.ReplySGX;
@@ -54,62 +55,90 @@ public class sconeApi {
 
 
     @GET
-    @Path("")
+    //@Path("")
     @Produces(MediaType.APPLICATION_JSON)
-    public ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
+    public synchronized ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
                             @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
                             @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey) throws Exception {
 
         System.out.println("HI IM SGX GET_LOW_HIGH METHOD");
 
-        Gson gson = new Gson();
-        String db_D = URLDecoder.decode(db, "UTF-8");
+        try {
 
-        HashMap<String, TypeAmount> db_filtered = gson.fromJson(db_D, HashMap.class);
-        List<String> returnList = new ArrayList<String>();
 
-        File sgxPrivateKey = new File("./sgxPrivateKey.txt");
-        String privateKey="";
-        Scanner scanner = new Scanner(sgxPrivateKey);
+            Gson gson = new Gson();
+            String db_D = URLDecoder.decode(db, "UTF-8");
 
-        while(scanner.hasNextLine()){
-            privateKey=scanner.next();
-            System.out.println("privateKey: " + privateKey);
+            HashMap<String, TypeAmount> db_filtered = gson.fromJson(db_D, HashMap.class);
+            List<String> returnList = new ArrayList<String>();
+
+            File sgxPrivateKey = new File("./sgxPrivateKey.txt");
+            String privateKey = "";
+            Scanner scanner = new Scanner(sgxPrivateKey);
+            System.out.println("11");
+            while (scanner.hasNextLine()) {
+                privateKey = scanner.next();
+                System.out.println("12");
+                //System.out.println("privateKey: " + privateKey);
+            }
+            System.out.println("13");
+
+            byte[] sgxByte = Base64.getDecoder().decode(privateKey);
+            System.out.println("14");
+            PrivateKey sgxPrivate = PrivateKey.createKey(sgxByte);
+            System.out.println("15");
+
+            System.out.println("16");
+
+
+            //String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
+            byte[] decodedBytes = Base64.getDecoder().decode(sgxKey);
+
+            System.out.println("1");
+            byte[] decryptedPrivate = sgxPrivate.decrypt(decodedBytes);
+            System.out.println("22");
+
+            String decripted = new String(decryptedPrivate);
+            //String utfString = URLDecoder.decode(decripted, "UTF-8");
+
+            PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decripted);
+
+
+            System.out.println("23");
+
+            System.out.println("2");
+            db_filtered.forEach((String key, TypeAmount value) -> {
+
+                BigInteger valueToDecrypt = BigInteger.valueOf(Long.parseLong(value.getAmount()));
+                Long valueToCheck = null;
+                System.out.println("3");
+
+                try {
+                    System.out.println("4");
+                    BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, sgxFinalKey);
+                    valueToCheck = decriptedBigInt.longValue();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("5");
+                if (valueToCheck >= low && valueToCheck <= high) {
+                    returnList.add(key);
+                    System.out.println("6");
+                }
+                System.out.println("7");
+            });
+
+            System.out.println("type; " + type);
+            System.out.println("encript type: " + encryptType);
+            System.out.println("list: " + returnList);
+            ReplySGX response = new ReplySGX(type, encryptType, nonce + 1, returnList);
+            return response;
+        }catch (Exception e ) {
+            e.printStackTrace();
+
+            return null;
         }
-
-        byte[] sgxByte = Base64.getDecoder().decode(privateKey);
-        PrivateKey sgxPrivate = PrivateKey.createKey(sgxByte);
-
-        String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
-        byte[] decryptedPrivate = sgxPrivate.decrypt(sgxKey_D.getBytes());
-
-        PaillierKey sgxFinalKey = HomoAdd.keyFromString(decryptedPrivate.toString());
-
-
-
-
-        db_filtered.forEach((String key, TypeAmount value) -> {
-
-            BigInteger valueToDecrypt = BigInteger.valueOf(Long.parseLong(value.getAmount()));
-            Long valueToCheck = null;
-
-            try {
-                BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, sgxFinalKey);
-                valueToCheck = decriptedBigInt.longValue();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            if(valueToCheck >= low && valueToCheck <= high){
-                returnList.add(key);
-            }
-        });
-
-        System.out.println("type; " + type);
-        System.out.println("encript type: " + encryptType);
-        System.out.println("list: " + returnList);
-        ReplySGX response = new ReplySGX(type, encryptType, nonce+1, returnList);
-        return response;
     }
 
 

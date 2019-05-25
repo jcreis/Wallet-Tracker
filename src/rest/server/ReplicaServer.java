@@ -346,10 +346,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 }
 
 
-
                 // HOMO OPE INT -> SUM
                 else {
-
+                    System.out.println("ENTREI NO OPE INT DENTRO DO SUM");
                     Client client = ClientBuilder.newBuilder()
                             .hostnameVerifier(new AppClient.InsecureHostnameVerifier())
                             .build();
@@ -361,11 +360,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     Long balance=0l;
 
+                    System.out.println("VOU PO IF");
+                    if(!db.containsKey(publicKey)){
+                        System.out.println("FODEU");
+                    }
+                    System.out.println("PUBLICKEY = " + publicKey);
+                    System.out.println("TYPE = " + db.get(publicKey).getType());
                     if(db.get(publicKey).getType().equals("HOMO_OPE_INT")) {
                         balance = Long.parseLong(db.get(publicKey).getAmount());
+                        System.out.println("BALANCE = " + balance);
                     }
 
 
+                    System.out.println("VOU PO RESPONSE");
                     response = target.path("/sgx")
                             .queryParam("balance", balance)
                             .queryParam("value", value)

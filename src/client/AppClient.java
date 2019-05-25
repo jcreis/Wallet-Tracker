@@ -59,10 +59,11 @@ public class AppClient {
         try {
 
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
             getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -349,6 +350,13 @@ public class AppClient {
         PrivateKey adminPriv = PrivateKey.createKey(privByte);
 
 
+        //TODO TESTES
+        String adminPubString = Base64.getEncoder().encodeToString(adminPub.exportKey());
+        String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
+
+
+
+
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         KeyPair kp = kpg.generateKeyPair();
@@ -443,7 +451,8 @@ public class AppClient {
 
                 System.out.println("Vou enviar o valor encriptado po server -> "+openValue);
 
-                response = target.path(pathPublicKey)
+                System.out.println("PUBLIC KEY -> " + pathPublicKey);
+                response = target.path(adminPathPublicKey)
                         .queryParam("value", openValue.toString())
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)

@@ -8,6 +8,7 @@ public class ReplySGX {
     String type, encryptType;
     Long nonce;
     List<String> returnList;
+    Long replyValue;
 
     public ReplySGX(String type, String encryptType, Long nonce, List<String> returnList, Long replyValue) {
 
@@ -15,6 +16,7 @@ public class ReplySGX {
         this.encryptType = encryptType;
         this.nonce = nonce;
         this.returnList = returnList;
+        this.replyValue = replyValue;
 
     }
 
@@ -24,6 +26,14 @@ public class ReplySGX {
 
     public String getType() {
         return type;
+    }
+
+    public Long getReplyValue() {
+        return replyValue;
+    }
+
+    public void setReplyValue(Long replyValue) {
+        this.replyValue = replyValue;
     }
 
     public void setType(String type) {

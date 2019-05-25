@@ -112,14 +112,13 @@ public class sconeApi {
 
     @SuppressWarnings("Duplicates")
     @POST
-    @Path("")
+    //@Path("")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce")Long nonce,
                         @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
                         @QueryParam("sgxKey") String sgxKey) throws Exception {
 
-        List<String> returnList = new ArrayList<String>();
 
         PrivateKey sgx_privateKey = getPrivKey();
 

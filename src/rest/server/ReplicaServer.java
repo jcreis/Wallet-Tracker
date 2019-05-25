@@ -7,10 +7,7 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import client.AppClient;
 import com.google.gson.Gson;
 import hj.mlib.HomoAdd;
-import model.OpType;
-import model.Reply_OPE;
-import model.TypeAmount;
-import model.TypeKey;
+import model.*;
 
 
 import javax.ws.rs.client.Client;
@@ -465,7 +462,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     WebTarget target = client.target(baseURI);
 
                     Response response;
-                    Reply_OPE r;
+                    ReplySGX r;
 
                     Gson gson = new Gson();
                     String dbJson_S = gson.toJson(db_filteredByType);
@@ -494,7 +491,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             .queryParam("sgxKey", keyData.get(publicKey).getKey())
                             .request()
                             .get();
-                    r = response.readEntity(Reply_OPE.class);
+                    r = response.readEntity(ReplySGX.class);
+
+                    System.out.println(r);
+                    /*if(r.getReturnList().isEmpty()){
+                        System.out.println("MERDA VEIO VAZIO");
+                    }else {
+                        System.out.println("Received from SGX the Keys : \n" + r.getReturnList());
+                        reply = r.getReturnList();
+                    }*/
+
+
+
+
 
                     System.out.println("Finished SXG GET LOW HIGH");
                 }

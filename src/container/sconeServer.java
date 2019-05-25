@@ -24,11 +24,11 @@ public class sconeServer {
         URI baseUri = UriBuilder.fromUri("https://localhost/").port(port).build();
 
         ResourceConfig config = new ResourceConfig();
-        config.register( new sconeHandler() );
+        config.register( new sconeApi() );
 
         JdkHttpServerFactory.createHttpServer(baseUri, config, SSLContext.getDefault());
 
-        System.err.println(" Wallet Server ready @ " + baseUri);
+        System.err.println(" Scone Server ready @ " + baseUri);
     }
 
 

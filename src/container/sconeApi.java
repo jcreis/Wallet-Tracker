@@ -14,13 +14,44 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.io.FileWriter;
 import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 @Path("/sgx")
 public class sconeApi {
+
+    public sconeApi() throws Exception {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(1024);
+        KeyPair kp = kpg.generateKeyPair();
+        PublicKey pub = new PublicKey("RSA", kp.getPublic());
+        PrivateKey priv = new PrivateKey("RSA", kp.getPrivate());
+
+
+        String publicString = Base64.getEncoder().encodeToString(pub.exportKey());
+        String privateString = Base64.getEncoder().encodeToString(priv.exportKey());
+
+
+        File publicKey = new File("./sgxPublicKey.txt");
+        File privateKey = new File("./sgxPrivateKey.txt");
+
+
+        FileWriter pb = new FileWriter(publicKey, false);
+        FileWriter pr = new FileWriter(privateKey, false);
+        pb.write(publicString);
+        pr.write(privateString);
+        pb.close();
+        pr.close();
+
+    }
+
+
 
     @GET
     @Path("")
@@ -43,12 +74,14 @@ public class sconeApi {
 
         while(scanner.hasNextLine()){
             privateKey=scanner.next();
+            System.out.println("privateKey: " + privateKey);
         }
 
         byte[] sgxByte = Base64.getDecoder().decode(privateKey);
         PrivateKey sgxPrivate = PrivateKey.createKey(sgxByte);
 
-        byte[] decryptedPrivate = sgxPrivate.decrypt(sgxKey.getBytes());
+        String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
+        byte[] decryptedPrivate = sgxPrivate.decrypt(sgxKey_D.getBytes());
 
         PaillierKey sgxFinalKey = HomoAdd.keyFromString(decryptedPrivate.toString());
 
@@ -72,6 +105,9 @@ public class sconeApi {
             }
         });
 
+        System.out.println("type; " + type);
+        System.out.println("encript type: " + encryptType);
+        System.out.println("list: " + returnList);
         ReplySGX response = new ReplySGX(type, encryptType, nonce+1, returnList);
         return response;
     }

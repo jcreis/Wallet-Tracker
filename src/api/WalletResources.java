@@ -75,6 +75,11 @@ public class WalletResources {
 
     }
 
+    public WalletResources(){
+
+
+    }
+
 
     @SuppressWarnings("Duplicates")
     @POST

@@ -1,9 +1,10 @@
 package model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Reply_OPE {
+public class Reply_OPE implements Serializable {
 
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;

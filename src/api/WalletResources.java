@@ -5,6 +5,7 @@ import bftsmart.tom.ServiceProxy;
 import model.CaptureMessages;
 import model.Reply;
 import model.Reply_OPE;
+
 import rest.server.ReplicaServer;
 import security.Digest;
 import security.PrivateKey;
@@ -19,7 +20,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static model.OpType.*;
 
@@ -41,7 +41,8 @@ public class WalletResources {
 
 
 
-    private Map<String, Double> db = new ConcurrentHashMap<String, Double>();
+
+
 
     public WalletResources(int replicaNumber) throws Exception {
         this.replicaNumber = replicaNumber;
@@ -86,7 +87,9 @@ public class WalletResources {
                           @QueryParam("msg") String msg,
                           @QueryParam("type") String type,
                           @QueryParam("encryptType") String encryptType,
-                          @QueryParam("nSquare") BigInteger nSquare)
+                          @QueryParam("nSquare") BigInteger nSquare,
+                          @QueryParam("homoAddKey") String homo_add_Key,
+                          @QueryParam("homoOpeIntKey") String homo_ope_int_Key)
 
             throws Exception {
 
@@ -115,7 +118,7 @@ public class WalletResources {
 
         // Checks if Hashes match
         if (Arrays.equals(hashDecriptPriv, hash)) {
-            System.out.println("AQUI CARALHO");
+
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
@@ -128,6 +131,8 @@ public class WalletResources {
                 objOut.writeObject(type);
                 objOut.writeObject(encryptType);
                 objOut.writeObject(nSquare);
+                objOut.writeObject(homo_add_Key);
+                objOut.writeObject(homo_ope_int_Key);
 
                 objOut.flush();
                 byteOut.flush();

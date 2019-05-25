@@ -52,6 +52,7 @@ public class AppClient {
     private static long HomoOpeIntKey = HomoOpeInt.generateKey();
     private static HomoOpeInt ope = new HomoOpeInt(HomoOpeIntKey);
 
+
     public static void main(String[] args) throws Exception {
 
         try {
@@ -70,6 +71,7 @@ public class AppClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         //addMoney("WALLET", EncryptOpType_ADD.SET);
         //addMoney("WALLET", EncryptOpType_ADD.CREATE);
 
@@ -305,17 +307,31 @@ public class AppClient {
 
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");
+        File sgxPublicKey = new File("./sgxPublicKey.txt");
+        String sgxPublicString = null;
         String adminPublicString = null;
         String adminPrivateString = null;
 
         Scanner sc = new Scanner(file);
         Scanner sc2 = new Scanner(file2);
+        Scanner sc3 = new Scanner(sgxPublicKey);
 
 
-        while (sc.hasNextLine() && sc2.hasNextLine()) {
+        while (sc.hasNextLine() && sc2.hasNextLine() && sc3.hasNextLine()) {
             adminPublicString = sc.next();
             adminPrivateString = sc2.next();
+            sgxPublicString = sc3.next();
         }
+
+        byte[] sgxByte = Base64.getDecoder().decode(sgxPublicString);
+        PublicKey sgxPublic = PublicKey.createKey(sgxByte);
+        //HOMO_ADD KEY
+        byte[] addKey = sgxPublic.encrypt(pk.toString().getBytes());
+        String homo_add_Key = Base64.getEncoder().encodeToString(addKey);
+        //HOMO_OPE_INT
+        byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
+        String homo_ope_int_Key = Base64.getEncoder().encodeToString(intKey);
+
 
 
         /*System.out.println("AdminPublicKey : " + adminPublicString.substring(0,50));
@@ -394,6 +410,7 @@ public class AppClient {
                         .queryParam("type", type)
                         .queryParam("encryptType", encryptType)
                         .queryParam("nSquare", nSquare)
+                        .queryParam("homoAddKey", homo_add_Key)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
@@ -426,6 +443,7 @@ public class AppClient {
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
                         .queryParam("encryptType", encryptType)
+                        .queryParam("homoOpeIntKey", homo_ope_int_Key)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 

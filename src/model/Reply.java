@@ -1,9 +1,10 @@
 package model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Reply {
+public class Reply implements Serializable {
 
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
@@ -29,28 +30,20 @@ public class Reply {
     public Reply() {
     }
 
+    public ArrayList<ReplicaResponseMessage> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(ArrayList<ReplicaResponseMessage> messages) {
+        this.messages = messages;
+    }
+
     public String getPublicKey() {
         return publicKey;
     }
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
-    }
-
-    public ArrayList<ReplicaResponseMessage> getMessages() {
-        return messages;
-    }
-
-    public OpType getOperationType() {
-        return operationType;
-    }
-
-    public void setOperationType(OpType operationType) {
-        this.operationType = operationType;
-    }
-
-    public void setMessages(ArrayList<ReplicaResponseMessage> messages) {
-        this.messages = messages;
     }
 
     public String getAmount() {
@@ -69,7 +62,11 @@ public class Reply {
         this.nonce = nonce;
     }
 
+    public OpType getOperationType() {
+        return operationType;
+    }
 
-
-
+    public void setOperationType(OpType operationType) {
+        this.operationType = operationType;
+    }
 }

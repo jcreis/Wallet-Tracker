@@ -10,6 +10,8 @@ import hj.mlib.HomoAdd;
 import model.OpType;
 import model.Reply_OPE;
 import model.TypeAmount;
+import model.TypeKey;
+
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -28,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ReplicaServer extends DefaultSingleRecoverable {
 
     private Map<String, TypeAmount> db = new ConcurrentHashMap<>();
+    private Map<String, TypeKey> keyData = new ConcurrentHashMap<>();
 
 
     public ReplicaServer(int id) {

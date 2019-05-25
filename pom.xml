@@ -115,6 +115,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.5</version>
+
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+
         </dependency>
     </dependencies>
 
@@ -155,6 +161,12 @@
                 <artifactId>jackson-core</artifactId>
                 <version>2.9.9</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                <artifactId>jackson-jaxrs-json-provider</artifactId>
+                <version>2.9.9</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

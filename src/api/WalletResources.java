@@ -111,7 +111,6 @@ public class WalletResources {
         }
         byte[] adminPublic = Base64.getDecoder().decode(adminPublicString);
         PublicKey adminPubKey = PublicKey.createKey(adminPublic);
-
         // Prepares Hash of message H(N), N = (pubKey, value, nonce)
         URLDecoder.decode(publicKey, "UTF-8");
         String verify = publicKey + value + nonce;
@@ -123,7 +122,7 @@ public class WalletResources {
 
         // Checks if Hashes match
         if (Arrays.equals(hashDecriptPriv, hash)) {
-
+            System.out.println("hashes match!! ");
 
             try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                  ObjectOutput objOut = new ObjectOutputStream(byteOut);) {

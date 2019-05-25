@@ -2,7 +2,6 @@ package client;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
-import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
@@ -305,7 +304,7 @@ public class AppClient {
         //Adicionar um valor random
         Double value = randomm.nextInt(899) + 100.0;
 
-        System.out.println("Valor gerado (desencriptado)= "+value);
+        System.out.println("Valor gerado (desencriptado) = "+value);
 
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");
@@ -350,7 +349,6 @@ public class AppClient {
         PrivateKey adminPriv = PrivateKey.createKey(privByte);
 
 
-        //TODO TESTES
         String adminPubString = Base64.getEncoder().encodeToString(adminPub.exportKey());
         String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
 
@@ -444,7 +442,7 @@ public class AppClient {
 
                 //Long openValue = ope.encrypt(value.intValue());
                 Long openValue = ope.encrypt(1100);
-                msg = publicString + openValue + nonce;
+                msg = adminPubString + openValue + nonce;
                 hash = Digest.getDigest(msg.getBytes());
                 hashEncriptPriv = adminPriv.encrypt(hash);
                 msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);

@@ -74,40 +74,30 @@ public class sconeApi {
         //String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
         byte[] decodedBytes = Base64.getDecoder().decode(sgxKey);
 
-        System.out.println("1");
         byte[] decryptedPrivate = sgx_privateKey.decrypt(decodedBytes);
-        System.out.println("22");
 
-        String decripted = new String(decryptedPrivate);
-        //String utfString = URLDecoder.decode(decripted, "UTF-8");
+        String decrypted = new String(decryptedPrivate);
+        String utfString = URLDecoder.decode(decrypted, "UTF-8");
 
-        PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decripted);
+        PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decrypted);
 
-
-        System.out.println("23");
-
-        System.out.println("2");
 
         db_filtered.forEach((String key, TypeAmount value) -> {
 
             BigInteger valueToDecrypt = BigInteger.valueOf(Long.parseLong(value.getAmount()));
             Long valueToCheck = null;
-            System.out.println("3");
 
             try {
-                System.out.println("4");
                 BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, sgxFinalKey);
                 valueToCheck = decriptedBigInt.longValue();
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            System.out.println("5");
             if (valueToCheck >= low && valueToCheck <= high) {
                 returnList.add(key);
-                System.out.println("6");
             }
-            System.out.println("7");
+
         });
 
         System.out.println("type; " + type);

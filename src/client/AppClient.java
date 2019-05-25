@@ -58,13 +58,13 @@ public class AppClient {
         try {
 
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-            addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
             //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-            getMoney("WALLET", EncryptOpType_GET.GET);
+            getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -452,6 +452,8 @@ public class AppClient {
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
                 } else {
+                    System.out.println("Ola joao");
+                    System.out.println("amount before decrypting"+r.getAmount());
                     int addValue = ope.decrypt(Long.parseLong(r.getAmount()));
                     System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
                 }
@@ -473,7 +475,11 @@ public class AppClient {
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
             ObjectInput objIn = new ObjectInputStream(byteIn);
             String msgStringAmount = (String) objIn.readObject();
+
             Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
+            if(replicaMsgAmount == -1){
+                System.out.println("Account does not exist in the database");
+            }
 
            // System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
@@ -608,6 +614,8 @@ public class AppClient {
 
         switch (type) {
             case "WALLET":
+                System.out.println("A fazer pedido WALLET - GET");
+
                 response = target.path(pathPublicKey + "/money")
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
@@ -623,6 +631,7 @@ public class AppClient {
                 break;
 
             case "HOMO_ADD":
+                System.out.println("A fazer pedido HOMO ADD - GET");
                 response = target.path(pathPublicKey + "/money")
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
@@ -634,7 +643,8 @@ public class AppClient {
 
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
-                } else {
+                }
+                else {
                     BigInteger BigIntegerValue = new BigInteger(r.getAmount());
                     int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
                     System.out.println("value = " + addValue);
@@ -642,6 +652,8 @@ public class AppClient {
                 break;
 
             case "HOMO_OPE_INT":
+                System.out.println("A fazer pedido HOMO OPE INT - GET");
+
                 response = target.path(pathPublicKey + "/money")
                         .queryParam("nonce", nonce)
                         .queryParam("msg", msgHashStr)
@@ -689,16 +701,20 @@ public class AppClient {
                     }
                     break;
                 case "HOMO_ADD" :
-                    BigInteger BigIntegerValue = new BigInteger(msgStringAmount);
-                    int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
-                    amounts_add.add(addValue);
-                    for (Integer amount : amounts_add) {
-                        BigInteger BigIntegerValue_r = new BigInteger(r.getAmount());
-                        int r_addValue = HomoAdd.decrypt(BigIntegerValue_r, pk).intValue();
-                        if (amount == r_addValue)
-                            majority++;
+                    if(msgStringAmount.equals("-1")){
+                        System.out.println("User does not exist");
                     }
-
+                    else {
+                        BigInteger bigIntegerValue = new BigInteger(msgStringAmount);
+                        int addValue = HomoAdd.decrypt(bigIntegerValue, pk).intValue();
+                        amounts_add.add(addValue);
+                        for (Integer amount : amounts_add) {
+                            BigInteger BigIntegerValue_r = new BigInteger(r.getAmount());
+                            int r_addValue = HomoAdd.decrypt(BigIntegerValue_r, pk).intValue();
+                            if (amount == r_addValue)
+                                majority++;
+                        }
+                    }
                     break;
 
 
@@ -841,8 +857,25 @@ public class AppClient {
         }
         //Long higher = ope.encrypt(randValue1.intValue());
         //Long lower = ope.encrypt(randValue2.intValue());
-        Long higher = ope.encrypt(1200);
-        Long lower = ope.encrypt(1000);
+        Long higher;
+        Long lower;
+        if(type.equals("HOMO_OPE_INT")){
+            higher = ope.encrypt(1200);
+            lower = ope.encrypt(1000);
+        }
+        else if(type.equals("HOMO_ADD")){
+            BigInteger bigIntHigher = new BigInteger("1200");
+            BigInteger bigIntLower = new BigInteger("1000");
+
+            higher = HomoAdd.encrypt(bigIntHigher, pk).longValue();
+            lower = HomoAdd.encrypt(bigIntLower, pk).longValue();
+
+        }
+        else{
+            higher = 1200L;
+            lower = 1000L;
+        }
+
 
         response = target.path("/money")
                 .queryParam("higher", higher)

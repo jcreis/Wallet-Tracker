@@ -93,11 +93,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare);
 
                     } else if ((type.equals("HOMO_OPE_INT"))){
+                        System.out.println("Entrei no Homo ope int");
                         homoOpeIntKey = (String) objIn.readObject();
                         keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
 
                     } else {
+                        System.out.println("Entrei no WALLET");
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
                     }
 
@@ -240,18 +242,27 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         switch (type) {
             case "WALLET":
                 if (encryptType.equals("SUM")) {
-                    Double doubleValue = Double.parseDouble(value);
-
-                    Double newValue = Double.parseDouble(db.get(publicKey).getAmount() + doubleValue);
-
-                    TypeAmount aux = db.get(publicKey);
-                    aux.setAmount(newValue.toString());
-                    db.put(publicKey, aux);
-
-                    ret = db.get(publicKey).getAmount();
-
-
+                    System.out.println("--------WALLET SUM-------");
+                    if(db.containsKey(publicKey)) {
+                        Double doubleValue = Double.parseDouble(value);
+                        System.out.println("1");
+                        Double newValue = Double.parseDouble(db.get(publicKey).getAmount() + doubleValue);
+                        System.out.println("2");
+                        TypeAmount aux = db.get(publicKey);
+                        System.out.println("3");
+                        aux.setAmount(newValue.toString());
+                        System.out.println("4");
+                        db.put(publicKey, aux);
+                        System.out.println("5");
+                        ret = db.get(publicKey).getAmount();
+                        System.out.println("6");
+                    }
+                    else{
+                        System.out.println("USer not found in the database");
+                        ret = "-1";
+                    }
                 } else if(encryptType.equals("SET")) {
+                    System.out.println("Tou aqui no set");
                     Double doubleValue = Double.parseDouble(value);
 
                     if (db.containsKey(publicKey)) {
@@ -268,10 +279,15 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             System.out.println("Value not valid");
                         }
                     }
+                    else{
+                        System.out.println("User does not exists in the database.");
+                        ret = "-1";
+                    }
                 }
 
                 // CREATE
                 else {
+                    System.out.println("Tou aqui no create");
                     db.put(publicKey, new TypeAmount("WALLET", value));
 
                     ret = db.get(publicKey).getAmount();
@@ -367,6 +383,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             case "CREATE":
                 // para os 2 casos HOMO ADD && HOMO OPE INT
                 System.out.println("Vou criar com o valor encriptado: " + value);
+                System.out.println("tenho a chave "+keyData.get(publicKey).getKey());
                 db.put(publicKey, new TypeAmount(type, value));
 
                 break;
@@ -391,7 +408,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         } else {
 
             System.out.println("User not found in the database.");
-            return "";
+            reply = "-1";
         }
 
 
@@ -451,6 +468,18 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     Gson gson = new Gson();
                     String dbJson = gson.toJson(db_filteredByType);
 
+                    System.out.println("SENDING GET LOW HIGH TO SGX");
+                    System.out.println("target is "+target);
+                    System.out.println("higher -> "+higher);
+                    System.out.println("lower -> "+lower);
+                    System.out.println("type -> "+type);
+                    System.out.println("encrypt type -> "+encryptType);
+                    System.out.println("db -> "+dbJson);
+                    System.out.println("sgxKey -> "+keyData.get(publicKey).getKey());
+
+
+
+
                     response = target.path("/sgx")
                             .queryParam("higher", higher)
                             .queryParam("lower", lower)
@@ -458,9 +487,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             .queryParam("type",  type)
                             .queryParam("encryptType", encryptType)
                             .queryParam("db", dbJson)
+                            .queryParam("sgxKey", keyData.get(publicKey).getKey())
                             .request()
                             .get();
                     r = response.readEntity(Reply_OPE.class);
+
+                    System.out.println("Finished SXG GET LOW HIGH");
                 }
             }
         }

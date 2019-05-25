@@ -10,6 +10,10 @@ import java.net.URI;
 public class sconeServer {
 
     public static void main(String[] args) throws Exception {
+
+        System.setProperty("javax.net.ssl.keyStore","sgx.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword","qwerty");
+
         int port = 8000;
 
         if( args.length > 0) {

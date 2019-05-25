@@ -4,17 +4,23 @@ package rest.server;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
+import client.AppClient;
+import com.google.gson.Gson;
 import hj.mlib.HomoAdd;
-import hj.mlib.HomoOpeInt;
-import javassist.NotFoundException;
 import model.OpType;
+import model.Reply_OPE;
 import model.TypeAmount;
-import org.omg.CosNaming.NamingContextPackage.NotFound;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -186,7 +192,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
 
-                    rec_val = selectionOfType_GET_LOWER_HIGHER(type, encryptType, "", higher, lower);
+                    rec_val = selectionOfType_GET_LOWER_HIGHER(type, encryptType, "", higher, lower, nonce);
                     objOut.writeObject(rec_val);
                     objOut.writeObject(nonce);
                     hasReply = true;
@@ -380,7 +386,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     @SuppressWarnings("Duplicates")
-    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Long higher, Long lower) throws IOException {
+    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Long higher, Long lower, Long nonce) throws IOException {
         List<String> reply = new ArrayList<>();
         if (encryptType.equals("GET_LOWER_HIGHER")) {
             if (type.equals("HOMO_OPE_INT")) {
@@ -410,7 +416,39 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             }
             // HOMO_ADD
             else{
-                //TODO send to be processed into SGX
+                if(type.equals("HOMO_ADD")){
+
+                    HashMap<String, TypeAmount> db_filteredByType = new HashMap<String, TypeAmount>();
+
+                    db.forEach((String key, TypeAmount value) -> {
+                        if(value.getType().equals("HOMO_ADD")){
+                            db_filteredByType.put(key, value);
+                        }
+                    });
+
+                    Client client = ClientBuilder.newBuilder()
+                            .hostnameVerifier(new AppClient.InsecureHostnameVerifier())
+                            .build();
+                    URI baseURI = UriBuilder.fromUri("https://localhost:8080/").build();
+                    WebTarget target = client.target(baseURI);
+
+                    Response response;
+                    Reply_OPE r;
+
+                    Gson gson = new Gson();
+                    String dbJson = gson.toJson(db_filteredByType);
+
+                    response = target.path("/sgx")
+                            .queryParam("higher", higher)
+                            .queryParam("lower", lower)
+                            .queryParam("nonce", nonce)
+                            .queryParam("type",  type)
+                            .queryParam("encryptType", encryptType)
+                            .queryParam("db", dbJson)
+                            .request()
+                            .get();
+                    r = response.readEntity(Reply_OPE.class);
+                }
             }
         }
 

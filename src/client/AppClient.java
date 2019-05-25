@@ -26,7 +26,10 @@ import java.io.ObjectInputStream;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
+import java.security.Signature;
 import java.util.*;
 
 public class AppClient {

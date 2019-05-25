@@ -57,7 +57,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String value;
 
         boolean hasReply = false;
-        String replyR;
+        String replyR = "";
         Long nonce;
 
         //PHASE 2
@@ -65,6 +65,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String type; //HOMO_ADD or HOMO_OPE_INT
         BigInteger nSquare;
         String encryptType;
+        String homoAddKey;
+        String homoOpeIntKey;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -81,13 +83,21 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
+
+
                     if (type.equals("HOMO_ADD")) {
                         System.out.println("Entrei no Homo_add");;
                         nSquare = (BigInteger) objIn.readObject();
+                        homoAddKey = (String) objIn.readObject();
+                        keyData.put(publicKey, new TypeKey("HOMO_ADD", homoAddKey));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare);
 
+                    } else if ((type.equals("HOMO_OPE_INT"))){
+                        homoOpeIntKey = (String) objIn.readObject();
+                        keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey));
+                        replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
+
                     } else {
-                        System.out.println("Entrei no Homo_ope ou Wallet");
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null);
                     }
 

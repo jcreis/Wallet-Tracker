@@ -130,9 +130,13 @@ public class WalletResources {
                 objOut.writeObject(nonce);
                 objOut.writeObject(type);
                 objOut.writeObject(encryptType);
-                objOut.writeObject(nSquare);
-                objOut.writeObject(homo_add_Key);
-                objOut.writeObject(homo_ope_int_Key);
+                if(type.equals("HOMO_ADD")){
+                    objOut.writeObject(nSquare);
+                    objOut.writeObject(homo_add_Key);
+                }else if(type.equals("HOMO_OPE_INT")){
+                    objOut.writeObject(homo_ope_int_Key);
+                }
+
 
                 objOut.flush();
                 byteOut.flush();

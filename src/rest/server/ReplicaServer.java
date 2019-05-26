@@ -12,7 +12,6 @@ import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import model.*;
 
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -301,7 +300,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                 condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce);
                             }
 
-                                break;
+                            break;
 
                         // SMALLER THAN <
                         case 4:
@@ -682,6 +681,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                 reply = returnList;
 
+
             } else if (type.equals("WALLET")) {
                 List<String> returnList = new ArrayList<>();
                 db.forEach((String key, TypeAmount value) -> {
@@ -763,10 +763,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     private ReplySGX condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce) {
-
-
-
-
+        
         Response response;
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new AppClient.InsecureHostnameVerifier())

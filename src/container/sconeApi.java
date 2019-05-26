@@ -207,8 +207,8 @@ public class sconeApi {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_value,
-                                     @QueryParam("cond_number") String cond_number, @QueryParam("op_list") String op_list,
-                                     @QueryParam("nonce") Long nonce) throws Exception {
+                                          @QueryParam("cond_number") String cond_number, @QueryParam("op_list") String op_list,
+                                          @QueryParam("nonce") Long nonce) throws Exception {
 
         GsonBuilder gsonBuilder = new GsonBuilder();
 
@@ -233,7 +233,7 @@ public class sconeApi {
         String privateKey = "";
         Scanner scanner = new Scanner(sgxPrivateKey);
 
-        while (scanner.hasNextLine()) {
+                        while (scanner.hasNextLine()) {
             privateKey = scanner.next();
             System.out.println("privateKey: " + privateKey);
         }
@@ -241,7 +241,7 @@ public class sconeApi {
         byte[] sgxByte = Base64.getDecoder().decode(privateKey);
         PrivateKey sgxPrivate = PrivateKey.createKey(sgxByte);
         return sgxPrivate;
-    }
+                        }
 
 
     private HashMap<String, TypeAmount> turnDbBackToHashMap(String db) throws UnsupportedEncodingException {

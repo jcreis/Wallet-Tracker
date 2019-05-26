@@ -115,7 +115,7 @@ public class sconeApi {
     //@Path("")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce")Long nonce,
+    public synchronized ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce")Long nonce,
                         @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
                         @QueryParam("sgxKey") String sgxKey) throws Exception {
 

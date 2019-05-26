@@ -1,10 +1,18 @@
 package rest.server;
 
+import api.LoaderResources;
+import api.WalletResources;
+import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import javax.net.ssl.SSLContext;
+import javax.ws.rs.core.UriBuilder;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -13,61 +21,35 @@ public class LoaderServer {
 
     public static void main(String[] args) throws Exception {
 
+        System.setProperty("javax.net.ssl.keyStore","server.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword","qwerty");
 
-        ProcessBuilder pb = new ProcessBuilder("/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java", "-cp", "target/CSD_Proj1.jar", "rest.server.WalletServer");
-        ProcessBuilder pb2 = new ProcessBuilder("/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java", "-cp", "target/CSD_Proj1.jar", "rest.server.WalletServer", "8090", "1");
-        Process p = pb.start();
-        Process p2 = pb2.start();
-        InputStream is = p.getErrorStream();
-        for (; ; ) {
-            int ch = is.read();
-            if( ch == -1)
-                return;
-            System.out.write(ch);
-            System.out.flush();
+        int port = 8099;
+        int replicaNum = 0;
+        if( args.length > 0) {
+            port = Integer.parseInt(args[0]);
+            replicaNum = Integer.parseInt(args[1]);
         }
-        //launchSeparateProcess();
-        //launchMain("10000", "0");
 
+        URI baseUri = UriBuilder.fromUri("https://localhost/").port(port).build();
 
+        ResourceConfig config = new ResourceConfig();
+        config.register( new LoaderResources() );
+        JdkHttpServerFactory.createHttpServer(baseUri, config, SSLContext.getDefault());
+
+        System.err.println(" Loader Server ready @ " + baseUri);
     }
-
-
-    /*private static void launchMain(String port, String n) throws IOException {
-        URL[] classLoaderUrls;
-        try {
-            classLoaderUrls = new URL[]{new URL("file:CSD_Proj1.jar")};
-
-            // Create a new URLClassLoader
-            URLClassLoader urlClassLoader = new URLClassLoader(classLoaderUrls);
-
-            // Load the target class
-            Class<?> beanClass = urlClassLoader.loadClass("rest.server.WalletServer");
-
-            // Create a new instance from the loaded class
-            Constructor<?> constructor = beanClass.getConstructor();
-            Object beanObj = constructor.newInstance();
-
-            final Method method = beanClass.getMethod("main", String[].class);
-            final Object[] arg = new Object[1];
-            arg[0] = new String[] { port, n};
-
-            method.invoke(beanObj, arg);
-
-
-
-        } catch (MalformedURLException | InstantiationException | InvocationTargetException | NoSuchMethodException |
-                IllegalAccessException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }*/
-
-
-
-
-
 
 
 
 }
+
+
+
+
+
+
+
+
+
+

@@ -2,6 +2,8 @@ package client;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
@@ -1031,12 +1033,17 @@ public class AppClient {
 
         Long nonce = random.nextLong();
 
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        Gson gsonObject = gsonBuilder.create();
+        String listJson_S = gsonObject.toJson(list);
+
+        String listJson = URLEncoder.encode(listJson_S, "UTF-8");
 
         response = target.path("/update")
                 .queryParam("cond_key",cond_key )
                 .queryParam("cond_value", value)
                 .queryParam("cond_number", cond)
-                .queryParam("op_list", list)
+                .queryParam("op_list", listJson)
                 .queryParam("nonce", nonce)
                 .request()
                 .post(Entity.entity(Reply_OPE.class, MediaType.APPLICATION_JSON));

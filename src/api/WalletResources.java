@@ -374,8 +374,8 @@ public class WalletResources {
     @Produces(MediaType.APPLICATION_JSON)
     public Reply_OPE cond_upd(@QueryParam("cond_key") String cond_key,
                                  @QueryParam("cond_value") String cond_value,
-                                 @QueryParam("cond_number") String cond_number,
-                                 @QueryParam("list") List<String> op_list,
+                                 @QueryParam("cond_number") Integer cond_number,
+                                 @QueryParam("op_list") String op_list,
                                  @QueryParam("nonce") Long nonce)
             throws Exception {
 

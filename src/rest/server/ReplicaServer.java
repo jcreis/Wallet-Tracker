@@ -7,6 +7,7 @@ import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import client.AppClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import model.*;
@@ -20,8 +21,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +73,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String homoAddKey;
         String homoOpeIntKey;
         String encodedSecKey;
+        String cond_key;
+        String cond_val;
+        Integer cond_number;
+        String op_list;
+        ArrayList<UpdateKeyValue> list;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -152,6 +160,77 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         }
                     }
                     break;
+
+                case COND_UPD:
+
+                    cond_key = (String) objIn.readObject();
+                    cond_val = (String) objIn.readObject();
+                    cond_number = (Integer) objIn.readObject();
+                    op_list = (String) objIn.readObject();
+                    nonce = (Long) objIn.readObject();
+
+                    GsonBuilder gsonBuilder = new GsonBuilder();
+
+                    Gson gsonObject = gsonBuilder.create();
+
+                    String list_D = URLDecoder.decode(op_list, "UTF-8");
+
+                    System.out.println("db_GSON : " + list_D);
+
+
+                    Type empMapType = new TypeToken<List<UpdateKeyValue>>() {
+                    }.getType();
+
+                    list = gsonObject.fromJson(list_D, empMapType);
+
+                    String db_type = db.get(cond_key).getType();
+
+
+
+                    switch(cond_number){
+                        case 0:
+                            if(db_type.equals("WALLET")){
+                                for(int = 0 ; i < l)
+                            }
+                            String db_valueRetreived = db.get(cond_key).getAmount();
+                            break;
+                        case 1:
+                            if(db_type.equals("WALLET")){
+
+                            }
+
+                            break;
+                        case 2:
+                            if(db_type.equals("WALLET")){
+
+                            }
+
+                            break;
+                        case 3:
+                            if(db_type.equals("WALLET")){
+
+                            }
+
+                            break;
+                        case 4:
+                            if(db_type.equals("WALLET")){
+
+                            }
+
+                            break;
+                        case 5:
+                            if(db_type.equals("WALLET")){
+
+                            }
+                            break;
+
+                    }
+
+
+
+
+
+
 
             }
             if (hasReply) {

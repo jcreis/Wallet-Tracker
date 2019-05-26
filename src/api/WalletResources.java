@@ -368,4 +368,53 @@ public class WalletResources {
         return null;
     }
 
+    @SuppressWarnings("Duplicates")
+    @POST
+    @Path("/update")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Reply_OPE cond_upd(@QueryParam("cond_key") String cond_key,
+                                 @QueryParam("cond_value") String cond_value,
+                                 @QueryParam("cond_number") String cond_number,
+                                 @QueryParam("list") List<String> op_list,
+                                 @QueryParam("nonce") Long nonce)
+            throws Exception {
+
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
+
+
+            objOut.writeObject(COND_UPD);
+            objOut.writeObject(cond_key);
+            objOut.writeObject(cond_value);
+            objOut.writeObject(cond_number);
+            objOut.writeObject(op_list);
+            objOut.writeObject(nonce);
+
+            objOut.flush();
+            byteOut.flush();
+
+
+            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+            if (reply.length == 0)
+                return null;
+            try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+                 ObjectInput objIn = new ObjectInputStream(byteIn)) {
+
+                // DO THINGS
+
+                return null; // Reply_OPE(GET_LOW_HIGH, captureMessages.getReplicaMessages(), keyList, replyNonce + 1);
+
+            }
+            catch (Exception e){
+                System.out.println("Exception from the inside.");
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Exception from the outside." + e.getMessage());
+        }
+
+
+        return null;
+    }
+
 }

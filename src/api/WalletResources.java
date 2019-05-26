@@ -94,6 +94,7 @@ public class WalletResources {
                           @QueryParam("encryptType") String encryptType,
                           @QueryParam("nSquare") BigInteger nSquare,
                           @QueryParam("homoAddKey") String homo_add_Key,
+                          @QueryParam("aesKey") String encodedAESKey,
                           @QueryParam("homoOpeIntKey") String homo_ope_int_Key)
 
             throws Exception {
@@ -137,6 +138,7 @@ public class WalletResources {
                 if(type.equals("HOMO_ADD")){
                     objOut.writeObject(nSquare);
                     objOut.writeObject(homo_add_Key);
+                    objOut.writeObject(encodedAESKey);
                 }else if(type.equals("HOMO_OPE_INT")){
                     objOut.writeObject(homo_ope_int_Key);
                 }

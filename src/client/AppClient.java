@@ -2,6 +2,7 @@ package client;
 
 import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.util.KeyLoader;
+import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
@@ -10,6 +11,9 @@ import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import javax.ws.rs.client.Client;
@@ -57,15 +61,15 @@ public class AppClient {
 
         try {
 
-            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-            //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
+            getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -328,10 +332,37 @@ public class AppClient {
         PublicKey sgxPublic = PublicKey.createKey(sgxByte);
 
         //HOMO_ADD KEY
-        String pk_S = pk.toString();
+
+        KeyGenerator generator = KeyGenerator.getInstance("AES");
+        generator.init(256); // The AES key size in number of bits
+        SecretKey secKey = generator.generateKey();
+        String encodedSecKey = Base64.getEncoder().encodeToString(secKey.getEncoded());
+
+        Cipher aesCipher = Cipher.getInstance("AES");
+        aesCipher.init(Cipher.ENCRYPT_MODE, secKey);
+
+        byte[] aes_pk = aesCipher.doFinal(HelpSerial.toString(pk).getBytes());
+        byte[] rsa_pk = sgxPublic.encrypt(secKey.getEncoded());
+
+        String homo_add_AESKey = Base64.getEncoder().encodeToString(aes_pk);
+        String homo_add_RSAKey = Base64.getEncoder().encodeToString(rsa_pk);
+
+
+        System.out.println("AESKEY : "+ secKey.getEncoded());
+
+
+        System.out.println("AES Encripted RSA : " + homo_add_AESKey);
+
+        System.out.println("Pailier Key Encrypted with AES :" + homo_add_RSAKey);
+
+
+
+
+
+        /*String pk_S = pk.toString();
         byte[] addKey = sgxPublic.encrypt(pk_S.getBytes());
         String homo_add_Key = Base64.getEncoder().encodeToString(addKey);
-        //String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");
+        //String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");*/
 
         //HOMO_OPE_INT
         byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
@@ -422,7 +453,8 @@ public class AppClient {
                         .queryParam("type", type)
                         .queryParam("encryptType", encryptType)
                         .queryParam("nSquare", nSquare)
-                        .queryParam("homoAddKey", homo_add_Key)
+                        .queryParam("homoAddKey", homo_add_RSAKey)
+                        .queryParam("aesKey", homo_add_AESKey)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 

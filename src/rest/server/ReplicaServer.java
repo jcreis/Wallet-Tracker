@@ -69,6 +69,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String encryptType;
         String homoAddKey;
         String homoOpeIntKey;
+        String encodedSecKey;
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
@@ -87,17 +88,20 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     encryptType = (String) objIn.readObject();
 
 
+
                     if (type.equals("HOMO_ADD")) {
                         System.out.println("Entrei no Homo_add");;
                         nSquare = (BigInteger) objIn.readObject();
                         homoAddKey = (String) objIn.readObject();
-                        keyData.put(publicKey, new TypeKey("HOMO_ADD", homoAddKey));
+                        encodedSecKey = (String) objIn.readObject();
+                        keyData.put(publicKey, new TypeKey("HOMO_ADD", homoAddKey, encodedSecKey));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, nSquare, nonce);
 
                     } else if ((type.equals("HOMO_OPE_INT"))){
                         System.out.println("Entrei no Homo ope int");
                         homoOpeIntKey = (String) objIn.readObject();
-                        keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey));
+
+                        keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey, ""));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null, nonce);
 
                     } else {
@@ -535,6 +539,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             .queryParam("encryptType", encryptType)
                             .queryParam("db", dbJson)
                             .queryParam("sgxKey", keyData.get(publicKey).getKey())
+                            .queryParam("aesKey", keyData.get(publicKey).getAes())
                             .request()
                             .get();
                     r = response.readEntity(ReplySGX.class);

@@ -11,6 +11,9 @@ import model.TypeAmount;
 import security.PrivateKey;
 import security.PublicKey;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
@@ -57,7 +60,8 @@ public class sconeApi {
     @Produces(MediaType.APPLICATION_JSON)
     public synchronized ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
                                             @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
-                                            @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey) throws Exception {
+                                            @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey,
+                                            @QueryParam("aesKey") String aesKey) throws Exception {
 
 
         HashMap<String, TypeAmount> db_filtered = turnDbBackToHashMap(db);
@@ -66,20 +70,39 @@ public class sconeApi {
         PrivateKey sgx_privateKey = getPrivKey();
 
 
+        System.out.println("AESENCRIPTED WITH RSA : "+ aesKey);
 
+        System.out.println("PaillierEnc WITH AES : "+ sgxKey);
         // Decrypt the key to do the operation
-        /*String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
-        byte[] decryptedPrivate = sgx_privateKey.decrypt(sgxKey_D.getBytes());*/
 
-        //String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
-        byte[] decodedBytes = Base64.getDecoder().decode(sgxKey);
 
-        byte[] decryptedPrivate = sgx_privateKey.decrypt(decodedBytes);
 
-        String decrypted = new String(decryptedPrivate);
-        String utfString = URLDecoder.decode(decrypted, "UTF-8");
+        byte[] decodedAES = Base64.getDecoder().decode(aesKey);
 
-        PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decrypted);
+        byte[] aes = sgx_privateKey.decrypt(decodedAES);
+
+
+        String homo_add_AESKey = Base64.getEncoder().encodeToString(aes);
+
+        System.out.println("AES : " + homo_add_AESKey);
+
+
+        byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
+
+        SecretKey AESKey = new SecretKeySpec(aes , 0, aes .length, "AES");
+        Cipher aesCipher = Cipher.getInstance("AES");
+
+        aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
+        byte[] PaillierByte = aesCipher.doFinal(decodedSgxKey);
+
+        PaillierKey pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
+
+
+
+
+        //String utfString = URLDecoder.decode(decrypted, "UTF-8");
+
+        //PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decrypted);
 
 
         db_filtered.forEach((String key, TypeAmount value) -> {
@@ -88,7 +111,7 @@ public class sconeApi {
             Long valueToCheck = null;
 
             try {
-                BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, sgxFinalKey);
+                BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
                 valueToCheck = decriptedBigInt.longValue();
             } catch (Exception e) {
                 e.printStackTrace();

@@ -5,10 +5,12 @@ public class TypeKey {
 
     private String type;
     private String key;
+    private String aes;
 
-    public TypeKey(String type, String key) {
+    public TypeKey(String type, String key, String aes) {
         this.type = type;
         this.key = key;
+        this.aes = aes;
     }
 
     public TypeKey() {
@@ -31,4 +33,11 @@ public class TypeKey {
         this.key = amount;
     }
 
+    public String getAes() {
+        return aes;
+    }
+
+    public void setAes(String aes) {
+        this.aes = aes;
+    }
 }

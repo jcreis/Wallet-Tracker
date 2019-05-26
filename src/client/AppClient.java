@@ -1039,10 +1039,10 @@ public class AppClient {
                 .queryParam("op_list", list)
                 .queryParam("nonce", nonce)
                 .request()
-                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
+                .post(Entity.entity(Reply_OPE.class, MediaType.APPLICATION_JSON));
 
 
-        Reply r = response.readEntity(Reply.class);
+        Reply_OPE r = response.readEntity(Reply_OPE.class);
 
     }
 

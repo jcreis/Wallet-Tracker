@@ -177,8 +177,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
         String publicKey;
         Long nonce;
-        Long higher;
-        Long lower;
+        String higher;
+        String lower;
         String type;
         String encryptType;
         List<String> rec_val;
@@ -208,8 +208,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                 case GET_LOW_HIGH:
                     publicKey = (String) objIn.readObject();
-                    higher = (Long) objIn.readObject();
-                    lower = (Long) objIn.readObject();
+                    higher = (String) objIn.readObject();
+                    lower = (String) objIn.readObject();
                     nonce = (Long) objIn.readObject();
                     type = (String) objIn.readObject();
                     encryptType = (String) objIn.readObject();
@@ -463,7 +463,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     @SuppressWarnings("Duplicates")
-    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, Long higher, Long lower, Long nonce) throws IOException {
+    private List<String> selectionOfType_GET_LOWER_HIGHER(String type, String encryptType, String publicKey, String higher, String lower, Long nonce) throws IOException {
         List<String> reply = new ArrayList<>();
         if (encryptType.equals("GET_LOWER_HIGHER")) {
             if (type.equals("HOMO_OPE_INT")) {
@@ -472,7 +472,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 List<String> returnList = new ArrayList<>();
                 db.forEach((String key, TypeAmount value) -> {
                     Long res = Long.parseLong(value.getAmount());
-                    if (res >= lower && res <= higher) {
+                    if (res >= (Long)HelpSerial.fromString(lower) && res <= (Long)HelpSerial.fromString((higher))) {
                         returnList.add(key);
                     }
                 });
@@ -484,7 +484,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 db.forEach((String key, TypeAmount value) -> {
                     Long longValue = Long.parseLong(value.getAmount());
 
-                    if(longValue >= lower && longValue <= higher){
+                    if(longValue >= Long.parseLong(lower) && longValue <= Long.parseLong(higher)){
                         returnList.add(key);
                     }
                 });
@@ -544,13 +544,13 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             .get();
                     r = response.readEntity(ReplySGX.class);
 
-                    System.out.println(r);
-                    /*if(r.getReturnList().isEmpty()){
+                    //System.out.println(r);
+                    if(r.getReturnList().isEmpty()){
                         System.out.println("MERDA VEIO VAZIO");
                     }else {
                         System.out.println("Received from SGX the Keys : \n" + r.getReturnList());
                         reply = r.getReturnList();
-                    }*/
+                    }
 
 
 

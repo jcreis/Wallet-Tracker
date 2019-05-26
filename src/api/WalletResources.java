@@ -311,8 +311,8 @@ public class WalletResources {
     @Path("/money")
     @Produces(MediaType.APPLICATION_JSON)
     public Reply_OPE getHOMO_OPE(@QueryParam("publicKey") String publicKey,
-                             @QueryParam("higher") Long higher,
-                             @QueryParam("lower") Long lower,
+                             @QueryParam("higher") String higher,
+                             @QueryParam("lower") String lower,
                              @QueryParam("nonce") Long nonce,
                              @QueryParam("type") String type,
                              @QueryParam("encryptType") String encryptType)

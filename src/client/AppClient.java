@@ -61,15 +61,15 @@ public class AppClient {
 
         try {
 
-            addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-            getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
+            //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
 
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -432,7 +432,7 @@ public class AppClient {
 
             case "HOMO_ADD":
 
-                BigInteger big1 = BigInteger.valueOf(value.intValue());
+                BigInteger big1 = BigInteger.valueOf(2);
                 BigInteger encryptValue = HomoAdd.encrypt(big1, pk);
 
                 // Value changed, it's now encrypted
@@ -901,20 +901,22 @@ public class AppClient {
         }
         //Long higher = ope.encrypt(randValue1.intValue());
         //Long lower = ope.encrypt(randValue2.intValue());
-        Long higher;
-        Long lower;
+        String higher = "1200";
+        String lower = "1";
+        /*int higherr = 1200;
+        int lowerr = 1000;*/
         if(type.equals("HOMO_OPE_INT")){
-            higher = ope.encrypt(1200);
-            lower = ope.encrypt(1000);
+            higher = HelpSerial.toString(ope.encrypt(1200));
+            lower = HelpSerial.toString(ope.encrypt(1000));
         }
         else if(type.equals("HOMO_ADD")){
 
 
-            BigInteger bigIntHigher = new BigInteger("1200");
-            BigInteger bigIntLower = new BigInteger("1000");
+            BigInteger bigIntHigher = new BigInteger(higher);
+            BigInteger bigIntLower = new BigInteger(lower);
 
-            higher = (HomoAdd.encrypt(bigIntHigher, pk).longValue());
-            lower = HomoAdd.encrypt(bigIntLower, pk).longValue();
+            higher = HelpSerial.toString(HomoAdd.encrypt(bigIntHigher, pk));
+            lower = HelpSerial.toString(HomoAdd.encrypt(bigIntLower, pk));
 
 
 
@@ -925,8 +927,8 @@ public class AppClient {
 
         }
         else{
-            higher = 1200L;
-            lower = 1000L;
+            higher = "1200";
+            lower = "1000";
         }
 
 

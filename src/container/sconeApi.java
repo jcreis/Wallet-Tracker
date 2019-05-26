@@ -60,7 +60,7 @@ public class sconeApi {
     @GET
     //@Path("")
     @Produces(MediaType.APPLICATION_JSON)
-    public synchronized ReplySGX getLowHigh(@QueryParam("higher") Long high, @QueryParam("lower") Long low, @QueryParam("nonce")Long nonce,
+    public synchronized ReplySGX getLowHigh(@QueryParam("higher") String high, @QueryParam("lower") String low, @QueryParam("nonce") Long nonce,
                                             @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
                                             @QueryParam("db") String db, @QueryParam("sgxKey") String sgxKey,
                                             @QueryParam("aesKey") String aesKey) throws Exception {
@@ -72,11 +72,10 @@ public class sconeApi {
         PrivateKey sgx_privateKey = getPrivKey();
 
 
-        System.out.println("AES ENCRIPTED WITH RSA : "+ aesKey);
+        System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
 
-        System.out.println("PaillierEnc WITH AES : "+ sgxKey);
+        System.out.println("PaillierEnc WITH AES : " + sgxKey);
         // Decrypt the key to do the operation
-
 
 
         byte[] decodedAES = Base64.getDecoder().decode(aesKey);
@@ -91,7 +90,7 @@ public class sconeApi {
 
         byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
 
-        SecretKey AESKey = new SecretKeySpec(aes , 0, aes .length, "AES");
+        SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
         Cipher aesCipher = Cipher.getInstance("AES");
 
         aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
@@ -100,56 +99,56 @@ public class sconeApi {
         PaillierKey pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
 
 
-
-
         //String utfString = URLDecoder.decode(decrypted, "UTF-8");
 
         //PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decrypted);
 
 
+        db_filtered.forEach((String key, TypeAmount value) -> {
+
+            System.out.println("HIGHER: " + high);
+            System.out.println("LOWER: " + low);
+            BigInteger valueToDecrypt = new BigInteger(value.getAmount());
+            BigInteger loww =  (BigInteger)(HelpSerial.fromString(low));
+            BigInteger highh = (BigInteger)(HelpSerial.fromString(high));
+
+                /*BigInteger loww = BigInteger.valueOf(low);
+                BigInteger highh = BigInteger.valueOf(high);*/
 
 
+            int valueToCheck = 0;
+                /*BigInteger low_b = new BigInteger("0");
+                BigInteger high_b = new BigInteger("0");*/
 
-            db_filtered.forEach((String key, TypeAmount value) -> {
+            try {
+                BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
+                BigInteger low_b = HomoAdd.decrypt(loww, pk);
+                BigInteger high_b = HomoAdd.decrypt(highh, pk);
 
-                System.out.println("HIGHER: "+ high);
-                System.out.println("LOWER: "+ low);
-                BigInteger valueToDecrypt = new BigInteger(value.getAmount());
-                BigInteger loww = new BigInteger(low.toString());
-                BigInteger highh = new BigInteger(high.toString());
+                System.out.println("BIGHIGHER: " + high_b);
+                System.out.println("BIGLOWER: " + low_b);
 
+                valueToCheck = decriptedBigInt.intValue();
 
-
-
-                Long valueToCheck = null;
-
-                try {
-                    BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
-                    BigInteger low_b = HomoAdd.decrypt(loww, pk);
-                    BigInteger high_b = HomoAdd.decrypt(highh, pk);
-                    System.out.println("BIGHIGHER: "+ high_b);
-                    System.out.println("BIGLOWER: "+ low_b);
-
-                    valueToCheck = decriptedBigInt.longValue();
-                    System.out.println("VALUE TO CHECK: " + valueToCheck);
-                    System.out.println("LOW: " + low_b.longValue());
-                    System.out.println("HIGH: " + high_b.longValue());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                System.out.println("VALUE TO CHECK: " + valueToCheck);
+                System.out.println("LOW: " + low_b.intValue());
+                System.out.println("HIGH: " + high_b.intValue());
 
 
-                if (valueToCheck >= low && valueToCheck <= high) {
+                if (valueToCheck >= low_b.intValue() && valueToCheck <= high_b.intValue()) {
                     returnList.add(key);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-            });
+        });
 
 
         System.out.println("type; " + type);
         System.out.println("encript type: " + encryptType);
         System.out.println("list: " + returnList);
-        ReplySGX response = new ReplySGX(type, encryptType, nonce+1, returnList, 0l);
+        ReplySGX response = new ReplySGX(type, encryptType, nonce + 1, returnList, 0l);
         return response;
 
 
@@ -161,13 +160,12 @@ public class sconeApi {
     //@Path("")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public synchronized ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce")Long nonce,
-                        @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
-                        @QueryParam("sgxKey") String sgxKey) throws Exception {
+    public synchronized ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce") Long nonce,
+                                     @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
+                                     @QueryParam("sgxKey") String sgxKey) throws Exception {
 
 
         PrivateKey sgx_privateKey = getPrivKey();
-
 
 
         // Decrypt the key to do the operation
@@ -183,24 +181,18 @@ public class sconeApi {
         long returnValueEncrypted = ope.encrypt(decriptedBalance + decriptedValueToAdd);
 
 
-
         ReplySGX reply = new ReplySGX(type, encryptType, nonce, null, returnValueEncrypted);
         return reply;
     }
 
 
-
-
-
-
-
     private PrivateKey getPrivKey() throws Exception {
         File sgxPrivateKey = new File("./sgxPrivateKey.txt");
-        String privateKey="";
+        String privateKey = "";
         Scanner scanner = new Scanner(sgxPrivateKey);
 
-        while(scanner.hasNextLine()){
-            privateKey=scanner.next();
+        while (scanner.hasNextLine()) {
+            privateKey = scanner.next();
             System.out.println("privateKey: " + privateKey);
         }
 
@@ -210,25 +202,24 @@ public class sconeApi {
     }
 
 
-
     private HashMap<String, TypeAmount> turnDbBackToHashMap(String db) throws UnsupportedEncodingException {
 
-            GsonBuilder gsonBuilder = new GsonBuilder();
+        GsonBuilder gsonBuilder = new GsonBuilder();
 
-            Gson gsonObject = gsonBuilder.create();
-            //Gson gson = new Gson();
+        Gson gsonObject = gsonBuilder.create();
+        //Gson gson = new Gson();
 
-            String db_D = URLDecoder.decode(db, "UTF-8");
+        String db_D = URLDecoder.decode(db, "UTF-8");
 
-            System.out.println("db_GSON : " + db_D);
+        System.out.println("db_GSON : " + db_D);
 
 
-            Type empMapType = new TypeToken<HashMap<String, TypeAmount>>() {
-            }.getType();
-            HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, empMapType);
-            System.out.println("OLA");
-            //HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, HashMap.class);
-            return db_filtered;
+        Type empMapType = new TypeToken<HashMap<String, TypeAmount>>() {
+        }.getType();
+        HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, empMapType);
+        System.out.println("OLA");
+        //HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, HashMap.class);
+        return db_filtered;
 
     }
 

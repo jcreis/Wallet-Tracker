@@ -112,15 +112,32 @@ public class sconeApi {
 
             db_filtered.forEach((String key, TypeAmount value) -> {
 
+                System.out.println("HIGHER: "+ high);
+                System.out.println("LOWER: "+ low);
                 BigInteger valueToDecrypt = new BigInteger(value.getAmount());
+                BigInteger loww = new BigInteger(low.toString());
+                BigInteger highh = new BigInteger(high.toString());
+
+
+
+
                 Long valueToCheck = null;
 
                 try {
                     BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
+                    BigInteger low_b = HomoAdd.decrypt(loww, pk);
+                    BigInteger high_b = HomoAdd.decrypt(highh, pk);
+                    System.out.println("BIGHIGHER: "+ high_b);
+                    System.out.println("BIGLOWER: "+ low_b);
+
                     valueToCheck = decriptedBigInt.longValue();
+                    System.out.println("VALUE TO CHECK: " + valueToCheck);
+                    System.out.println("LOW: " + low_b.longValue());
+                    System.out.println("HIGH: " + high_b.longValue());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+
 
                 if (valueToCheck >= low && valueToCheck <= high) {
                     returnList.add(key);

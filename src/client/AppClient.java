@@ -908,11 +908,20 @@ public class AppClient {
             lower = ope.encrypt(1000);
         }
         else if(type.equals("HOMO_ADD")){
+
+
             BigInteger bigIntHigher = new BigInteger("1200");
             BigInteger bigIntLower = new BigInteger("1000");
 
-            higher = HomoAdd.encrypt(bigIntHigher, pk).longValue();
+            higher = (HomoAdd.encrypt(bigIntHigher, pk).longValue());
             lower = HomoAdd.encrypt(bigIntLower, pk).longValue();
+
+
+
+            System.out.println("BIGHIGHER: "+ bigIntHigher);
+            System.out.println("BIGLOWER: "+ bigIntLower);
+            System.out.println("HIGHER: "+ higher);
+            System.out.println("LOWER: "+ lower);
 
         }
         else{

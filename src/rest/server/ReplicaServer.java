@@ -188,9 +188,27 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
                     switch(cond_number){
+                        // EQUALS =
                         case 0:
                             if(db_type.equals("WALLET")){
-                                for(int = 0 ; i < l)
+                                for(int i=0; i<list.size(); i++){
+                                    // SET
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+                                    if(currentObj.getOp()==0){
+                                        if(db_val == Double.parseDouble(cond_val)){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                    }
+                                    // ADD
+                                    else{
+                                        if(db_val == Double.parseDouble(cond_val)){
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    }
+
+                                }
                             }
                             String db_valueRetreived = db.get(cond_key).getAmount();
                             break;
@@ -232,8 +250,16 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
 
-            }
-            if (hasReply) {
+            } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        if (hasReply) {
                 objOut.flush();
                 byteOut.flush();
                 reply = byteOut.toByteArray();

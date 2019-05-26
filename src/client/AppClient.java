@@ -309,7 +309,7 @@ public class AppClient {
         //Adicionar um valor random
         Double value = randomm.nextInt(899) + 100.0;
 
-        System.out.println("Valor gerado (desencriptado) = "+value);
+        System.out.println("Valor gerado (desencriptado) = " + value);
 
         File file = new File("./publicKey.txt");
         File file2 = new File("./privateKey.txt");
@@ -350,8 +350,6 @@ public class AppClient {
         String homo_add_AESkeyWithRSA = Base64.getEncoder().encodeToString(rsa_pk);
 
 
-
-
         System.out.println("Pailier Key Encrypted with AES :" + homo_add_PaillierKeyWithAES);
         System.out.println("AES Encripted RSA : " + homo_add_AESkeyWithRSA);
 
@@ -388,8 +386,6 @@ public class AppClient {
 
         String adminPubString = Base64.getEncoder().encodeToString(adminPub.exportKey());
         String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
-
-
 
 
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
@@ -485,7 +481,7 @@ public class AppClient {
                 hashEncriptPriv = adminPriv.encrypt(hash);
                 msgHashStr = Base64.getEncoder().encodeToString(hashEncriptPriv);
 
-                System.out.println("Vou enviar o valor encriptado po server -> "+openValue);
+                System.out.println("Vou enviar o valor encriptado po server -> " + openValue);
 
                 System.out.println("PUBLIC KEY -> " + pathPublicKey);
                 response = target.path(adminPathPublicKey)
@@ -504,7 +500,7 @@ public class AppClient {
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
                 } else {
-                    System.out.println("amount before decrypting"+r.getAmount());
+                    System.out.println("amount before decrypting" + r.getAmount());
                     int addValue = ope.decrypt(Long.parseLong(r.getAmount()));
                     System.out.println("vou desencriptar o valor. Deu isto -> " + addValue);
                 }
@@ -528,13 +524,13 @@ public class AppClient {
             String msgStringAmount = (String) objIn.readObject();
 
             Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
-            if(replicaMsgAmount == -1){
+            if (replicaMsgAmount == -1) {
                 System.out.println("Account does not exist in the database");
             }
 
-           // System.out.println("replica amount: "+ replicaMsgAmount);
+            // System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
-           // System.out.println("replica nonce: " + replicaNonce);
+            // System.out.println("replica nonce: " + replicaNonce);
 
 
             amounts.add(replicaMsgAmount);
@@ -602,23 +598,6 @@ public class AppClient {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @SuppressWarnings("Duplicates")
     public static void getMoney(String type, EncryptOpType_GET encryptType) throws Exception {
         System.out.println("#################################");
@@ -676,7 +655,7 @@ public class AppClient {
                         .get();
                 r = response.readEntity(Reply.class);
 
-                System.out.println("replica amount: "+ r.getAmount());
+                System.out.println("replica amount: " + r.getAmount());
 
 
                 break;
@@ -694,8 +673,7 @@ public class AppClient {
 
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
-                }
-                else {
+                } else {
                     BigInteger BigIntegerValue = new BigInteger(r.getAmount());
                     int addValue = HomoAdd.decrypt(BigIntegerValue, pk).intValue();
                     System.out.println("value = " + addValue);
@@ -716,7 +694,7 @@ public class AppClient {
 
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
-                } else  {
+                } else {
                     Long val = Long.parseLong(r.getAmount());
                     int recVal = ope.decrypt(val);
                     System.out.println("AMOUNT = " + recVal);
@@ -741,8 +719,8 @@ public class AppClient {
             ObjectInput objIn = new ObjectInputStream(byteIn);
 
             String msgStringAmount = (String) objIn.readObject();
-            switch (type){
-                case "WALLET" :
+            switch (type) {
+                case "WALLET":
                     Double replicaMsgAmount = Double.parseDouble(msgStringAmount);
                     amounts.add(replicaMsgAmount);
 
@@ -751,11 +729,10 @@ public class AppClient {
                             majority++;
                     }
                     break;
-                case "HOMO_ADD" :
-                    if(msgStringAmount.equals("-1")){
+                case "HOMO_ADD":
+                    if (msgStringAmount.equals("-1")) {
                         System.out.println("User does not exist");
-                    }
-                    else {
+                    } else {
                         BigInteger bigIntegerValue = new BigInteger(msgStringAmount);
                         int addValue = HomoAdd.decrypt(bigIntegerValue, pk).intValue();
                         amounts_add.add(addValue);
@@ -769,7 +746,7 @@ public class AppClient {
                     break;
 
 
-                case "HOMO_OPE_INT" :
+                case "HOMO_OPE_INT":
                     int openValue = ope.decrypt(Long.parseLong(msgStringAmount));
                     amounts_int.add(openValue);
                     for (Integer amount : amounts_int) {
@@ -785,7 +762,6 @@ public class AppClient {
             // System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
             // System.out.println("replica nonce: " + replicaNonce);
-
 
 
             lNonces.add(replicaNonce);
@@ -805,7 +781,6 @@ public class AppClient {
             }
 
         }
-
 
 
         for (Long n : lNonces) {
@@ -847,7 +822,6 @@ public class AppClient {
 
 
     }
-
 
 
     @SuppressWarnings("Duplicates")
@@ -912,11 +886,10 @@ public class AppClient {
         String lower = "1";
         /*int higherr = 1200;
         int lowerr = 1000;*/
-        if(type.equals("HOMO_OPE_INT")){
+        if (type.equals("HOMO_OPE_INT")) {
             higher = HelpSerial.toString(ope.encrypt(1200));
             lower = HelpSerial.toString(ope.encrypt(1000));
-        }
-        else if(type.equals("HOMO_ADD")){
+        } else if (type.equals("HOMO_ADD")) {
 
 
             BigInteger bigIntHigher = new BigInteger(higher);
@@ -926,14 +899,12 @@ public class AppClient {
             lower = HelpSerial.toString(HomoAdd.encrypt(bigIntLower, pk));
 
 
+            System.out.println("BIGHIGHER: " + bigIntHigher);
+            System.out.println("BIGLOWER: " + bigIntLower);
+            System.out.println("HIGHER: " + higher);
+            System.out.println("LOWER: " + lower);
 
-            System.out.println("BIGHIGHER: "+ bigIntHigher);
-            System.out.println("BIGLOWER: "+ bigIntLower);
-            System.out.println("HIGHER: "+ higher);
-            System.out.println("LOWER: "+ lower);
-
-        }
-        else{
+        } else {
             higher = "1200";
             lower = "1000";
         }
@@ -944,7 +915,7 @@ public class AppClient {
                 .queryParam("higher", higher)
                 .queryParam("lower", lower)
                 .queryParam("nonce", nonce)
-                .queryParam("type",  type)
+                .queryParam("type", type)
                 .queryParam("encryptType", encryptType)
                 .request()
                 .get();
@@ -966,7 +937,7 @@ public class AppClient {
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
             ObjectInput objIn = new ObjectInputStream(byteIn);
             List<String> msgStringKey = (List<String>) objIn.readObject();
-            for (String key : msgStringKey){
+            for (String key : msgStringKey) {
 
                 amounts.add(key);
             }
@@ -975,7 +946,6 @@ public class AppClient {
             // System.out.println("replica amount: "+ replicaMsgAmount);
             Long replicaNonce = (Long) objIn.readObject();
             // System.out.println("replica nonce: " + replicaNonce);
-
 
 
             lNonces.add(replicaNonce);
@@ -998,13 +968,10 @@ public class AppClient {
 
         for (String key : amounts) {
 
-                for (String k : r.getListAmounts()){
+            for (String k : r.getListAmounts()) {
 
-                    if (key.equals(k))
-                        majority++;
-
-
-
+                if (key.equals(k))
+                    majority++;
             }
 
         }
@@ -1045,15 +1012,39 @@ public class AppClient {
 
     }
 
+    @SuppressWarnings("Duplicates")
+    public static void conditional_upd(String cond_key, String value, int cond, ArrayList<UpdateKeyValue> list) throws Exception {
+        System.out.println("#################################");
+        System.out.println("####### Conditional Update #######");
+        System.out.println("#################################");
+        System.out.println();
+
+        Client client = ClientBuilder.newBuilder()
+                .hostnameVerifier(new InsecureHostnameVerifier())
+                .build();
+
+        URI baseURI = UriBuilder.fromUri("https://localhost:8080/users/").build();
+        WebTarget target = client.target(baseURI);
+        System.out.println("URI: " + baseURI);
+
+        Response response;
+
+        Long nonce = random.nextLong();
 
 
+        response = target.path("/update")
+                .queryParam("cond_key",cond_key )
+                .queryParam("cond_value", value)
+                .queryParam("cond_number", cond)
+                .queryParam("op_list", list)
+                .queryParam("nonce", nonce)
+                .request()
+                .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
 
+        Reply r = response.readEntity(Reply.class);
 
-
-
-
-
+    }
 
 
     public static long getTransferAvgTime() {

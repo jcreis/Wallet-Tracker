@@ -9,6 +9,7 @@ import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
 import model.ReplySGX;
 import model.TypeAmount;
+import model.UpdateKeyValue;
 import security.PrivateKey;
 import security.PublicKey;
 
@@ -198,6 +199,31 @@ public class sconeApi {
         System.out.println("Value to sum: "+decriptedValueToAdd);
         System.out.println("Encrypted final value: "+addedValue);
         return reply;
+    }
+
+    @SuppressWarnings("Duplicates")
+    @POST
+    @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_value,
+                                     @QueryParam("cond_number") String cond_number, @QueryParam("op_list") String op_list,
+                                     @QueryParam("nonce") Long nonce) throws Exception {
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+
+        Gson gsonObject = gsonBuilder.create();
+
+        String list_D = URLDecoder.decode(op_list, "UTF-8");
+
+        System.out.println("db_GSON : " + list_D);
+
+
+        Type empMapType = new TypeToken<List<UpdateKeyValue>>() {
+        }.getType();
+
+        ArrayList<UpdateKeyValue> list = gsonObject.fromJson(list_D, empMapType);
+
     }
 
 

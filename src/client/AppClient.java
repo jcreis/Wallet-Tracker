@@ -7,6 +7,7 @@ import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
 import model.*;
+import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import security.Digest;
 import security.PrivateKey;
 import security.PublicKey;
@@ -336,7 +337,6 @@ public class AppClient {
         KeyGenerator generator = KeyGenerator.getInstance("AES");
         generator.init(256); // The AES key size in number of bits
         SecretKey secKey = generator.generateKey();
-        String encodedSecKey = Base64.getEncoder().encodeToString(secKey.getEncoded());
 
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, secKey);
@@ -354,20 +354,26 @@ public class AppClient {
 
         System.out.println("Pailier Key Encrypted with AES :" + homo_add_PaillierKeyWithAES);
         System.out.println("AES Encripted RSA : " + homo_add_AESkeyWithRSA);
-        //System.out.println("AES (Decrypted) : "+ secKey.getFormat().toString());
 
-
-
-
-        /*String pk_S = pk.toString();
-        byte[] addKey = sgxPublic.encrypt(pk_S.getBytes());
-        String homo_add_Key = Base64.getEncoder().encodeToString(addKey);
-        //String homo_add_Key = URLEncoder.encode(homo_add_Key_S, "UTF-8");*/
 
         //HOMO_OPE_INT
-        byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
-        String homo_ope_int_Key = Base64.getEncoder().encodeToString(intKey);
+        /*byte[] intKey = sgxPublic.encrypt(Long.toString(HomoOpeIntKey).getBytes());
+        String homo_ope_int_Key = Base64.getEncoder().encodeToString(intKey);*/
+
+        //KeyGenerator generator = KeyGenerator.getInstance("AES");
+        generator.init(256); // The AES key size in number of bits
+        SecretKey secKey_homo_ope_int = generator.generateKey();
         //String homo_ope_int_Key = URLEncoder.encode(homo_ope_int_Key_S, "UTF-8");
+        Cipher aesCipher2 = Cipher.getInstance("AES");
+        aesCipher2.init(Cipher.ENCRYPT_MODE, secKey_homo_ope_int);
+
+        // Encrypt HOMO_OPE_INT_KEY with AES
+        byte[] ope_aes = aesCipher2.doFinal(HelpSerial.toString(HomoOpeIntKey).getBytes());
+        // Encrypt AES with pubKeyRSA
+        byte[] aes_pubKey_rsa = sgxPublic.encrypt(secKey_homo_ope_int.getEncoded());
+
+        String homo_ope_int_OPEkeyWithAES = Base64.getEncoder().encodeToString(ope_aes);
+        String homo_ope_int_AESkeyWithPubKeyRSA = Base64.getEncoder().encodeToString(aes_pubKey_rsa);
 
 
 
@@ -488,7 +494,8 @@ public class AppClient {
                         .queryParam("msg", msgHashStr)
                         .queryParam("type", type)
                         .queryParam("encryptType", encryptType)
-                        .queryParam("homoOpeIntKey", homo_ope_int_Key)
+                        .queryParam("homoOpeIntKey", homo_ope_int_OPEkeyWithAES)
+                        .queryParam("aesKey", homo_ope_int_AESkeyWithPubKeyRSA)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 

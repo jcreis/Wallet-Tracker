@@ -100,8 +100,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     } else if ((type.equals("HOMO_OPE_INT"))){
                         System.out.println("Entrei no Homo ope int");
                         homoOpeIntKey = (String) objIn.readObject();
+                        encodedSecKey = (String) objIn.readObject();
 
-                        keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey, ""));
+                        keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey, encodedSecKey));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null, nonce);
 
                     } else {
@@ -323,7 +324,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
     }
 
     @SuppressWarnings("Duplicates")
-    private String selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare, Long nonce) throws Exception {
+    private String  selectionOfEncryptType(String type, String encryptType, String publicKey, String value, BigInteger nSquare, Long nonce) throws Exception {
 
         switch (encryptType) {
 
@@ -384,13 +385,12 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                             .queryParam("type",  type)
                             .queryParam("encryptType", encryptType)
                             .queryParam("sgxKey", keyData.get(publicKey).getKey())
+                            .queryParam("aesKey", keyData.get(publicKey).getAes())
                             .request()
                             .post(Entity.entity(ReplySGX.class, MediaType.APPLICATION_JSON));
                     r = response.readEntity(ReplySGX.class);
 
 
-
-                    //TODO send to sgx to process and return to client after
 
 
 

@@ -143,6 +143,7 @@ public class WalletResources {
                     objOut.writeObject(encodedAESKey);
                 }else if(type.equals("HOMO_OPE_INT")){
                     objOut.writeObject(homo_ope_int_Key);
+                    objOut.writeObject(encodedAESKey);
                 }
 
 

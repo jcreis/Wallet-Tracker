@@ -162,26 +162,41 @@ public class sconeApi {
     @Produces(MediaType.APPLICATION_JSON)
     public synchronized ReplySGX sum(@QueryParam("balance") Long balance, @QueryParam("value") Long value, @QueryParam("nonce") Long nonce,
                                      @QueryParam("type") String type, @QueryParam("encryptType") String encryptType,
-                                     @QueryParam("sgxKey") String sgxKey) throws Exception {
+                                     @QueryParam("sgxKey") String sgxKey, @QueryParam("aesKey") String aesKey) throws Exception {
 
 
         PrivateKey sgx_privateKey = getPrivKey();
 
 
-        // Decrypt the key to do the operation
-        String sgxKey_D = URLDecoder.decode(sgxKey, "UTF-8");
-        byte[] decryptedPrivate = sgx_privateKey.decrypt(sgxKey_D.getBytes());
 
+        byte[] decodedAES = Base64.getDecoder().decode(aesKey);
+        byte[] aes = sgx_privateKey.decrypt(decodedAES);
 
-        HomoOpeInt ope = new HomoOpeInt(decryptedPrivate.toString());
+        //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
+
+        byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
+
+        SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
+        Cipher aesCipher = Cipher.getInstance("AES");
+        aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
+
+        byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
+        String opeStr = HelpSerial.toString(opeKeyBytes);
+        HomoOpeInt ope = new HomoOpeInt(opeStr);
+
         int decriptedValueToAdd = ope.decrypt(value);
 
         int decriptedBalance = ope.decrypt(balance);
 
-        long returnValueEncrypted = ope.encrypt(decriptedBalance + decriptedValueToAdd);
+        int addedValue = decriptedValueToAdd+decriptedBalance;
+
+        long returnValueEncrypted = ope.encrypt(addedValue);
 
 
         ReplySGX reply = new ReplySGX(type, encryptType, nonce, null, returnValueEncrypted);
+        System.out.println("Balance: "+decriptedBalance);
+        System.out.println("Value to sum: "+decriptedValueToAdd);
+        System.out.println("Encrypted final value: "+addedValue);
         return reply;
     }
 

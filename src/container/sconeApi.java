@@ -2,6 +2,7 @@ package container;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.security.KeyPair;
@@ -105,23 +107,27 @@ public class sconeApi {
         //PaillierKey sgxFinalKey = (PaillierKey)HelpSerial.fromString(decrypted);
 
 
-        db_filtered.forEach((String key, TypeAmount value) -> {
 
-            BigInteger valueToDecrypt = BigInteger.valueOf(Long.parseLong(value.getAmount()));
-            Long valueToCheck = null;
 
-            try {
-                BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
-                valueToCheck = decriptedBigInt.longValue();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-            if (valueToCheck >= low && valueToCheck <= high) {
-                returnList.add(key);
-            }
+            db_filtered.forEach((String key, TypeAmount value) -> {
 
-        });
+                BigInteger valueToDecrypt = new BigInteger(value.getAmount());
+                Long valueToCheck = null;
+
+                try {
+                    BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
+                    valueToCheck = decriptedBigInt.longValue();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (valueToCheck >= low && valueToCheck <= high) {
+                    returnList.add(key);
+                }
+
+            });
+
 
         System.out.println("type; " + type);
         System.out.println("encript type: " + encryptType);
@@ -189,13 +195,24 @@ public class sconeApi {
 
 
     private HashMap<String, TypeAmount> turnDbBackToHashMap(String db) throws UnsupportedEncodingException {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gsonObject = gsonBuilder.create();
 
-        String db_D = URLDecoder.decode(db, "UTF-8");
+            GsonBuilder gsonBuilder = new GsonBuilder();
 
-        HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, HashMap.class);
-        return db_filtered;
+            Gson gsonObject = gsonBuilder.create();
+            //Gson gson = new Gson();
+
+            String db_D = URLDecoder.decode(db, "UTF-8");
+
+            System.out.println("db_GSON : " + db_D);
+
+
+            Type empMapType = new TypeToken<HashMap<String, TypeAmount>>() {
+            }.getType();
+            HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, empMapType);
+            System.out.println("OLA");
+            //HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, HashMap.class);
+            return db_filtered;
+
     }
 
 }

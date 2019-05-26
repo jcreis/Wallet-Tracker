@@ -5,7 +5,6 @@ import bftsmart.tom.ServiceProxy;
 import model.CaptureMessages;
 import model.Reply;
 import model.Reply_OPE;
-
 import rest.server.ReplicaServer;
 import security.Digest;
 import security.PrivateKey;
@@ -19,7 +18,10 @@ import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Scanner;
 
 import static model.OpType.*;
 

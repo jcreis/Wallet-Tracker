@@ -70,7 +70,7 @@ public class sconeApi {
         PrivateKey sgx_privateKey = getPrivKey();
 
 
-        System.out.println("AESENCRIPTED WITH RSA : "+ aesKey);
+        System.out.println("AES ENCRIPTED WITH RSA : "+ aesKey);
 
         System.out.println("PaillierEnc WITH AES : "+ sgxKey);
         // Decrypt the key to do the operation

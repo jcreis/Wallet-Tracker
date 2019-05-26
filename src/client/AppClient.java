@@ -341,20 +341,20 @@ public class AppClient {
         Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.ENCRYPT_MODE, secKey);
 
+        // Encrypt PaillierKey with AES
         byte[] aes_pk = aesCipher.doFinal(HelpSerial.toString(pk).getBytes());
+        // Encrypt AES with pubKeyRSA
         byte[] rsa_pk = sgxPublic.encrypt(secKey.getEncoded());
 
-        String homo_add_AESKey = Base64.getEncoder().encodeToString(aes_pk);
-        String homo_add_RSAKey = Base64.getEncoder().encodeToString(rsa_pk);
+        String homo_add_PaillierKeyWithAES = Base64.getEncoder().encodeToString(aes_pk);
+        String homo_add_AESkeyWithRSA = Base64.getEncoder().encodeToString(rsa_pk);
 
 
-        System.out.println("AESKEY : "+ secKey.getEncoded());
 
 
-        System.out.println("AES Encripted RSA : " + homo_add_AESKey);
-
-        System.out.println("Pailier Key Encrypted with AES :" + homo_add_RSAKey);
-
+        System.out.println("Pailier Key Encrypted with AES :" + homo_add_PaillierKeyWithAES);
+        System.out.println("AES Encripted RSA : " + homo_add_AESkeyWithRSA);
+        //System.out.println("AES (Decrypted) : "+ secKey.getFormat().toString());
 
 
 
@@ -453,8 +453,8 @@ public class AppClient {
                         .queryParam("type", type)
                         .queryParam("encryptType", encryptType)
                         .queryParam("nSquare", nSquare)
-                        .queryParam("homoAddKey", homo_add_RSAKey)
-                        .queryParam("aesKey", homo_add_AESKey)
+                        .queryParam("homoAddKey", homo_add_PaillierKeyWithAES)
+                        .queryParam("aesKey", homo_add_AESkeyWithRSA)
                         .request()
                         .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 

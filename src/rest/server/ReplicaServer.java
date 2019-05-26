@@ -191,75 +191,174 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         // EQUALS =
                         case 0:
                             if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
-                                    // SET
+                                for(int i=0; i<list.size(); i++) {
+
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
-                                    if(currentObj.getOp()==0){
-                                        if(db_val == Double.parseDouble(cond_val)){
+
+                                    if (db_val == Double.parseDouble(cond_val)) {
+
+                                        // SET
+                                        if (currentObj.getOp() == 0) {
                                             db.get(currentObj.getKey()).setAmount(currentObj.getValue());
                                         }
+                                        // ADD
+                                        else {
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    } else {
+                                        System.out.println("Condition not hold.");
                                     }
-                                    // ADD
-                                    else{
-                                        if(db_val == Double.parseDouble(cond_val)){
+                                }
+
+                            }
+                            break;
+
+                        // NOT EQUALS !=
+                        case 1:
+                            if(db_type.equals("WALLET")){
+                                for(int i=0; i<list.size(); i++){
+
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if(db_val != Double.parseDouble(cond_val)){
+
+                                        // SET
+                                        if(currentObj.getOp()==0){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else{
                                             Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
                                             db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
                                         }
                                     }
-
+                                    else{
+                                        System.out.println("Condition not hold.");
+                                    }
                                 }
                             }
-                            String db_valueRetreived = db.get(cond_key).getAmount();
-                            break;
-                        case 1:
-                            if(db_type.equals("WALLET")){
-
-                            }
 
                             break;
+
+                        // GREATER THAN >
                         case 2:
                             if(db_type.equals("WALLET")){
+                                for(int i=0; i<list.size(); i++){
 
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if(db_val > Double.parseDouble(cond_val)){
+
+                                        // SET
+                                        if(currentObj.getOp()==0){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else{
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    }
+                                    else{
+                                        System.out.println("Condition not hold.");
+                                    }
+                                }
                             }
 
                             break;
+
+                        // GREATER OR EQUAL THAN >=
                         case 3:
                             if(db_type.equals("WALLET")){
+                                for(int i=0; i<list.size(); i++){
 
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if(db_val >= Double.parseDouble(cond_val)){
+
+                                        // SET
+                                        if(currentObj.getOp()==0){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else{
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    }
+                                    else{
+                                        System.out.println("Condition not hold.");
+                                    }
+                                }
                             }
 
                             break;
+
+                        // SMALLER THAN <
                         case 4:
                             if(db_type.equals("WALLET")){
+                                for(int i=0; i<list.size(); i++){
 
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if(db_val < Double.parseDouble(cond_val)){
+
+                                        // SET
+                                        if(currentObj.getOp()==0){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else{
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    }
+                                    else{
+                                        System.out.println("Condition not hold.");
+                                    }
+                                }
                             }
 
                             break;
+
+                        // SMALLER OR EQUAL THAN <=
                         case 5:
                             if(db_type.equals("WALLET")){
+                                for(int i=0; i<list.size(); i++){
 
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if(db_val <= Double.parseDouble(cond_val)){
+
+                                        // SET
+                                        if(currentObj.getOp()==0){
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else{
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    }
+                                    else{
+                                        System.out.println("Condition not hold.");
+                                    }
+                                }
                             }
                             break;
 
                     }
 
 
-
-
-
-
-
-            } catch (UnsupportedEncodingException ex) {
-            ex.printStackTrace();
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        if (hasReply) {
+            }
+            if (hasReply) {
                 objOut.flush();
                 byteOut.flush();
                 reply = byteOut.toByteArray();

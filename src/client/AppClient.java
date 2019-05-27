@@ -61,6 +61,25 @@ public class AppClient {
 
     public static void main(String[] args) throws Exception {
 
+
+        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
+        getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
+        addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
+        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SET);
+        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
+        //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+
+
         /*try {
 
             File file = new File("./publicKey.txt");
@@ -89,32 +108,41 @@ public class AppClient {
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+
 
             conditional_upd(adminPathPublicKey, "2", 0, testOpList);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
             //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
-            //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+
 
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
             e.printStackTrace();
         }*/
 
-        //addMoney("WALLET", EncryptOpType_ADD.SET);
+        /*//addMoney("WALLET", EncryptOpType_ADD.SET);
         addMoney("WALLET", EncryptOpType_ADD.CREATE);
         addMoney("WALLET", EncryptOpType_ADD.CREATE);
         addMoney("WALLET", EncryptOpType_ADD.CREATE);
         addMoney("WALLET", EncryptOpType_ADD.CREATE);
-        transferMoney();
+        transferMoney();*/
 
 
-        /*long initAddMoneyTime = System.currentTimeMillis();
+       /* long initAddMoneyTime = System.currentTimeMillis();
         while (true) {
-            //addMoney("WALLET", "HOMO_ADD");
+            addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("WALLET", EncryptOpType_ADD.CREATE);
+            addMoney("WALLET", EncryptOpType_ADD.SET);
+            addMoney("WALLET", EncryptOpType_ADD.SUM);
+            getMoney("WALLET", EncryptOpType_GET.GET);
+            getMoney("WALLET", EncryptOpType_GET.GET);
+            getMoney_LOW_HIGH("WALLET", EncryptOpType_GET.GET_LOWER_HIGHER);
+            //transferMoney();
             // TODO after tests done -> runtime = 300*60
-            if (System.currentTimeMillis() - initAddMoneyTime >= 30 * 60) {
+            if (System.currentTimeMillis() - initAddMoneyTime >= 300 * 60) {
                 break;
             }
         }
@@ -126,8 +154,13 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true) {
                     try {
-                        transferMoney();
-                        //getMoney("WALLET", );
+                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
+                        addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
+                        getMoney("HOMO_ADD", EncryptOpType_GET.GET);
+                        getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -148,8 +181,14 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true) {
                     try {
-                        //getMoney("WALLET", "HOMO_ADD");
-                        transferMoney();
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SET);
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
+                        getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
+                        getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -158,13 +197,13 @@ public class AppClient {
                         break;
                 }
             }
-        };*/
+        };
 
 
-        //transferThread1.start();
-        /*transferThread2.start();
-        transferThread2.join();*/
-
+        transferThread1.start();
+        transferThread2.start();
+        transferThread2.join();
+*/
         System.out.println("#####################################");
         System.out.println("###### AVERAGE REQUEST TIMES ########");
         System.out.println("#####################################");

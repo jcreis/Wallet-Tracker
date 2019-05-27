@@ -751,9 +751,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
             } else if (type.equals("WALLET")) {
                 List<String> returnList = new ArrayList<>();
                 db.forEach((String key, TypeAmount value) -> {
-                    Long longValue = Long.parseLong(value.getAmount());
+                    Double longValue = Double.parseDouble(value.getAmount());
 
-                    if (longValue >= Long.parseLong(lower) && longValue <= Long.parseLong(higher)) {
+                    if (longValue >= Double.parseDouble(lower) && longValue <= Double.parseDouble(higher)) {
                         returnList.add(key);
                     }
                 });

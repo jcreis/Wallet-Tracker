@@ -183,11 +183,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     String db_type = db.get(cond_key).getType();
 
                     List<String> updKey_valueList = new ArrayList<>();
-                    ReplyCondUpdate replySgx = null;
+                    ReplyCondUpdate r_cond = null;
 
                     HashMap<String, String> return_wallet_map = new HashMap<>();
 
-
+                    System.out.println("ENTER SWITCH COND_NUMBER");
                     switch (cond_number) {
                         // EQUALS =
                         case 0:
@@ -215,13 +215,16 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             } else {
+                                System.out.println("ENTERING FOR");
                                 for (int i = 0; i < list.size(); i++) {
 
                                     updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
                                 }
 
-                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                System.out.println("COND UPDATE REQUEST TO SGX");
+                                r_cond = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+
+                                r_cond.getReturnMap().forEach((String key, String newValue) -> {
                                     db.get(key).setAmount(newValue);
                                     return_wallet_map.put(key, db.get(key).getAmount());
 
@@ -263,8 +266,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                                     updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
                                 }
-                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                r_cond = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                r_cond.getReturnMap().forEach((String key, String newValue) -> {
                                     db.get(key).setAmount(newValue);
                                     return_wallet_map.put(key, db.get(key).getAmount());
 
@@ -428,7 +431,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                                     updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
                                 }
+                                System.out.println("condUPDATEREQUESTTO SGX");
                                 ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+
+                                System.out.println("REPLY_S : " + reply_S);
                                 reply_S.getReturnMap().forEach((String key, String newValue) -> {
                                     db.get(key).setAmount(newValue);
                                     return_wallet_map.put(key, db.get(key).getAmount());
@@ -841,7 +847,9 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-    private ReplyCondUpdate condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare, List<String> key_value_list, String sgxKey, String aesKey) {
+    private ReplyCondUpdate condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare, List<String> key_value_list, String sgxKey, String aesKey) throws UnsupportedEncodingException {
+
+
 
         Response response;
         ReplyCondUpdate r;
@@ -851,22 +859,45 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         URI baseURI = UriBuilder.fromUri("https://localhost:8000/").build();
         WebTarget target = client.target(baseURI);
 
+        System.out.println("VOU ENVIAR para " + target + "/update");
+        System.out.println("TYPE: " + type);
+        System.out.println("COND_KEY: " + cond_key);
+        System.out.println("COND_VALUE: " + cond_value);
+        System.out.println("NUMBER:" + cond_number);
+        System.out.println("LIST:" + op_list);
+        System.out.println("NONCEE: " + nonce);
+        System.out.println("AMOUNT: " +amountToCompare);
+        System.out.println("VALUE LIST: " + key_value_list);
+        System.out.println("SGX: " + sgxKey);
+        System.out.println("AES: " + aesKey);
 
-        response = target.path("/update")
-                .queryParam("type", type)
-                .queryParam("cond_key", cond_key)
-                .queryParam("cond_value", cond_value)
-                .queryParam("cond_number", cond_number)
-                .queryParam("op_list", op_list)
-                .queryParam("nonce", nonce)
-                .queryParam("amountToCompare", amountToCompare)
-                .queryParam("key_value_list", key_value_list)
-                .queryParam("sgxKey", sgxKey)
-                .queryParam("aesKey", aesKey)
-                .request()
-                .post(Entity.entity(ReplyCondUpdate.class, MediaType.APPLICATION_JSON));
+        String op = URLEncoder.encode(op_list, "UTF-8");
+        try {
 
-        r = response.readEntity(ReplyCondUpdate.class);
+
+            response = target.path("/sgx/op")
+                    .queryParam("type", type)
+                    .queryParam("cond_key", cond_key)
+                    .queryParam("cond_value", cond_value)
+                    .queryParam("cond_number", cond_number)
+                    .queryParam("op_list", op)
+                    .queryParam("nonce", nonce)
+                    .queryParam("amountToCompare", amountToCompare)
+                    .queryParam("key_value_list", key_value_list)
+                    .queryParam("sgxKey", sgxKey)
+                    .queryParam("aesKey", aesKey)
+                    .request()
+                    .post(Entity.entity(ReplyCondUpdate.class, MediaType.APPLICATION_JSON));
+            System.out.println("LA VOU EU");
+            r = response.readEntity(ReplyCondUpdate.class);
+        }catch(Exception e){
+            e.printStackTrace();
+            r = null;
+        }
+
+
+
+
 
 
         return r;

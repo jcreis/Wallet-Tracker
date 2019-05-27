@@ -380,6 +380,7 @@ public class WalletResources {
 
         HashMap<String,String> map = new HashMap<>();
         Long replyNonce = null;
+        System.out.println("CHEGUEI ENTRAR NO BYTEARRAY");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -390,12 +391,14 @@ public class WalletResources {
             objOut.writeObject(cond_number);
             objOut.writeObject(op_list);
             objOut.writeObject(nonce);
+            System.out.println("WRITING OJECTS");
 
             objOut.flush();
             byteOut.flush();
 
 
-            byte[] reply = serviceProxy.invokeUnordered(byteOut.toByteArray());
+
+            byte[] reply = serviceProxy.invokeOrdered(byteOut.toByteArray());
             if (reply.length == 0)
                 return null;
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
@@ -406,7 +409,11 @@ public class WalletResources {
 
                 // DO THINGS
 
-                return new ReplyCondUpd_Client(map, replyNonce+1, captureMessages.getReplicaMessages());
+                ReplyCondUpd_Client ola =  new ReplyCondUpd_Client(map, replyNonce+1, captureMessages.getReplicaMessages());
+
+                System.out.println("REPLYTOCLIENT: " + ola);
+
+                return ola;
 
             }
             catch (Exception e){

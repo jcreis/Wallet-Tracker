@@ -184,7 +184,7 @@ public class sconeApi {
 
     @SuppressWarnings("Duplicates")
     @POST
-    @Path("/update")
+    @Path("/op")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public synchronized ReplyCondUpdate cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String cond_key, @QueryParam("cond_value") String cond_val,
@@ -192,6 +192,7 @@ public class sconeApi {
                                           @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare, @QueryParam("key_value_list") List<String> key_value_list,
                                           @QueryParam("sgxKey") String sgxKey, @QueryParam("aesKey") String aesKey) throws Exception {
 
+        System.out.println("ENTREI");
         PaillierKey pk = null;
         HomoOpeInt ope = null;
         ReplyCondUpdate reply;
@@ -282,6 +283,8 @@ public class sconeApi {
                         System.out.println("Condition not hold.");
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
+                    System.out.println("COND_VALUE: " + Integer.parseInt(cond_val));
+                    System.out.println("valuetocheck: " + valueToCheck_HOMO_OPE_INT);
                     if (valueToCheck_HOMO_OPE_INT == Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 

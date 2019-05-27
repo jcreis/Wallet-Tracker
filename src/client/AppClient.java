@@ -82,12 +82,14 @@ public class AppClient {
             ArrayList<UpdateKeyValue> testOpList = new ArrayList<>();
             testOpList.add(new UpdateKeyValue(0, adminPathPublicKey, "100"));
 
+
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
             addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            conditional_upd(adminPathPublicKey, "1100", 0, testOpList);
+
+            conditional_upd(adminPathPublicKey, "2", 0, testOpList);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
             //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -1073,7 +1075,7 @@ public class AppClient {
 
 
         long initRequestTime = System.currentTimeMillis();
-
+        System.out.println("VOU mandar pedido COND_UPDATE");
         response = target.path("/update")
                 .queryParam("cond_key", cond_key)
                 .queryParam("cond_value", value)
@@ -1095,16 +1097,16 @@ public class AppClient {
 
             ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
             ObjectInput objIn = new ObjectInputStream(byteIn);
-            List<String> msgStringKey = (List<String>) objIn.readObject();
-            for (String key : msgStringKey) {
-                amounts.add(r.getKey_value().get(key));
-            }
+//            HashMap<String,String> msgStringKey = (HashMap<String,String>) objIn.readObject();
+//            for (String key : msgStringKey) {
+//                amounts.add(r.getKey_value().get(key));
+//            }
 
             // System.out.println("replica amount: "+ replicaMsgAmount);
-            Long replicaNonce = (Long) objIn.readObject();
+            //Long replicaNonce = (Long) objIn.readObject();
 
             // System.out.println("replica nonce: " + replicaNonce);
-            lNonces.add(replicaNonce);
+            //lNonces.add(replicaNonce);
 
             KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
             java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());

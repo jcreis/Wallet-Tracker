@@ -25,10 +25,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaServer extends DefaultSingleRecoverable {
@@ -59,6 +56,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String publicKey;
         String publicKey2;
         String value;
+        Double transferValue;
 
         boolean hasReply = false;
         String replyR = "";
@@ -77,6 +75,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         Integer cond_number;
         String op_list;
         ArrayList<UpdateKeyValue> list;
+
 
 
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
@@ -110,6 +109,11 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                         homoOpeIntKey = (String) objIn.readObject();
                         encodedSecKey = (String) objIn.readObject();
 
+
+
+                        System.out.println("SGXKEY: " + homoOpeIntKey);
+                        System.out.println("SGXKEY_D: " + HelpSerial.toString(Base64.getDecoder().decode(homoOpeIntKey)));
+                        System.out.println("OPENKEYBYTES: " + encodedSecKey);
                         keyData.put(publicKey, new TypeKey("HOMO_OPE_INT", homoOpeIntKey, encodedSecKey));
                         replyR = selectionOfType_ADD(type, encryptType, publicKey, value, null, nonce);
 
@@ -129,35 +133,39 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
                 case TRANSFER:
-
+                    System.out.println("Enters transfer replica");
                     publicKey = (String) objIn.readObject();
                     publicKey2 = (String) objIn.readObject();
-                    value = (String) objIn.readObject();
+                    transferValue = (Double) objIn.readObject();
                     nonce = (Long) objIn.readObject();
 
-                    Double doubleValue = Double.parseDouble(value);
+                    if(db.get(publicKey).getType().equals("WALLET") && db.get(publicKey2).getType().equals("WALLET")) {
+                        System.out.println("enters if of transfer");
 
-                    if (!db.containsKey(publicKey) || !db.containsKey(publicKey2)) {
-                        System.out.println("User not found.");
-                    } else if (doubleValue < 0) {
-                        System.out.println("Invalid amount.");
-                    } else {
-                        Double doubleValueDb = Double.parseDouble(db.get(publicKey).getAmount());
-                        Double doubleValueDb2 = Double.parseDouble(db.get(publicKey2).getAmount());
-                        if (doubleValueDb >= doubleValue) {
-                            Double transfSum = doubleValueDb2 + doubleValue;
-                            Double transfMin = doubleValueDb - doubleValue;
-
-                            db.put(publicKey, new TypeAmount("WALLET", transfMin.toString()));
-                            db.put(publicKey2, new TypeAmount("WALLET", transfSum.toString()));
-                            objOut.writeObject(db.get(publicKey2).getAmount());
-                            //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
-                            objOut.writeObject(nonce);
-
-                            hasReply = true;
+                        if (!db.containsKey(publicKey) || !db.containsKey(publicKey2)) {
+                            System.out.println("User not found.");
+                        } else if (transferValue < 0) {
+                            System.out.println("Invalid amount.");
                         } else {
-                            System.out.println("User making the transfer does not have enough money.");
+                            Double doubleValueDb = Double.parseDouble(db.get(publicKey).getAmount());
+                            Double doubleValueDb2 = Double.parseDouble(db.get(publicKey2).getAmount());
+                            if (doubleValueDb >= transferValue) {
+                                Double transfSum = doubleValueDb2 + transferValue;
+                                Double transfMin = doubleValueDb - transferValue;
+
+                                db.put(publicKey, new TypeAmount("WALLET", transfMin.toString()));
+                                db.put(publicKey2, new TypeAmount("WALLET", transfSum.toString()));
+                                objOut.writeObject(db.get(publicKey2).getAmount());
+                                //System.out.println("User " + publicKey2 + " now has " + db.get(publicKey2) + "€");
+                                objOut.writeObject(nonce);
+
+                                hasReply = true;
+                            } else {
+                                System.out.println("User making the transfer does not have enough money.");
+                            }
                         }
+                    }else{
+                        System.out.println("Type not Supported");
                     }
                     break;
 
@@ -222,6 +230,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                 }
 
                                 System.out.println("COND UPDATE REQUEST TO SGX");
+                                System.out.println("SEND SGXKEY");
                                 r_cond = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
 
                                 r_cond.getReturnMap().forEach((String key, String newValue) -> {

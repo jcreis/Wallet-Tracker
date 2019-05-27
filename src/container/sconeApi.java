@@ -236,14 +236,23 @@ public class sconeApi {
         } else {
             byte[] decodedAES = Base64.getDecoder().decode(aesKey);
             byte[] aes = sgx_privateKey.decrypt(decodedAES);
+            System.out.println("AESKEY: " + aesKey);
             //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
+            System.out.println("SGXKEY: " + sgxKey);
             byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
+            System.out.println("SGXKEY_D: " +  HelpSerial.toString(decodedSGXkey));
             SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
             Cipher aesCipher = Cipher.getInstance("AES");
             aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
+
             byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
+            System.out.println("OPENKEYBYTES: " + HelpSerial.toString(decodedSGXkey));
+
             String opeStr = HelpSerial.toString(opeKeyBytes);
-            ope = new HomoOpeInt(opeStr);
+
+            System.out.println("OPE: " + opeStr);
+            ope = new HomoOpeInt(Base64.getDecoder().decode(opeStr).toString());
+            //System.out.println("OPESTR : " + opeStr);
             valueToCheck_HOMO_OPE_INT = ope.decrypt(Long.parseLong(amountToCompare));
         }
 

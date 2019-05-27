@@ -61,7 +61,7 @@ public class AppClient {
 
     public static void main(String[] args) throws Exception {
 
-        try {
+        /*try {
 
             File file = new File("./publicKey.txt");
             String adminPublicString = null;
@@ -80,6 +80,8 @@ public class AppClient {
             String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
 
             ArrayList<UpdateKeyValue> testOpList = new ArrayList<>();
+
+
             testOpList.add(new UpdateKeyValue(0, adminPathPublicKey, "100"));
 
 
@@ -87,7 +89,7 @@ public class AppClient {
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
+            //addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
 
             conditional_upd(adminPathPublicKey, "2", 0, testOpList);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
@@ -98,10 +100,15 @@ public class AppClient {
             //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
         //addMoney("WALLET", EncryptOpType_ADD.SET);
-        //addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        addMoney("WALLET", EncryptOpType_ADD.CREATE);
+        transferMoney();
+
 
         /*long initAddMoneyTime = System.currentTimeMillis();
         while (true) {
@@ -151,17 +158,17 @@ public class AppClient {
                         break;
                 }
             }
-        };
+        };*/
 
 
-        transferThread1.start();
-        transferThread2.start();
-        transferThread2.join();
+        //transferThread1.start();
+        /*transferThread2.start();
+        transferThread2.join();*/
 
         System.out.println("#####################################");
         System.out.println("###### AVERAGE REQUEST TIMES ########");
         System.out.println("#####################################");
-        System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
+        /*System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
         System.out.println("Average time of getMoney requests: " + getGetMoneyAvgTime() + "ms");
         System.out.println("Average time of addMoney requests: " + getAddMoneyAvgTime() + "ms");
 */
@@ -221,7 +228,8 @@ public class AppClient {
         // Calculate time for request
         long initRequestTime = System.currentTimeMillis();
 
-        Response response = target.path("transfer/" + pathPublicKey).queryParam("tpublicKey", pathPublicKey2)
+        Response response = target.path("transfer/" + pathPublicKey)
+                .queryParam("tpublicKey", pathPublicKey2)
                 .queryParam("value", value)
                 .queryParam("nonce", nonce)
                 .queryParam("msg", msgHashStr)
@@ -240,13 +248,13 @@ public class AppClient {
             if (currentReplicaMsg != null) {
                 ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
                 ObjectInput objIn = new ObjectInputStream(byteIn);
-                Double replicaMsgAmount = (Double) objIn.readObject();
+                String replicaMsgAmount = (String) objIn.readObject();
                 //System.out.println("replica amount: "+ replicaMsgAmount);
                 Long replicaNonce = (Long) objIn.readObject();
                 //System.out.println("replica nonce: " + replicaNonce);
 
 
-                amounts.add(replicaMsgAmount);
+                amounts.add(Double.parseDouble(replicaMsgAmount));
                 lNonces.add(replicaNonce);
 
                 KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
@@ -389,11 +397,19 @@ public class AppClient {
 
         // Encrypt HOMO_OPE_INT_KEY with AES
         byte[] ope_aes = aesCipher2.doFinal(HelpSerial.toString(HomoOpeIntKey).getBytes());
+        System.out.println("OPENKEYBYTES: " + HelpSerial.toString(ope_aes));
+
+        System.out.println("OPE : " + HelpSerial.toString(HomoOpeIntKey));
         // Encrypt AES with pubKeyRSA
         byte[] aes_pubKey_rsa = sgxPublic.encrypt(secKey_homo_ope_int.getEncoded());
 
         String homo_ope_int_OPEkeyWithAES = Base64.getEncoder().encodeToString(ope_aes);
         String homo_ope_int_AESkeyWithPubKeyRSA = Base64.getEncoder().encodeToString(aes_pubKey_rsa);
+
+        System.out.println("SGXKEY: " + homo_ope_int_OPEkeyWithAES);
+        System.out.println("SGXKEY_D: " + HelpSerial.toString(ope_aes));
+        System.out.println("AESKEY: " + homo_ope_int_AESkeyWithPubKeyRSA);
+
 
 
 
@@ -497,7 +513,7 @@ public class AppClient {
             case "HOMO_OPE_INT":
 
                 //Long openValue = ope.encrypt(value.intValue());
-                Long openValue = ope.encrypt(1100);
+                Long openValue = ope.encrypt(2);
                 msg = adminPubString + openValue + nonce;
                 hash = Digest.getDigest(msg.getBytes());
                 hashEncriptPriv = adminPriv.encrypt(hash);
@@ -1175,7 +1191,7 @@ public class AppClient {
 
 
 
-    public static long getTransferAvgTime() {
+   /* public static long getTransferAvgTime() {
         long totalTimeCounter = 0;
         for (int i = 0; i < transferRequestTimes.size(); i++) {
             totalTimeCounter += transferRequestTimes.get(i);
@@ -1198,7 +1214,7 @@ public class AppClient {
         }
         return totalTimeCounter / addMoneyRequestTimes.size();
     }
-
+*/
 
 
     static public class InsecureHostnameVerifier implements HostnameVerifier {

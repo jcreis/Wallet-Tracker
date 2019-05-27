@@ -380,8 +380,7 @@ public class AppClient {
         String homo_add_AESkeyWithRSA = Base64.getEncoder().encodeToString(rsa_pk);
 
 
-        System.out.println("Pailier Key Encrypted with AES :" + homo_add_PaillierKeyWithAES);
-        System.out.println("AES Encripted RSA : " + homo_add_AESkeyWithRSA);
+
 
 
         //HOMO_OPE_INT
@@ -397,18 +396,14 @@ public class AppClient {
 
         // Encrypt HOMO_OPE_INT_KEY with AES
         byte[] ope_aes = aesCipher2.doFinal(HelpSerial.toString(HomoOpeIntKey).getBytes());
-        System.out.println("OPENKEYBYTES: " + HelpSerial.toString(ope_aes));
 
-        System.out.println("OPE : " + HelpSerial.toString(HomoOpeIntKey));
         // Encrypt AES with pubKeyRSA
         byte[] aes_pubKey_rsa = sgxPublic.encrypt(secKey_homo_ope_int.getEncoded());
 
         String homo_ope_int_OPEkeyWithAES = Base64.getEncoder().encodeToString(ope_aes);
         String homo_ope_int_AESkeyWithPubKeyRSA = Base64.getEncoder().encodeToString(aes_pubKey_rsa);
 
-        System.out.println("SGXKEY: " + homo_ope_int_OPEkeyWithAES);
-        System.out.println("SGXKEY_D: " + HelpSerial.toString(ope_aes));
-        System.out.println("AESKEY: " + homo_ope_int_AESkeyWithPubKeyRSA);
+
 
 
 
@@ -521,7 +516,7 @@ public class AppClient {
 
                 System.out.println("Vou enviar o valor encriptado po server -> " + openValue);
 
-                System.out.println("PUBLIC KEY -> " + pathPublicKey);
+                System.out.println("PUBLIC KEY -> " + adminPathPublicKey);
                 response = target.path(adminPathPublicKey)
                         .queryParam("value", openValue.toString())
                         .queryParam("nonce", nonce)
@@ -937,10 +932,7 @@ public class AppClient {
             lower = HelpSerial.toString(HomoAdd.encrypt(bigIntLower, pk));
 
 
-            System.out.println("BIGHIGHER: " + bigIntHigher);
-            System.out.println("BIGLOWER: " + bigIntLower);
-            System.out.println("HIGHER: " + higher);
-            System.out.println("LOWER: " + lower);
+
 
         } else {
             higher = "1200";

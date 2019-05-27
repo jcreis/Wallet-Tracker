@@ -73,13 +73,11 @@ public class sconeApi {
         List<String> returnList = new ArrayList<String>();
 
         PrivateKey sgx_privateKey = getPrivKey();
-        System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
-        System.out.println("PaillierEnc WITH AES : " + sgxKey);
+
         // Decrypt the key to do the operation
         byte[] decodedAES = Base64.getDecoder().decode(aesKey);
         byte[] aes = sgx_privateKey.decrypt(decodedAES);
         String homo_add_AESKey = Base64.getEncoder().encodeToString(aes);
-        System.out.println("AES : " + homo_add_AESKey);
         byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
         SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
         Cipher aesCipher = Cipher.getInstance("AES");
@@ -95,8 +93,7 @@ public class sconeApi {
 
         db_filtered.forEach((String key, TypeAmount value) -> {
 
-            System.out.println("HIGHER: " + high);
-            System.out.println("LOWER: " + low);
+
             BigInteger valueToDecrypt = new BigInteger(value.getAmount());
             BigInteger loww = (BigInteger) (HelpSerial.fromString(low));
             BigInteger highh = (BigInteger) (HelpSerial.fromString(high));
@@ -114,14 +111,9 @@ public class sconeApi {
                 BigInteger low_b = HomoAdd.decrypt(loww, pk);
                 BigInteger high_b = HomoAdd.decrypt(highh, pk);
 
-                System.out.println("BIGHIGHER: " + high_b);
-                System.out.println("BIGLOWER: " + low_b);
 
                 valueToCheck = decriptedBigInt.intValue();
 
-                System.out.println("VALUE TO CHECK: " + valueToCheck);
-                System.out.println("LOW: " + low_b.intValue());
-                System.out.println("HIGH: " + high_b.intValue());
 
 
                 if (valueToCheck >= low_b.intValue() && valueToCheck <= high_b.intValue()) {
@@ -134,9 +126,7 @@ public class sconeApi {
         });
 
 
-        System.out.println("type; " + type);
-        System.out.println("encript type: " + encryptType);
-        System.out.println("list: " + returnList);
+
         ReplySGX response = new ReplySGX(type, encryptType, nonce + 1, returnList, 0l);
         return response;
 
@@ -176,9 +166,7 @@ public class sconeApi {
 
 
         ReplySGX reply = new ReplySGX(type, encryptType, nonce, null, returnValueEncrypted);
-        System.out.println("Balance: " + decriptedBalance);
-        System.out.println("Value to sum: " + decriptedValueToAdd);
-        System.out.println("Encrypted final value: " + addedValue);
+
         return reply;
     }
 
@@ -192,7 +180,7 @@ public class sconeApi {
                                           @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare, @QueryParam("key_value_list") List<String> key_value_list,
                                           @QueryParam("sgxKey") String sgxKey, @QueryParam("aesKey") String aesKey) throws Exception {
 
-        System.out.println("ENTREI");
+
         PaillierKey pk = null;
         HomoOpeInt ope = null;
         ReplyCondUpdate reply;
@@ -202,7 +190,7 @@ public class sconeApi {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gsonObject = gsonBuilder.create();
         String list_D = URLDecoder.decode(op_list, "UTF-8");
-        System.out.println("db_GSON : " + list_D);
+
         Type empMapType = new TypeToken<List<UpdateKeyValue>>() {
         }.getType();
         ArrayList<UpdateKeyValue> list = gsonObject.fromJson(list_D, empMapType);
@@ -214,13 +202,11 @@ public class sconeApi {
         HashMap<String,String> return_encripted_values_map = new HashMap<>();
 
         if (type.equals("HOMO_ADD")) {
-            System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
-            System.out.println("PaillierEnc WITH AES : " + sgxKey);
+
             // Decrypt the key to do the operation
             byte[] decodedAES = Base64.getDecoder().decode(aesKey);
             byte[] aes = sgx_privateKey.decrypt(decodedAES);
             String homo_add_AESKey = Base64.getEncoder().encodeToString(aes);
-            System.out.println("AES : " + homo_add_AESKey);
             byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
             SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
             Cipher aesCipher = Cipher.getInstance("AES");
@@ -236,23 +222,17 @@ public class sconeApi {
         } else {
             byte[] decodedAES = Base64.getDecoder().decode(aesKey);
             byte[] aes = sgx_privateKey.decrypt(decodedAES);
-            System.out.println("AESKEY: " + aesKey);
-            //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
-            System.out.println("SGXKEY: " + sgxKey);
+
+
             byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
-            System.out.println("SGXKEY_D: " +  HelpSerial.toString(decodedSGXkey));
+
             SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
             Cipher aesCipher = Cipher.getInstance("AES");
             aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
 
             byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
-            System.out.println("OPENKEYBYTES: " + HelpSerial.toString(decodedSGXkey));
-
             String opeStr = HelpSerial.toString(opeKeyBytes);
-
-            System.out.println("OPE: " + opeStr);
             ope = new HomoOpeInt(Base64.getDecoder().decode(opeStr).toString());
-            //System.out.println("OPESTR : " + opeStr);
             valueToCheck_HOMO_OPE_INT = ope.decrypt(Long.parseLong(amountToCompare));
         }
 
@@ -292,8 +272,7 @@ public class sconeApi {
                         System.out.println("Condition not hold.");
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    System.out.println("COND_VALUE: " + Integer.parseInt(cond_val));
-                    System.out.println("valuetocheck: " + valueToCheck_HOMO_OPE_INT);
+
                     if (valueToCheck_HOMO_OPE_INT == Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
@@ -661,7 +640,6 @@ public class sconeApi {
 
         while (scanner.hasNextLine()) {
             privateKey = scanner.next();
-            System.out.println("privateKey: " + privateKey);
         }
 
         byte[] sgxByte = Base64.getDecoder().decode(privateKey);
@@ -679,14 +657,12 @@ public class sconeApi {
 
         String db_D = URLDecoder.decode(db, "UTF-8");
 
-        System.out.println("db_GSON : " + db_D);
 
 
         Type empMapType = new TypeToken<HashMap<String, TypeAmount>>() {
         }.getType();
         HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, empMapType);
-        System.out.println("OLA");
-        //HashMap<String, TypeAmount> db_filtered = gsonObject.fromJson(db_D, HashMap.class);
+
         return db_filtered;
 
     }

@@ -31,9 +31,6 @@ import java.util.*;
 @Path("/sgx")
 public class sconeApi {
 
-    private HomoOpeInt ope;
-    private Cipher aesCipher;
-    private PaillierKey pk;
 
     public sconeApi() throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
@@ -75,34 +72,19 @@ public class sconeApi {
         List<String> returnList = new ArrayList<String>();
 
         PrivateKey sgx_privateKey = getPrivKey();
-
-
         System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
-
         System.out.println("PaillierEnc WITH AES : " + sgxKey);
         // Decrypt the key to do the operation
-
-
         byte[] decodedAES = Base64.getDecoder().decode(aesKey);
-
         byte[] aes = sgx_privateKey.decrypt(decodedAES);
-
-
         String homo_add_AESKey = Base64.getEncoder().encodeToString(aes);
-
         System.out.println("AES : " + homo_add_AESKey);
-
-
         byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
-
         SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
-
-        aesCipher = Cipher.getInstance("AES");
-
+        Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
         byte[] PaillierByte = aesCipher.doFinal(decodedSgxKey);
-
-        pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
+        PaillierKey pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
 
 
         //String utfString = URLDecoder.decode(decrypted, "UTF-8");
@@ -177,23 +159,15 @@ public class sconeApi {
 
         byte[] decodedAES = Base64.getDecoder().decode(aesKey);
         byte[] aes = sgx_privateKey.decrypt(decodedAES);
-
         //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
-
         byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
-
         SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
-
-        aesCipher = Cipher.getInstance("AES");
+        Cipher aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
-
         byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
         String opeStr = HelpSerial.toString(opeKeyBytes);
-
-        ope = new HomoOpeInt(opeStr);
-
+        HomoOpeInt ope = new HomoOpeInt(opeStr);
         int decriptedValueToAdd = ope.decrypt(value);
-
         int decriptedBalance = ope.decrypt(balance);
 
         int addedValue = decriptedValueToAdd+decriptedBalance;
@@ -215,36 +189,75 @@ public class sconeApi {
     @Produces(MediaType.APPLICATION_JSON)
     public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_val,
                                           @QueryParam("cond_number") int cond_number, @QueryParam("op_list") String op_list,
-                                          @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare) throws Exception {
+                                          @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare,
+                                          @QueryParam("sgxKey") String sgxKey, @QueryParam("aesKey") String aesKey) throws Exception {
 
+        PaillierKey pk;
+        HomoOpeInt ope;
         ReplySGX reply;
+
         GsonBuilder gsonBuilder = new GsonBuilder();
-
         Gson gsonObject = gsonBuilder.create();
-
         String list_D = URLDecoder.decode(op_list, "UTF-8");
-
         System.out.println("db_GSON : " + list_D);
-
-
         Type empMapType = new TypeToken<List<UpdateKeyValue>>() {
         }.getType();
-
         ArrayList<UpdateKeyValue> list = gsonObject.fromJson(list_D, empMapType);
 
-        switch (cond_number) {
-            // EQUALS =
-            case 0:
+        PrivateKey sgx_privateKey = getPrivKey();
+        int valueToCheck_HOMO_ADD = 0;
+        int valueToCheck_HOMO_OPE_INT = 0;
 
+        if(type.equals("HOMO_ADD")){
+            System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
+            System.out.println("PaillierEnc WITH AES : " + sgxKey);
+            // Decrypt the key to do the operation
+            byte[] decodedAES = Base64.getDecoder().decode(aesKey);
+            byte[] aes = sgx_privateKey.decrypt(decodedAES);
+            String homo_add_AESKey = Base64.getEncoder().encodeToString(aes);
+            System.out.println("AES : " + homo_add_AESKey);
+            byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
+            SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
+            Cipher aesCipher = Cipher.getInstance("AES");
+            aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
+            byte[] PaillierByte = aesCipher.doFinal(decodedSgxKey);
+            pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
+
+            BigInteger valueToDecrypt = new BigInteger(amountToCompare);
+            BigInteger decriptedBigInt = HomoAdd.decrypt(valueToDecrypt, pk);
+            valueToCheck_HOMO_ADD = decriptedBigInt.intValue();
+
+
+        }else{
+            byte[] decodedAES = Base64.getDecoder().decode(aesKey);
+            byte[] aes = sgx_privateKey.decrypt(decodedAES);
+            //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
+            byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
+            SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
+            Cipher aesCipher = Cipher.getInstance("AES");
+            aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
+            byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
+            String opeStr = HelpSerial.toString(opeKeyBytes);
+            ope = new HomoOpeInt(opeStr);
+            valueToCheck_HOMO_OPE_INT = ope.decrypt(Long.parseLong(amountToCompare));
+        }
+
+
+
+
+        switch (cond_number) {
+
+            case 0:
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare == cond_val) {
+
+                    if (valueToCheck_HOMO_ADD == Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -258,14 +271,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare == cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT == Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -289,14 +302,14 @@ public class sconeApi {
             case 1:
 
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare != cond_val) {
+                    if (valueToCheck_HOMO_ADD != Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -310,14 +323,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare != cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT != Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -341,14 +354,14 @@ public class sconeApi {
             // GREATER THAN >
             case 2:
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare > cond_val) {
+                    if (valueToCheck_HOMO_ADD > Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -362,14 +375,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare > cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT > Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -395,14 +408,14 @@ public class sconeApi {
             case 3:
 
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare >= cond_val) {
+                    if (valueToCheck_HOMO_ADD >= Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -416,14 +429,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare >= cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT >= Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -449,14 +462,14 @@ public class sconeApi {
             case 4:
 
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare < cond_val) {
+                    if (valueToCheck_HOMO_ADD < Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -470,14 +483,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare < cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT < Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -502,14 +515,14 @@ public class sconeApi {
             case 5:
 
                 if (type.equals("HOMO_ADD")) {
-                    if (amountToCompare <= cond_val) {
+                    if (valueToCheck_HOMO_ADD <= Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -523,14 +536,14 @@ public class sconeApi {
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
-                    if (amountToCompare <= cond_val) {
+                    if (valueToCheck_HOMO_OPE_INT <= Integer.parseInt(cond_val)) {
                         for (int i = 0; i < list.size(); i++) {
 
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
 
-                                // ADD
+                                // SET
                                 case 0:
                                     break;
 
@@ -593,5 +606,7 @@ public class sconeApi {
         return db_filtered;
 
     }
+
+
 
 }

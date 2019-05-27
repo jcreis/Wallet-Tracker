@@ -207,7 +207,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
                             break;
 
@@ -236,7 +236,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             }else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
 
                             break;
@@ -266,7 +266,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
 
                             break;
@@ -297,7 +297,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                 }
                             }
                             else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
 
                             break;
@@ -328,7 +328,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
 
                             break;
@@ -358,7 +358,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             }else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount());
+                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
                             }
                             break;
 
@@ -762,7 +762,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-    private ReplySGX condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare) {
+    private ReplySGX condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare, String sgxKey, String aesKey) {
         
         Response response;
         Client client = ClientBuilder.newBuilder()
@@ -773,12 +773,15 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
 
         response = target.path("/update")
+                .queryParam("type", type)
                 .queryParam("cond_key", cond_key)
                 .queryParam("cond_value", cond_value)
                 .queryParam("cond_number", cond_number)
                 .queryParam("op_list", op_list)
                 .queryParam("nonce", nonce)
                 .queryParam("amountToCompare", amountToCompare)
+                .queryParam("sgxKey", sgxKey)
+                .queryParam("aesKey", aesKey)
                 .request()
                 .post(Entity.entity(Reply_OPE.class, MediaType.APPLICATION_JSON));
 

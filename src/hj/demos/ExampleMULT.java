@@ -6,8 +6,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Random;
 
-import hlib.hj.mlib.HomoAdd;
-import hlib.hj.mlib.HomoMult;
+import hj.mlib.HomoAdd;
+import hj.mlib.HomoMult;
 
 public class ExampleMULT {
 

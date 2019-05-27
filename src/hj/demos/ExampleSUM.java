@@ -2,9 +2,9 @@ package hj.demos;
 import java.math.BigInteger;
 import java.util.Random;
 
-import hlib.hj.mlib.HelpSerial;
-import hlib.hj.mlib.HomoAdd;
-import hlib.hj.mlib.PaillierKey;
+import hj.mlib.HelpSerial;
+import hj.mlib.HomoAdd;
+import hj.mlib.PaillierKey;
 
 public class ExampleSUM {
 

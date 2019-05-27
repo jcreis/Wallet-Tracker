@@ -4,5 +4,8 @@ public enum OpType {
     TRANSFER,
     ADD_MONEY,
     GET_MONEY,
-    CREATE
+    GET_LOW_HIGH,
+    COND_UPD
 }
+
+

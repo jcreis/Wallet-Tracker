@@ -4,31 +4,31 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Reply implements Serializable {
+public class Reply_OPE implements Serializable {
 
     ArrayList<ReplicaResponseMessage> messages;
     String publicKey;
     String amount;
+    List<String> listAmounts;
     long nonce;
 
     OpType operationType;
 
 
+    public Reply_OPE(){
+
+    }
 
 
-    public Reply(OpType operationType, ArrayList<ReplicaResponseMessage> messages, String publicKey, String amount, long nonce){
+    // For OPE_INT - without pubKey and a List<String> amounts instead of a single amount
+    public Reply_OPE(OpType operationType, ArrayList<ReplicaResponseMessage> messages, List<String> listAmounts, long nonce){
         this.messages = messages;
-        this.publicKey = publicKey;
-        this.amount = amount;
+        this.listAmounts = listAmounts;
         this.nonce = nonce;
         this.operationType = operationType;
 
     }
 
-
-
-    public Reply() {
-    }
 
     public ArrayList<ReplicaResponseMessage> getMessages() {
         return messages;
@@ -46,12 +46,13 @@ public class Reply implements Serializable {
         this.publicKey = publicKey;
     }
 
-    public String getAmount() {
-        return amount;
+
+    public List<String> getListAmounts() {
+        return listAmounts;
     }
 
-    public void setAmount(String amount) {
-        this.amount = amount;
+    public void setListAmounts(List<String> listAmounts) {
+        this.listAmounts = listAmounts;
     }
 
     public long getNonce() {

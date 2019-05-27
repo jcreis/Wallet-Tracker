@@ -1,5 +1,5 @@
 package hj.demos;
-import hlib.hj.mlib.HomoDet;
+import hj.mlib.HomoDet;
 
 import java.io.UnsupportedEncodingException;
 import javax.crypto.SecretKey;

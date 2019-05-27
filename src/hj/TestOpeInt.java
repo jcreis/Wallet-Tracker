@@ -1,6 +1,6 @@
 package hj;
 
-import hlib.hj.mlib.HomoOpeInt;
+import hj.mlib.HomoOpeInt;
 
 /**
  * Testa utilizacao da cifra order-preserving

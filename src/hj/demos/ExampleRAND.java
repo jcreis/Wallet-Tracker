@@ -4,8 +4,8 @@ package hj.demos;
 import java.io.UnsupportedEncodingException;
 import javax.crypto.SecretKey;
 
-import hlib.hj.mlib.HomoDet;
-import hlib.hj.mlib.HomoRand;
+import hj.mlib.HomoDet;
+import hj.mlib.HomoRand;
 
 public class ExampleRAND {
 

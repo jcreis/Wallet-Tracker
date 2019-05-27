@@ -4,6 +4,7 @@ import bftsmart.reconfiguration.util.RSAKeyLoader;
 import bftsmart.tom.ServiceProxy;
 import model.CaptureMessages;
 import model.Reply;
+import model.ReplyCondUpd_Client;
 import model.Reply_OPE;
 import rest.server.ReplicaServer;
 import security.Digest;
@@ -18,10 +19,7 @@ import java.net.URLDecoder;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static model.OpType.*;
 
@@ -372,13 +370,15 @@ public class WalletResources {
     @POST
     @Path("/update")
     @Produces(MediaType.APPLICATION_JSON)
-    public Reply_OPE cond_upd(@QueryParam("cond_key") String cond_key,
-                                 @QueryParam("cond_value") String cond_value,
-                                 @QueryParam("cond_number") Integer cond_number,
-                                 @QueryParam("op_list") String op_list,
-                                 @QueryParam("nonce") Long nonce)
+    public ReplyCondUpd_Client cond_upd(@QueryParam("cond_key") String cond_key,
+                                        @QueryParam("cond_value") String cond_value,
+                                        @QueryParam("cond_number") Integer cond_number,
+                                        @QueryParam("op_list") String op_list,
+                                        @QueryParam("nonce") Long nonce)
             throws Exception {
 
+        HashMap<String,String> map = new HashMap<>();
+        Long replyNonce = null;
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut);) {
 
@@ -400,6 +400,9 @@ public class WalletResources {
             try (ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
                  ObjectInput objIn = new ObjectInputStream(byteIn)) {
 
+                map = (HashMap<String, String>) objIn.readObject();
+                replyNonce = (Long) objIn.readObject();
+
                 // DO THINGS
 
                 return null; // Reply_OPE(GET_LOW_HIGH, captureMessages.getReplicaMessages(), keyList, replyNonce + 1);
@@ -414,7 +417,7 @@ public class WalletResources {
         }
 
 
-        return null;
+        return new ReplyCondUpd_Client(map, replyNonce+1, captureMessages.getReplicaMessages());
     }
 
 }

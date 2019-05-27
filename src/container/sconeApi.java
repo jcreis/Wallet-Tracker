@@ -7,6 +7,7 @@ import hj.mlib.HelpSerial;
 import hj.mlib.HomoAdd;
 import hj.mlib.HomoOpeInt;
 import hj.mlib.PaillierKey;
+import model.ReplyCondUpdate;
 import model.ReplySGX;
 import model.TypeAmount;
 import model.UpdateKeyValue;
@@ -97,8 +98,8 @@ public class sconeApi {
             System.out.println("HIGHER: " + high);
             System.out.println("LOWER: " + low);
             BigInteger valueToDecrypt = new BigInteger(value.getAmount());
-            BigInteger loww =  (BigInteger)(HelpSerial.fromString(low));
-            BigInteger highh = (BigInteger)(HelpSerial.fromString(high));
+            BigInteger loww = (BigInteger) (HelpSerial.fromString(low));
+            BigInteger highh = (BigInteger) (HelpSerial.fromString(high));
 
                 /*BigInteger loww = BigInteger.valueOf(low);
                 BigInteger highh = BigInteger.valueOf(high);*/
@@ -156,7 +157,6 @@ public class sconeApi {
         PrivateKey sgx_privateKey = getPrivKey();
 
 
-
         byte[] decodedAES = Base64.getDecoder().decode(aesKey);
         byte[] aes = sgx_privateKey.decrypt(decodedAES);
         //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
@@ -170,15 +170,15 @@ public class sconeApi {
         int decriptedValueToAdd = ope.decrypt(value);
         int decriptedBalance = ope.decrypt(balance);
 
-        int addedValue = decriptedValueToAdd+decriptedBalance;
+        int addedValue = decriptedValueToAdd + decriptedBalance;
 
         long returnValueEncrypted = ope.encrypt(addedValue);
 
 
         ReplySGX reply = new ReplySGX(type, encryptType, nonce, null, returnValueEncrypted);
-        System.out.println("Balance: "+decriptedBalance);
-        System.out.println("Value to sum: "+decriptedValueToAdd);
-        System.out.println("Encrypted final value: "+addedValue);
+        System.out.println("Balance: " + decriptedBalance);
+        System.out.println("Value to sum: " + decriptedValueToAdd);
+        System.out.println("Encrypted final value: " + addedValue);
         return reply;
     }
 
@@ -187,14 +187,16 @@ public class sconeApi {
     @Path("/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_val,
+    public synchronized ReplyCondUpdate cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String cond_key, @QueryParam("cond_value") String cond_val,
                                           @QueryParam("cond_number") int cond_number, @QueryParam("op_list") String op_list,
-                                          @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare,
+                                          @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare, @QueryParam("key_value_list") List<String> key_value_list,
                                           @QueryParam("sgxKey") String sgxKey, @QueryParam("aesKey") String aesKey) throws Exception {
 
-        PaillierKey pk;
-        HomoOpeInt ope;
-        ReplySGX reply;
+        PaillierKey pk = null;
+        HomoOpeInt ope = null;
+        ReplyCondUpdate reply;
+        int value_to_reply_decript = 0;
+        String value_to_reply_encript = "";
 
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gsonObject = gsonBuilder.create();
@@ -208,7 +210,9 @@ public class sconeApi {
         int valueToCheck_HOMO_ADD = 0;
         int valueToCheck_HOMO_OPE_INT = 0;
 
-        if(type.equals("HOMO_ADD")){
+        HashMap<String,String> return_encripted_values_map = new HashMap<>();
+
+        if (type.equals("HOMO_ADD")) {
             System.out.println("AES ENCRIPTED WITH RSA : " + aesKey);
             System.out.println("PaillierEnc WITH AES : " + sgxKey);
             // Decrypt the key to do the operation
@@ -228,7 +232,7 @@ public class sconeApi {
             valueToCheck_HOMO_ADD = decriptedBigInt.intValue();
 
 
-        }else{
+        } else {
             byte[] decodedAES = Base64.getDecoder().decode(aesKey);
             byte[] aes = sgx_privateKey.decrypt(decodedAES);
             //String homo_ope_int_AESkey = Base64.getEncoder().encodeToString(aes);
@@ -243,8 +247,6 @@ public class sconeApi {
         }
 
 
-
-
         switch (cond_number) {
 
             case 0:
@@ -256,19 +258,28 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
 
                         }
+                    } else {
+                        System.out.println("Condition not hold.");
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
                     if (valueToCheck_HOMO_OPE_INT == Integer.parseInt(cond_val)) {
@@ -277,22 +288,27 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
+
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
 
@@ -308,18 +324,24 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
-
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
@@ -329,22 +351,26 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
 
@@ -360,18 +386,24 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
-
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
@@ -381,25 +413,28 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
-
 
 
                 break;
@@ -414,18 +449,24 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
-
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
@@ -438,22 +479,27 @@ public class sconeApi {
 
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
 
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
-
 
 
                 break;
@@ -468,18 +514,24 @@ public class sconeApi {
                             UpdateKeyValue currentObj = list.get(i);
 
                             switch (currentObj.getOp()) {
-
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
-
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
@@ -492,19 +544,25 @@ public class sconeApi {
 
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
 
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
 
@@ -524,15 +582,22 @@ public class sconeApi {
 
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
-
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    BigInteger valueToDecrypt = new BigInteger(dbAmount);
+                                    BigInteger valueDecrypted = HomoAdd.decrypt(valueToDecrypt, pk);
+                                    int key_value = valueDecrypted.intValue();
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
 
                             }
-
+                            BigInteger v = new BigInteger(HelpSerial.toString(value_to_reply_decript));
+                            BigInteger vEncripted = HomoAdd.encrypt(v, pk);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     }
                 } else if (type.equals("HOMO_OPE_INT")) {
@@ -545,28 +610,35 @@ public class sconeApi {
 
                                 // SET
                                 case 0:
+                                    value_to_reply_decript = Integer.parseInt(currentObj.getValue());
                                     break;
 
                                 // ADD
                                 case 1:
-
+                                    String dbAmount = key_value_list.get(i);
+                                    int key_value = ope.decrypt(Long.parseLong(dbAmount));
+                                    value_to_reply_decript = key_value + Integer.parseInt(currentObj.getValue());
                                     break;
                             }
+                            long vEncripted = ope.encrypt(value_to_reply_decript);
+                            value_to_reply_encript = HelpSerial.toString(vEncripted);
+                            return_encripted_values_map.put(list.get(i).getKey(),value_to_reply_encript);
                         }
                     } else {
                         System.out.println("Condition not hold.");
                     }
 
-                }else{
+                } else {
                     System.out.println("Not a valid Type");
                 }
                 break;
 
 
         }
+        reply = new ReplyCondUpdate(return_encripted_values_map, nonce);
 
 
-        return null;
+        return reply;
     }
 
 
@@ -575,7 +647,7 @@ public class sconeApi {
         String privateKey = "";
         Scanner scanner = new Scanner(sgxPrivateKey);
 
-                        while (scanner.hasNextLine()) {
+        while (scanner.hasNextLine()) {
             privateKey = scanner.next();
             System.out.println("privateKey: " + privateKey);
         }
@@ -583,7 +655,7 @@ public class sconeApi {
         byte[] sgxByte = Base64.getDecoder().decode(privateKey);
         PrivateKey sgxPrivate = PrivateKey.createKey(sgxByte);
         return sgxPrivate;
-                        }
+    }
 
 
     private HashMap<String, TypeAmount> turnDbBackToHashMap(String db) throws UnsupportedEncodingException {
@@ -606,7 +678,6 @@ public class sconeApi {
         return db_filtered;
 
     }
-
 
 
 }

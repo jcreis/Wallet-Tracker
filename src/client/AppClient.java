@@ -1020,6 +1020,9 @@ public class AppClient {
         System.out.println("#################################");
         System.out.println();
 
+        ArrayList<String> amounts = new ArrayList<>();
+        ArrayList<Long> lNonces = new ArrayList<Long>();
+
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
                 .build();
@@ -1038,6 +1041,9 @@ public class AppClient {
 
         String listJson = URLEncoder.encode(listJson_S, "UTF-8");
 
+
+        long initRequestTime = System.currentTimeMillis();
+
         response = target.path("/update")
                 .queryParam("cond_key",cond_key )
                 .queryParam("cond_value", value)
@@ -1045,10 +1051,36 @@ public class AppClient {
                 .queryParam("op_list", listJson)
                 .queryParam("nonce", nonce)
                 .request()
-                .post(Entity.entity(Reply_OPE.class, MediaType.APPLICATION_JSON));
+                .post(Entity.entity(ReplyCondUpd_Client.class, MediaType.APPLICATION_JSON));
 
 
-        Reply_OPE r = response.readEntity(Reply_OPE.class);
+        ReplyCondUpd_Client r = response.readEntity(ReplyCondUpd_Client.class);
+
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime;
+        getMoneyRequestTimes.add(finalRequestTime);
+
+        for (int i = 0; i < r.getMessages().size(); i++) {
+            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+            List<String> msgStringKey = (List<String>) objIn.readObject();
+            for (String key : msgStringKey) {
+
+                amounts.add(key);
+            }
+
+            // System.out.println("replica amount: "+ replicaMsgAmount);
+            Long replicaNonce = (Long) objIn.readObject();
+
+            // System.out.println("replica nonce: " + replicaNonce);
+            lNonces.add(replicaNonce);
+
+
+
+
+
+        }
 
     }
 

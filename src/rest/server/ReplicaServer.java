@@ -78,6 +78,7 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         String op_list;
         ArrayList<UpdateKeyValue> list;
 
+
         try (ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
              ObjectInput objIn = new ObjectInputStream(byteIn);
              ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -181,12 +182,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                     String db_type = db.get(cond_key).getType();
 
+                    List<String> updKey_valueList = new ArrayList<>();
+                    ReplyCondUpdate replySgx = null;
+
+                    HashMap<String, String> return_wallet_map = new HashMap<>();
+
 
                     switch (cond_number) {
                         // EQUALS =
                         case 0:
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++) {
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
+
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
 
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
@@ -207,159 +215,230 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                for (int i = 0; i < list.size(); i++) {
+
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
+
                             }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
+
                             break;
 
                         // NOT EQUALS !=
                         case 1:
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
 
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
 
-                                    if(db_val != Double.parseDouble(cond_val)){
+                                    if (db_val != Double.parseDouble(cond_val)) {
 
                                         // SET
-                                        if(currentObj.getOp()==0){
+                                        if (currentObj.getOp() == 0) {
                                             db.get(currentObj.getKey()).setAmount(currentObj.getValue());
                                         }
                                         // ADD
-                                        else{
+                                        else {
                                             Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
                                             db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
                                         }
-                                    }
-                                    else{
-                                        System.out.println("Condition not hold.");
-                                    }
-                                }
-                            }else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                            }
-
-                            break;
-
-                        // GREATER THAN >
-                        case 2:
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
-
-                                    UpdateKeyValue currentObj = list.get(i);
-                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
-
-                                    if(db_val > Double.parseDouble(cond_val)){
-
-                                        // SET
-                                        if(currentObj.getOp()==0){
-                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
-                                        }
-                                        // ADD
-                                        else{
-                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
-                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
-                                        }
-                                    }
-                                    else{
+                                    } else {
                                         System.out.println("Condition not hold.");
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                            }
+                                for (int i = 0; i < list.size(); i++) {
 
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
+                            }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
                             break;
 
-                        // GREATER OR EQUAL THAN >=
-                        case 3:
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
+                        // GREATER THAN >
+                        case 2:
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
 
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
 
-                                    if(db_val >= Double.parseDouble(cond_val)){
+                                    if (db_val > Double.parseDouble(cond_val)) {
 
                                         // SET
-                                        if(currentObj.getOp()==0){
+                                        if (currentObj.getOp() == 0) {
                                             db.get(currentObj.getKey()).setAmount(currentObj.getValue());
                                         }
                                         // ADD
-                                        else{
+                                        else {
                                             Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
                                             db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
                                         }
-                                    }
-                                    else{
+                                    } else {
                                         System.out.println("Condition not hold.");
                                     }
                                 }
-                            }
-                            else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                            }
+                            } else {
+                                for (int i = 0; i < list.size(); i++) {
 
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
+                            }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
+                            break;
+
+                        // GREATER OR EQUAL THAN >=
+                        case 3:
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
+
+                                    UpdateKeyValue currentObj = list.get(i);
+                                    Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
+
+                                    if (db_val >= Double.parseDouble(cond_val)) {
+
+                                        // SET
+                                        if (currentObj.getOp() == 0) {
+                                            db.get(currentObj.getKey()).setAmount(currentObj.getValue());
+                                        }
+                                        // ADD
+                                        else {
+                                            Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
+                                            db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
+                                        }
+                                    } else {
+                                        System.out.println("Condition not hold.");
+                                    }
+                                }
+                            } else {
+                                for (int i = 0; i < list.size(); i++) {
+
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
+                            }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
                             break;
 
                         // SMALLER THAN <
                         case 4:
 
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
 
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
 
-                                    if(db_val < Double.parseDouble(cond_val)){
+                                    if (db_val < Double.parseDouble(cond_val)) {
 
                                         // SET
-                                        if(currentObj.getOp()==0){
+                                        if (currentObj.getOp() == 0) {
                                             db.get(currentObj.getKey()).setAmount(currentObj.getValue());
                                         }
                                         // ADD
-                                        else{
+                                        else {
                                             Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
                                             db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
                                         }
-                                    }
-                                    else{
+                                    } else {
                                         System.out.println("Condition not hold.");
                                     }
                                 }
                             } else {
-                                condUpdateRequesttoSgx(db_type,cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
-                            }
+                                for (int i = 0; i < list.size(); i++) {
 
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
+                            }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
                             break;
 
                         // SMALLER OR EQUAL THAN <=
                         case 5:
-                            if(db_type.equals("WALLET")){
-                                for(int i=0; i<list.size(); i++){
+                            if (db_type.equals("WALLET")) {
+                                for (int i = 0; i < list.size(); i++) {
 
                                     UpdateKeyValue currentObj = list.get(i);
                                     Double db_val = Double.parseDouble(db.get(cond_key).getAmount());
 
-                                    if(db_val <= Double.parseDouble(cond_val)){
+                                    if (db_val <= Double.parseDouble(cond_val)) {
 
                                         // SET
-                                        if(currentObj.getOp()==0){
+                                        if (currentObj.getOp() == 0) {
                                             db.get(currentObj.getKey()).setAmount(currentObj.getValue());
                                         }
                                         // ADD
-                                        else{
+                                        else {
                                             Double finalAddResult = db_val + Double.parseDouble(currentObj.getValue());
                                             db.get(currentObj.getKey()).setAmount(finalAddResult.toString());
                                         }
-                                    }
-                                    else{
+                                    } else {
                                         System.out.println("Condition not hold.");
                                     }
                                 }
-                            }else {
-                                condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                            } else {
+                                for (int i = 0; i < list.size(); i++) {
+
+                                    updKey_valueList.add(db.get(list.get(i).getKey()).getAmount());
+                                }
+                                ReplyCondUpdate reply_S = condUpdateRequesttoSgx(db_type, cond_key, cond_val, cond_number, op_list, nonce, db.get(cond_key).getAmount(), updKey_valueList, keyData.get(cond_key).getKey(), keyData.get(cond_key).getAes());
+                                reply_S.getReturnMap().forEach((String key, String newValue) -> {
+                                    db.get(key).setAmount(newValue);
+                                    return_wallet_map.put(key, db.get(key).getAmount());
+
+                                });
                             }
+                            objOut.writeObject(return_wallet_map);
+                            objOut.writeObject(nonce);
+
+                            hasReply = true;
                             break;
 
                     }
@@ -762,9 +841,10 @@ public class ReplicaServer extends DefaultSingleRecoverable {
         return reply;
     }
 
-    private ReplySGX condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare, String sgxKey, String aesKey) {
-        
+    private ReplyCondUpdate condUpdateRequesttoSgx(String type, String cond_key, String cond_value, int cond_number, String op_list, Long nonce, String amountToCompare, List<String> key_value_list, String sgxKey, String aesKey) {
+
         Response response;
+        ReplyCondUpdate r;
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new AppClient.InsecureHostnameVerifier())
                 .build();
@@ -780,13 +860,16 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                 .queryParam("op_list", op_list)
                 .queryParam("nonce", nonce)
                 .queryParam("amountToCompare", amountToCompare)
+                .queryParam("key_value_list", key_value_list)
                 .queryParam("sgxKey", sgxKey)
                 .queryParam("aesKey", aesKey)
                 .request()
-                .post(Entity.entity(Reply_OPE.class, MediaType.APPLICATION_JSON));
+                .post(Entity.entity(ReplyCondUpdate.class, MediaType.APPLICATION_JSON));
+
+        r = response.readEntity(ReplyCondUpdate.class);
 
 
-        return null;
+        return r;
     }
 }
 

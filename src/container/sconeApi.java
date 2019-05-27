@@ -31,6 +31,10 @@ import java.util.*;
 @Path("/sgx")
 public class sconeApi {
 
+    private HomoOpeInt ope;
+    private Cipher aesCipher;
+    private PaillierKey pk;
+
     public sconeApi() throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
@@ -92,12 +96,13 @@ public class sconeApi {
         byte[] decodedSgxKey = Base64.getDecoder().decode(sgxKey);
 
         SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
-        Cipher aesCipher = Cipher.getInstance("AES");
+
+        aesCipher = Cipher.getInstance("AES");
 
         aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
         byte[] PaillierByte = aesCipher.doFinal(decodedSgxKey);
 
-        PaillierKey pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
+        pk = (PaillierKey) HelpSerial.fromString(new String(PaillierByte));
 
 
         //String utfString = URLDecoder.decode(decrypted, "UTF-8");
@@ -178,12 +183,14 @@ public class sconeApi {
         byte[] decodedSGXkey = Base64.getDecoder().decode(sgxKey);
 
         SecretKey AESKey = new SecretKeySpec(aes, 0, aes.length, "AES");
-        Cipher aesCipher = Cipher.getInstance("AES");
+
+        aesCipher = Cipher.getInstance("AES");
         aesCipher.init(Cipher.DECRYPT_MODE, AESKey);
 
         byte[] opeKeyBytes = aesCipher.doFinal(decodedSGXkey);
         String opeStr = HelpSerial.toString(opeKeyBytes);
-        HomoOpeInt ope = new HomoOpeInt(opeStr);
+
+        ope = new HomoOpeInt(opeStr);
 
         int decriptedValueToAdd = ope.decrypt(value);
 
@@ -206,10 +213,11 @@ public class sconeApi {
     @Path("/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_value,
-                                          @QueryParam("cond_number") String cond_number, @QueryParam("op_list") String op_list,
-                                          @QueryParam("nonce") Long nonce) throws Exception {
+    public synchronized ReplySGX cond_upd(@QueryParam("type") String type, @QueryParam("cond_key") String  cond_key, @QueryParam("cond_value") String cond_val,
+                                          @QueryParam("cond_number") int cond_number, @QueryParam("op_list") String op_list,
+                                          @QueryParam("nonce") Long nonce, @QueryParam("amountToCompare") String amountToCompare) throws Exception {
 
+        ReplySGX reply;
         GsonBuilder gsonBuilder = new GsonBuilder();
 
         Gson gsonObject = gsonBuilder.create();
@@ -223,6 +231,327 @@ public class sconeApi {
         }.getType();
 
         ArrayList<UpdateKeyValue> list = gsonObject.fromJson(list_D, empMapType);
+
+        switch (cond_number) {
+            // EQUALS =
+            case 0:
+
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare == cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare == cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+
+                break;
+
+            // NOT EQUALS !=
+            case 1:
+
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare != cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare != cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+
+
+                break;
+
+            // GREATER THAN >
+            case 2:
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare > cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare > cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+
+
+
+                break;
+
+            // GREATER OR EQUAL THAN >=
+            case 3:
+
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare >= cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare >= cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+
+
+
+                break;
+
+            // SMALLER THAN <
+            case 4:
+
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare < cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare < cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+
+
+                break;
+
+            // SMALLER OR EQUAL THAN <=
+            case 5:
+
+                if (type.equals("HOMO_ADD")) {
+                    if (amountToCompare <= cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+
+                            }
+
+                        }
+                    }
+                } else if (type.equals("HOMO_OPE_INT")) {
+                    if (amountToCompare <= cond_val) {
+                        for (int i = 0; i < list.size(); i++) {
+
+                            UpdateKeyValue currentObj = list.get(i);
+
+                            switch (currentObj.getOp()) {
+
+                                // ADD
+                                case 0:
+                                    break;
+
+                                // ADD
+                                case 1:
+
+                                    break;
+                            }
+                        }
+                    } else {
+                        System.out.println("Condition not hold.");
+                    }
+
+                }else{
+                    System.out.println("Not a valid Type");
+                }
+                break;
+
+
+        }
+
 
         return null;
     }

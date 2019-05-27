@@ -63,12 +63,31 @@ public class AppClient {
 
         try {
 
+            File file = new File("./publicKey.txt");
+            String adminPublicString = null;
+
+            Scanner sc = new Scanner(file);
+
+
+            while (sc.hasNextLine()) {
+                adminPublicString = sc.next();
+            }
+
+            byte[] pubByte = Base64.getDecoder().decode(adminPublicString);
+            PublicKey adminPub = PublicKey.createKey(pubByte);
+
+            String adminPubString = Base64.getEncoder().encodeToString(adminPub.exportKey());
+            String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
+
+            ArrayList<UpdateKeyValue> testOpList = new ArrayList<>();
+            testOpList.add(new UpdateKeyValue(0, adminPathPublicKey, "100"));
+
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
             //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
             addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-            addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
+            conditional_upd(adminPathPublicKey, "1100", 0, testOpList);
             //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
             //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
             //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
@@ -1013,6 +1032,14 @@ public class AppClient {
 
     }
 
+
+
+
+
+
+
+
+
     @SuppressWarnings("Duplicates")
     public static void conditional_upd(String cond_key, String value, int cond, ArrayList<UpdateKeyValue> list) throws Exception {
         System.out.println("#################################");
@@ -1022,6 +1049,9 @@ public class AppClient {
 
         ArrayList<String> amounts = new ArrayList<>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
+
+        int majority = 0;
+        int numbNonces = 0;
 
         Client client = ClientBuilder.newBuilder()
                 .hostnameVerifier(new InsecureHostnameVerifier())
@@ -1045,7 +1075,7 @@ public class AppClient {
         long initRequestTime = System.currentTimeMillis();
 
         response = target.path("/update")
-                .queryParam("cond_key",cond_key )
+                .queryParam("cond_key", cond_key)
                 .queryParam("cond_value", value)
                 .queryParam("cond_number", cond)
                 .queryParam("op_list", listJson)
@@ -1055,6 +1085,7 @@ public class AppClient {
 
 
         ReplyCondUpd_Client r = response.readEntity(ReplyCondUpd_Client.class);
+        System.out.println("ReplyCond_Client: " + r);
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
         getMoneyRequestTimes.add(finalRequestTime);
@@ -1066,8 +1097,7 @@ public class AppClient {
             ObjectInput objIn = new ObjectInputStream(byteIn);
             List<String> msgStringKey = (List<String>) objIn.readObject();
             for (String key : msgStringKey) {
-
-                amounts.add(key);
+                amounts.add(r.getKey_value().get(key));
             }
 
             // System.out.println("replica amount: "+ replicaMsgAmount);
@@ -1076,13 +1106,71 @@ public class AppClient {
             // System.out.println("replica nonce: " + replicaNonce);
             lNonces.add(replicaNonce);
 
+            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+            sig.initVerify(pk);
+            sig.update(currentReplicaMsg.getSerializedMessage());
 
 
+            if (sig.verify(currentReplicaMsg.getSignature())) {
+                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+            } else {
 
+                System.out.println("Signature of message is invalid");
+            }
 
         }
 
+        for (String key : amounts) {
+
+            for (String k : r.getKey_value().values()) {
+
+                if (key.equals(k))
+                    majority++;
+            }
+
+        }
+
+        for (Long n : lNonces) {
+            if (n + 1 == r.getNonce())
+                numbNonces++;
+        }
+
+        // Verify majority of nonces of replicas
+        if (numbNonces >= (lNonces.size() / 2) + 1) {
+            System.out.println("majority of replicas returns the right nonce");
+        } else {
+            System.out.println("No majority reached for nonce");
+
+        }
+
+        // Verify majority from message replies of replicas
+        if ((majority >= (amounts.size() / 2) + 1)) {
+            System.out.println("majority of replicas returns the right value");
+        } else {
+            System.out.println("No majority reached");
+        }
+
+        // Check if response nonce(which is nonce+1) is equals to original nonce + 1
+        if (r.getNonce() != nonce + 1 ) {
+            System.out.println("Nonces dont match, reject message from server");
+        } else {
+            System.out.println();
+            System.out.println("Status: " + response.getStatusInfo());
+            if (nonce + 1 == r.getNonce()) {
+                System.out.println("Nonces match");
+            }
+            System.out.println("The keys are: " + r.getKey_value().keySet());
+            System.out.println();
+        }
     }
+
+
+
+
+
+
 
 
     public static long getTransferAvgTime() {
@@ -1108,6 +1196,7 @@ public class AppClient {
         }
         return totalTimeCounter / addMoneyRequestTimes.size();
     }
+
 
 
     static public class InsecureHostnameVerifier implements HostnameVerifier {

@@ -369,6 +369,7 @@ public class WalletResources {
     @SuppressWarnings("Duplicates")
     @POST
     @Path("/update")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ReplyCondUpd_Client cond_upd(@QueryParam("cond_key") String cond_key,
                                         @QueryParam("cond_value") String cond_value,
@@ -405,7 +406,7 @@ public class WalletResources {
 
                 // DO THINGS
 
-                return null; // Reply_OPE(GET_LOW_HIGH, captureMessages.getReplicaMessages(), keyList, replyNonce + 1);
+                return new ReplyCondUpd_Client(map, replyNonce+1, captureMessages.getReplicaMessages());
 
             }
             catch (Exception e){
@@ -417,7 +418,7 @@ public class WalletResources {
         }
 
 
-        return new ReplyCondUpd_Client(map, replyNonce+1, captureMessages.getReplicaMessages());
+        return null;
     }
 
 }

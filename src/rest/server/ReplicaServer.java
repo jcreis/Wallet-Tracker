@@ -25,7 +25,10 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ReplicaServer extends DefaultSingleRecoverable {
@@ -739,9 +742,19 @@ public class ReplicaServer extends DefaultSingleRecoverable {
 
                 List<String> returnList = new ArrayList<>();
                 db.forEach((String key, TypeAmount value) -> {
-                    Long res = Long.parseLong(value.getAmount());
-                    if (res >= (Long) HelpSerial.fromString(lower) && res <= (Long) HelpSerial.fromString((higher))) {
+
+                    BigInteger res = new BigInteger(value.getAmount());
+
+                    if (    (res.compareTo((new BigInteger(lower))) == 0 ||
+                            res.compareTo (new BigInteger(lower)) == 1) &&
+                            (res.compareTo (new BigInteger(higher)) == 0 ||
+                                    (res.compareTo (new BigInteger(higher)) == -1))
+                    ) {
+
                         returnList.add(key);
+                    }
+                    else{
+
                     }
                 });
 
@@ -767,6 +780,8 @@ public class ReplicaServer extends DefaultSingleRecoverable {
                     HashMap<String, TypeAmount> db_filteredByType = new HashMap<String, TypeAmount>();
 
                     db.forEach((String key, TypeAmount value) -> {
+                        System.out.println("enters homo_add get_between");
+                        System.out.println("its preparing request to sgx");
                         if (value.getType().equals("HOMO_ADD")) {
                             db_filteredByType.put(key, value);
                         }

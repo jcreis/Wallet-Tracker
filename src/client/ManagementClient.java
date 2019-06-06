@@ -17,6 +17,8 @@ public class ManagementClient {
 
         launch("8080", "0");
         launch("8090", "1");
+        launch("8060", "2");
+        launch("8070", "3");
         //stop("0");
         //stop("1");
 

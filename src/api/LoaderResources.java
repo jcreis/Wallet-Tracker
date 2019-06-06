@@ -24,7 +24,7 @@ public class LoaderResources {
                         @QueryParam("id")String id) throws IOException {
 
 
-        ProcessBuilder pb = new ProcessBuilder("/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java", "-cp", "target/lib/jersey-media-json-jackson-2.25.1.jar:target/rest-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "rest.server.WalletServer", port, id);
+        ProcessBuilder pb = new ProcessBuilder("java", "-cp", "target/lib/jersey-media-json-jackson-2.25.1.jar:target/rest-0.0.1-SNAPSHOT-jar-with-dependencies.jar", "rest.server.WalletServer", port, id);
 
         Process p = pb.start();
         processes.put(id, p);

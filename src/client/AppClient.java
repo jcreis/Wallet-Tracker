@@ -62,9 +62,13 @@ public class AppClient {
     public static void main(String[] args) throws Exception {
 
 
+        long initTime = System.currentTimeMillis();
+
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+
+
         addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
         getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
@@ -72,101 +76,35 @@ public class AppClient {
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
         addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
+        getMoney("HOMO_ADD", EncryptOpType_GET.GET);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SET);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
-        //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+        getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
+        getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+
+        System.out.println("Total time of execution: " + (System.currentTimeMillis() - initTime)/1000 + " sec");
 
 
-        /*try {
-
-            File file = new File("./publicKey.txt");
-            String adminPublicString = null;
-
-            Scanner sc = new Scanner(file);
-
-
-            while (sc.hasNextLine()) {
-                adminPublicString = sc.next();
-            }
-
-            byte[] pubByte = Base64.getDecoder().decode(adminPublicString);
-            PublicKey adminPub = PublicKey.createKey(pubByte);
-
-            String adminPubString = Base64.getEncoder().encodeToString(adminPub.exportKey());
-            String adminPathPublicKey = URLEncoder.encode(adminPubString, "UTF-8");
-
-            ArrayList<UpdateKeyValue> testOpList = new ArrayList<>();
-
-
-            testOpList.add(new UpdateKeyValue(0, adminPathPublicKey, "100"));
-
-
-            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-            //addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-            //addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
-            //addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-
-
-            conditional_upd(adminPathPublicKey, "2", 0, testOpList);
-            //getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
-            //getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-            //getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
-
-
-            //getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
-        /*//addMoney("WALLET", EncryptOpType_ADD.SET);
-        addMoney("WALLET", EncryptOpType_ADD.CREATE);
-        addMoney("WALLET", EncryptOpType_ADD.CREATE);
-        addMoney("WALLET", EncryptOpType_ADD.CREATE);
-        addMoney("WALLET", EncryptOpType_ADD.CREATE);
-        transferMoney();*/
-
-
-       /* long initAddMoneyTime = System.currentTimeMillis();
-        while (true) {
-            addMoney("WALLET", EncryptOpType_ADD.CREATE);
-            addMoney("WALLET", EncryptOpType_ADD.CREATE);
-            addMoney("WALLET", EncryptOpType_ADD.CREATE);
-            addMoney("WALLET", EncryptOpType_ADD.CREATE);
-            addMoney("WALLET", EncryptOpType_ADD.SET);
-            addMoney("WALLET", EncryptOpType_ADD.SUM);
-            getMoney("WALLET", EncryptOpType_GET.GET);
-            getMoney("WALLET", EncryptOpType_GET.GET);
-            getMoney_LOW_HIGH("WALLET", EncryptOpType_GET.GET_LOWER_HIGHER);
-            //transferMoney();
-            // TODO after tests done -> runtime = 300*60
-            if (System.currentTimeMillis() - initAddMoneyTime >= 300 * 60) {
-                break;
-            }
-        }
 
         @SuppressWarnings("Duplicates")
-        Thread transferThread1 = new Thread() {
+        Thread thread1 = new Thread()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
                 long initTransferTime = System.currentTimeMillis();
-                while (true) {
+                while (true){
                     try {
                         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
-                        addMoney("HOMO_ADD", EncryptOpType_ADD.SET);
-                        addMoney("HOMO_ADD", EncryptOpType_ADD.SUM);
-                        getMoney("HOMO_ADD", EncryptOpType_GET.GET);
-                        getMoney_LOW_HIGH("HOMO_ADD", EncryptOpType_GET.GET_LOWER_HIGHER);
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    // run during 3 min
-                    // TODO after tests done -> runtime = 3000*60
-                    if (System.currentTimeMillis() - initTransferTime >= 300 * 60)
+                    // 18 sec
+                    if(System.currentTimeMillis()-initTransferTime >= 300*60)
                         break;
                 }
 
@@ -174,43 +112,38 @@ public class AppClient {
             }
         };
 
-        @SuppressWarnings("Duplicates")
-        Thread transferThread2 = new Thread() {
+        Thread thread2 = new Thread()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
                 long initTransferTime = System.currentTimeMillis();
-                while (true) {
+                while (true){
                     try {
-                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.CREATE);
-                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SET);
-                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
-                        getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
-                        getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
-
+                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    // TODO after tests done -> runtime = 3000*60
-                    if (System.currentTimeMillis() - initTransferTime >= 300 * 60)
+                    // 18 sec
+                    if(System.currentTimeMillis()-initTransferTime >= 300*60)
                         break;
                 }
+
+
             }
         };
+        thread1.start();
 
 
-        transferThread1.start();
-        transferThread2.start();
-        transferThread2.join();
-*/
+
         System.out.println("#####################################");
         System.out.println("###### AVERAGE REQUEST TIMES ########");
         System.out.println("#####################################");
-        /*System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
+        System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
         System.out.println("Average time of getMoney requests: " + getGetMoneyAvgTime() + "ms");
         System.out.println("Average time of addMoney requests: " + getAddMoneyAvgTime() + "ms");
-*/
+
     }
 
 
@@ -308,6 +241,9 @@ public class AppClient {
                 } else {
                     System.out.println("Signature of message is invalid");
                 }
+            }
+            else{
+
             }
         }
 
@@ -708,7 +644,7 @@ public class AppClient {
 
         ArrayList<Double> amounts = new ArrayList<Double>();
         ArrayList<Integer> amounts_add = new ArrayList<Integer>();
-        ArrayList<Integer> amounts_int = new ArrayList<Integer>();
+        ArrayList<BigInteger> amounts_int = new ArrayList<BigInteger>();
         ArrayList<Long> lNonces = new ArrayList<Long>();
 
         int majority = 0;
@@ -767,8 +703,15 @@ public class AppClient {
                 if (r.getAmount().equals("-1")) {
                     System.out.println("Something went wrong.");
                 } else {
-                    Long val = Long.parseLong(r.getAmount());
-                    int recVal = ope.decrypt(val);
+                    String var = r.getAmount();
+                    if(var.equals("")){
+                        var = "0";
+                    }
+                    System.out.println("returning amount is -> " + r.getAmount());
+
+                    BigInteger val = new BigInteger(r.getAmount());
+
+                    int recVal = ope.decrypt(val.longValue());
                     System.out.println("AMOUNT = " + recVal);
 
                 }
@@ -819,11 +762,13 @@ public class AppClient {
 
 
                 case "HOMO_OPE_INT":
-                    int openValue = ope.decrypt(Long.parseLong(msgStringAmount));
-                    amounts_int.add(openValue);
-                    for (Integer amount : amounts_int) {
-                        int r_value = ope.decrypt(Long.parseLong(r.getAmount()));
-                        if (amount == r_value)
+                    BigInteger bigIntegerOpenValue = new BigInteger(msgStringAmount);
+
+                    amounts_int.add(bigIntegerOpenValue);
+                    for (BigInteger amount : amounts_int) {
+                        BigInteger bigIntegerRValue = new BigInteger(r.getAmount());
+
+                        if (amount.compareTo(bigIntegerRValue) == 0)
                             majority++;
                     }
 
@@ -991,49 +936,55 @@ public class AppClient {
         r = response.readEntity(Reply_OPE.class);
 
         System.out.println(response.getStatus());
-        for (String key : r.getListAmounts()) {
+/*
+        if(r.getListAmounts().size()>0) {
+            for (String key : r.getListAmounts()) {
 
-            System.out.println(key);
+                System.out.println(key);
+            }
         }
-
+*/
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
         getMoneyRequestTimes.add(finalRequestTime);
 
-        for (int i = 0; i < r.getMessages().size(); i++) {
-            ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
+        if(r.getMessages().size()>=0) {
+            for (int i = 0; i < r.getMessages().size(); i++) {
+                ReplicaResponseMessage currentReplicaMsg = r.getMessages().get(i);
 
-            ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
-            ObjectInput objIn = new ObjectInputStream(byteIn);
-            List<String> msgStringKey = (List<String>) objIn.readObject();
-            for (String key : msgStringKey) {
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(currentReplicaMsg.getContent());
+                ObjectInput objIn = new ObjectInputStream(byteIn);
+                List<String> msgStringKey = (List<String>) objIn.readObject();
+                for (String key : msgStringKey) {
 
-                amounts.add(key);
+                    amounts.add(key);
+                }
+
+
+                // System.out.println("replica amount: "+ replicaMsgAmount);
+                Long replicaNonce = (Long) objIn.readObject();
+                // System.out.println("replica nonce: " + replicaNonce);
+
+
+                lNonces.add(replicaNonce);
+
+                KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
+                java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
+                Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
+                sig.initVerify(pk);
+                sig.update(currentReplicaMsg.getSerializedMessage());
+
+
+                if (sig.verify(currentReplicaMsg.getSignature())) {
+                    System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
+                } else {
+
+                    System.out.println("Signature of message is invalid");
+                }
+
             }
-
-
-            // System.out.println("replica amount: "+ replicaMsgAmount);
-            Long replicaNonce = (Long) objIn.readObject();
-            // System.out.println("replica nonce: " + replicaNonce);
-
-
-            lNonces.add(replicaNonce);
-
-            KeyLoader keyLoader = new RSAKeyLoader(0, "config", false, "SHA256withRSA");
-            java.security.PublicKey pk = keyLoader.loadPublicKey(currentReplicaMsg.getSender());
-            Signature sig = Signature.getInstance("SHA512withRSA", "SunRsaSign");
-            sig.initVerify(pk);
-            sig.update(currentReplicaMsg.getSerializedMessage());
-
-
-            if (sig.verify(currentReplicaMsg.getSignature())) {
-                System.out.println("Replica message coming from replica " + currentReplicaMsg.getSender() + " is authentic");
-            } else {
-
-                System.out.println("Signature of message is invalid");
-            }
-
         }
+        else{}
 
         for (String key : amounts) {
 
@@ -1222,12 +1173,17 @@ public class AppClient {
 
 
 
-   /* public static long getTransferAvgTime() {
+    public static long getTransferAvgTime() {
         long totalTimeCounter = 0;
         for (int i = 0; i < transferRequestTimes.size(); i++) {
             totalTimeCounter += transferRequestTimes.get(i);
         }
-        return totalTimeCounter / transferRequestTimes.size();
+        System.out.println("Dividing "+totalTimeCounter+" for "+transferRequestTimes.size());
+        if(totalTimeCounter == 0 || transferRequestTimes.size() == 0){
+            return 0;
+        }
+        else
+            return totalTimeCounter / transferRequestTimes.size();
     }
 
     public static long getGetMoneyAvgTime() {
@@ -1245,7 +1201,7 @@ public class AppClient {
         }
         return totalTimeCounter / addMoneyRequestTimes.size();
     }
-*/
+
 
 
     static public class InsecureHostnameVerifier implements HostnameVerifier {

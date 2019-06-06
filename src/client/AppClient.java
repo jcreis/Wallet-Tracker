@@ -64,7 +64,7 @@ public class AppClient {
 
         long initTime = System.currentTimeMillis();
 
-        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+        /*addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
         addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
 
@@ -83,7 +83,7 @@ public class AppClient {
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SET);
         addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
         getMoney("HOMO_OPE_INT", EncryptOpType_GET.GET);
-        getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);
+        getMoney_LOW_HIGH("HOMO_OPE_INT", EncryptOpType_GET.GET_LOWER_HIGHER);*/
 
         System.out.println("Total time of execution: " + (System.currentTimeMillis() - initTime)/1000 + " sec");
 
@@ -98,20 +98,20 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
-                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     // 18 sec
-                    if(System.currentTimeMillis()-initTransferTime >= 300*60)
+                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
                         break;
                 }
 
 
             }
         };
-
+        @SuppressWarnings("Duplicates")
         Thread thread2 = new Thread()
         {
             @Override
@@ -120,13 +120,13 @@ public class AppClient {
                 long initTransferTime = System.currentTimeMillis();
                 while (true){
                     try {
-                        addMoney("HOMO_ADD", EncryptOpType_ADD.CREATE);
+                        addMoney("HOMO_OPE_INT", EncryptOpType_ADD.SUM);
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     // 18 sec
-                    if(System.currentTimeMillis()-initTransferTime >= 300*60)
+                    if(System.currentTimeMillis()-initTransferTime >= 3000*60)
                         break;
                 }
 
@@ -134,14 +134,17 @@ public class AppClient {
             }
         };
         thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
 
 
 
         System.out.println("#####################################");
         System.out.println("###### AVERAGE REQUEST TIMES ########");
         System.out.println("#####################################");
-        System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
-        System.out.println("Average time of getMoney requests: " + getGetMoneyAvgTime() + "ms");
+        //System.out.println("Average time of transfer requests: " + getTransferAvgTime() + "ms");
+        //System.out.println("Average time of getMoney requests: " + getGetMoneyAvgTime() + "ms");
         System.out.println("Average time of addMoney requests: " + getAddMoneyAvgTime() + "ms");
 
     }
@@ -209,7 +212,6 @@ public class AppClient {
                 .post(Entity.entity(Reply.class, MediaType.APPLICATION_JSON));
 
         long finalRequestTime = System.currentTimeMillis() - initRequestTime;
-        transferRequestTimes.add(finalRequestTime);
 
         Reply r = response.readEntity(Reply.class);
 
@@ -290,6 +292,7 @@ public class AppClient {
             System.out.println();
 
         }
+        transferRequestTimes.add(finalRequestTime);
     }
 
 
@@ -517,8 +520,7 @@ public class AppClient {
                 throw new IllegalStateException("Unexpected type: " + type);
         }
 
-        long finalRequestTime = System.currentTimeMillis() - initRequestTime;
-        addMoneyRequestTimes.add(finalRequestTime);
+
 
 
         ArrayList<Double> amounts = new ArrayList<Double>();
@@ -603,6 +605,10 @@ public class AppClient {
 
 
         }
+        long finalRequestTime = System.currentTimeMillis() - initRequestTime;
+        System.out.println("Time: "+finalRequestTime);
+        addMoneyRequestTimes.add(finalRequestTime);
+
     }
 
 
@@ -1191,7 +1197,11 @@ public class AppClient {
         for (int i = 0; i < getMoneyRequestTimes.size(); i++) {
             totalTimeCounter += getMoneyRequestTimes.get(i);
         }
-        return totalTimeCounter / getMoneyRequestTimes.size();
+        if(totalTimeCounter == 0 || getMoneyRequestTimes.size() == 0){
+            return 0;
+        }
+        else
+            return totalTimeCounter / getMoneyRequestTimes.size();
     }
 
     public static long getAddMoneyAvgTime() {
@@ -1199,7 +1209,11 @@ public class AppClient {
         for (int i = 0; i < addMoneyRequestTimes.size(); i++) {
             totalTimeCounter += addMoneyRequestTimes.get(i);
         }
-        return totalTimeCounter / addMoneyRequestTimes.size();
+        if(totalTimeCounter == 0 || addMoneyRequestTimes.size() == 0){
+            return 0;
+        }
+        else
+            return totalTimeCounter / addMoneyRequestTimes.size();
     }
 
 
